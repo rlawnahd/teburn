@@ -1,0 +1,13 @@
+{
+  "name": "stocklight-monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter client dev\" \"pnpm --filter server dev\"",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
