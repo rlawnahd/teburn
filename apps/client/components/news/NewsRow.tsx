@@ -1,17 +1,33 @@
-import React from 'react';
-import { TrendingUp, TrendingDown, ChevronRight, Sparkles } from 'lucide-react';
-import { NewsItem } from '@/lib/api/news';
+'use client';
+
+import React, { useState } from 'react';
+import { TrendingUp, TrendingDown, ChevronRight, Sparkles, Tag, Loader2, Zap } from 'lucide-react';
+import { NewsItem, analyzeNewsItem, AnalysisResult } from '@/lib/api/news';
 
 interface Props {
     data: NewsItem;
+    onAnalyzed?: (link: string, result: AnalysisResult) => void;
 }
 
-export default function NewsRow({ data }: Props) {
-    const sentiment = data.sentiment || 'neutral';
-    const stocks = data.stocks || [];
-    const score = data.score || 50;
-    const aiReason = data.aiReason || 'AI 분석 대기 중...';
+// 센티멘트 한글 변환
+const sentimentLabel = {
+    positive: '호재',
+    negative: '악재',
+    neutral: '중립',
+};
+
+export default function NewsRow({ data, onAnalyzed }: Props) {
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [localAnalysis, setLocalAnalysis] = useState<AnalysisResult | null>(null);
+
+    // 로컬 분석 결과가 있으면 사용, 없으면 props 데이터 사용
+    const sentiment = localAnalysis?.sentiment || data.sentiment || 'neutral';
+    const stocks = localAnalysis?.stocks || data.stocks || [];
+    const themes = localAnalysis?.themes || data.themes || [];
+    const score = localAnalysis?.score || data.score || 50;
+    const aiReason = localAnalysis?.aiReason || data.aiReason || '';
     const isDetailed = data.isDetailed || false;
+    const hasAnalysis = !!localAnalysis || !!data.aiReason;
 
     const isPositive = sentiment === 'positive';
     const isNegative = sentiment === 'negative';
@@ -27,6 +43,23 @@ export default function NewsRow({ data }: Props) {
         window.open(data.link, '_blank', 'noopener,noreferrer');
     };
 
+    const handleAnalyze = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // 카드 클릭 이벤트 방지
+
+        if (isAnalyzing || hasAnalysis) return;
+
+        setIsAnalyzing(true);
+        try {
+            const result = await analyzeNewsItem(data);
+            setLocalAnalysis(result);
+            onAnalyzed?.(data.link, result);
+        } catch (error) {
+            console.error('AI 분석 실패:', error);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     // 상세 분석 뉴스 (상위 5개) - 큰 카드
     if (isDetailed) {
         return (
@@ -34,15 +67,58 @@ export default function NewsRow({ data }: Props) {
                 onClick={handleClick}
                 className="group p-5 border border-slate-800 rounded-lg hover:bg-[#131b2e] hover:border-slate-700 transition-all cursor-pointer mb-4"
             >
-                {/* 상단: 배지 + 시간 + 언론사 */}
+                {/* 상단: 배지 + 시간 + 언론사 + AI 분석 버튼 */}
                 <div className="flex items-center gap-2 mb-3">
-                    <span className="flex items-center gap-1 text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
-                        <Sparkles size={12} />
-                        상세 분석
-                    </span>
+                    {hasAnalysis ? (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+                            <Sparkles size={12} />
+                            AI 분석 완료
+                        </span>
+                    ) : (
+                        <button
+                            onClick={handleAnalyze}
+                            disabled={isAnalyzing}
+                            className="flex items-center gap-1 text-xs font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors disabled:opacity-50"
+                        >
+                            {isAnalyzing ? (
+                                <>
+                                    <Loader2 size={12} className="animate-spin" />
+                                    분석 중...
+                                </>
+                            ) : (
+                                <>
+                                    <Zap size={12} />
+                                    AI 분석하기
+                                </>
+                            )}
+                        </button>
+                    )}
                     <span className="text-xs text-slate-500">{data.createdAt}</span>
                     <span className="text-xs px-1.5 py-0.5 bg-slate-800 rounded text-slate-500">{data.press}</span>
                 </div>
+
+                {/* 관련 종목 + 테마 */}
+                {(stocks.length > 0 || themes.length > 0) && (
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                        {stocks.map((stock, i) => (
+                            <span
+                                key={`stock-${i}`}
+                                className="text-xs font-semibold text-orange-300 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20"
+                            >
+                                {stock}
+                            </span>
+                        ))}
+                        {themes.map((theme, i) => (
+                            <span
+                                key={`theme-${i}`}
+                                className="flex items-center gap-1 text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20"
+                            >
+                                <Tag size={10} />
+                                {theme}
+                            </span>
+                        ))}
+                    </div>
+                )}
 
                 {/* 제목 */}
                 <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-indigo-400 transition-colors leading-tight">
@@ -52,21 +128,26 @@ export default function NewsRow({ data }: Props) {
                 {/* 요약 (긴 버전) */}
                 <p className="text-sm text-slate-400 mb-4 line-clamp-3 leading-relaxed">{data.summary}</p>
 
-                {/* AI Analysis Box */}
-                <div className="relative p-4 bg-slate-900/80 rounded-lg border border-slate-800/60 mb-4">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l"></div>
-                    <p className="text-sm text-slate-400 pl-3 leading-relaxed">
-                        <span className="text-indigo-400 font-semibold text-xs uppercase mr-2 tracking-wider">
-                            AI Analysis
-                        </span>
-                        {aiReason}
-                    </p>
-                </div>
+                {/* AI 분석 박스 */}
+                {hasAnalysis ? (
+                    <div className="relative p-4 bg-slate-900/80 rounded-lg border border-slate-800/60 mb-4">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l"></div>
+                        <p className="text-sm text-slate-300 pl-3 leading-relaxed">
+                            <span className="text-indigo-400 font-semibold text-xs mr-2">AI 분석</span>
+                            {aiReason}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="relative p-4 bg-slate-900/50 rounded-lg border border-dashed border-slate-700 mb-4">
+                        <p className="text-sm text-slate-500 text-center">
+                            {isAnalyzing ? '🤖 AI가 뉴스를 분석하고 있습니다...' : '👆 AI 분석하기 버튼을 클릭하세요'}
+                        </p>
+                    </div>
+                )}
 
-                {/* 하단: Sentiment + Score + 종목 */}
+                {/* 하단: 호재/악재 + 영향도 */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        {/* Sentiment */}
                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${sentimentBg}`}>
                             {isPositive ? (
                                 <TrendingUp size={14} className={sentimentColor} />
@@ -75,36 +156,20 @@ export default function NewsRow({ data }: Props) {
                             ) : (
                                 <div className="w-2 h-0.5 bg-slate-400"></div>
                             )}
-                            <span className={`text-xs font-bold uppercase tracking-wide ${sentimentColor}`}>
-                                {sentiment}
+                            <span className={`text-xs font-bold ${sentimentColor}`}>
+                                {sentimentLabel[sentiment]}
                             </span>
                         </div>
 
-                        {/* Score */}
                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 rounded-full">
-                            <span className="text-xs text-slate-500">Impact</span>
-                            <span className={`text-sm font-mono font-bold ${score >= 80 ? 'text-yellow-400' : 'text-slate-400'}`}>
+                            <span className="text-xs text-slate-500">영향도</span>
+                            <span className={`text-sm font-mono font-bold ${score >= 80 ? 'text-yellow-400' : score >= 60 ? 'text-slate-300' : 'text-slate-500'}`}>
                                 {score}
                             </span>
                         </div>
                     </div>
 
-                    {/* 종목 태그 */}
-                    <div className="flex items-center gap-2">
-                        {stocks.length > 0 ? (
-                            stocks.map((stock, i) => (
-                                <span
-                                    key={i}
-                                    className="text-xs font-bold text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700"
-                                >
-                                    {stock}
-                                </span>
-                            ))
-                        ) : (
-                            <span className="text-xs text-slate-600">종목 분석 대기</span>
-                        )}
-                        <ChevronRight size={18} className="text-slate-600 group-hover:text-slate-300 transition-colors" />
-                    </div>
+                    <ChevronRight size={18} className="text-slate-600 group-hover:text-slate-300 transition-colors" />
                 </div>
             </article>
         );
@@ -113,27 +178,41 @@ export default function NewsRow({ data }: Props) {
     // 일반 뉴스 (6번째 이후) - 작은 리스트
     return (
         <article
-            onClick={handleClick}
-            className="group flex items-center gap-4 p-3 border-b border-slate-800/50 hover:bg-[#131b2e] transition-colors cursor-pointer"
+            className="group flex items-center gap-4 p-3 border-b border-slate-800/50 hover:bg-[#131b2e] transition-colors"
         >
             {/* 시간 */}
-            <div className="w-16 text-xs text-slate-500 font-mono shrink-0">
+            <div className="w-14 text-xs text-slate-500 font-mono shrink-0">
                 {data.createdAt.split(' ')[1] || data.createdAt}
             </div>
 
             {/* 언론사 */}
-            <div className="w-20 shrink-0">
-                <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-500">{data.press}</span>
+            <div className="w-16 shrink-0">
+                <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-500 truncate block">{data.press}</span>
             </div>
 
-            {/* 제목 */}
-            <div className="flex-1 min-w-0">
+            {/* 제목 (클릭하면 링크 열기) */}
+            <div className="flex-1 min-w-0 cursor-pointer" onClick={handleClick}>
                 <h3 className="text-sm font-medium text-slate-300 group-hover:text-indigo-400 transition-colors truncate">
                     {data.title}
                 </h3>
             </div>
 
-            {/* Sentiment */}
+            {/* AI 분석 버튼 */}
+            {!hasAnalysis && (
+                <button
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing}
+                    className="flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors disabled:opacity-50 shrink-0"
+                >
+                    {isAnalyzing ? (
+                        <Loader2 size={10} className="animate-spin" />
+                    ) : (
+                        <Zap size={10} />
+                    )}
+                </button>
+            )}
+
+            {/* 호재/악재 */}
             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${sentimentBg}`}>
                 {isPositive ? (
                     <TrendingUp size={12} className={sentimentColor} />
@@ -142,17 +221,21 @@ export default function NewsRow({ data }: Props) {
                 ) : (
                     <div className="w-1.5 h-0.5 bg-slate-400"></div>
                 )}
-                <span className={`text-[10px] font-bold uppercase ${sentimentColor}`}>{sentiment}</span>
+                <span className={`text-[10px] font-bold ${sentimentColor}`}>{sentimentLabel[sentiment]}</span>
             </div>
 
-            {/* Score */}
-            <div className="w-12 text-right">
-                <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-yellow-400' : 'text-slate-500'}`}>
+            {/* 영향도 */}
+            <div className="w-10 text-right">
+                <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-yellow-400' : score >= 60 ? 'text-slate-300' : 'text-slate-500'}`}>
                     {score}
                 </span>
             </div>
 
-            <ChevronRight size={16} className="text-slate-700 group-hover:text-slate-400 transition-colors" />
+            <ChevronRight
+                size={16}
+                className="text-slate-700 group-hover:text-slate-400 transition-colors cursor-pointer"
+                onClick={handleClick}
+            />
         </article>
     );
 }
