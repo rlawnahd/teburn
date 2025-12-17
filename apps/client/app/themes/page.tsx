@@ -46,22 +46,22 @@ const DUMMY_THEMES = [
 
 function Sidebar() {
     return (
-        <aside className="w-64 bg-[#0B1120] border-r border-slate-800 hidden md:flex flex-col fixed h-full z-20">
-            <div className="h-16 flex items-center px-6 border-b border-slate-800">
-                <Zap className="text-yellow-400 mr-2" size={20} fill="currentColor" />
-                <span className="text-lg font-bold text-white tracking-wide">StockLight</span>
+        <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col fixed h-full z-20">
+            <div className="h-16 flex items-center px-6 border-b border-slate-200">
+                <Zap className="text-yellow-500 mr-2" size={20} fill="currentColor" />
+                <span className="text-lg font-bold text-slate-900 tracking-wide">StockLight</span>
             </div>
             <nav className="flex-1 px-3 py-6 space-y-1">
                 <Link
                     href="/"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all text-sm font-medium"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all text-sm font-medium"
                 >
                     <Newspaper size={18} />
                     <span>뉴스 피드</span>
                 </Link>
                 <Link
                     href="/themes"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-md bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500 transition-all text-sm font-medium"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-md bg-indigo-50 text-indigo-600 border-l-2 border-indigo-500 transition-all text-sm font-medium"
                 >
                     <TrendingUp size={18} />
                     <span>테마 현황</span>
@@ -73,14 +73,14 @@ function Sidebar() {
 
 export default function ThemesPage() {
     return (
-        <div className="flex min-h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
+        <div className="flex min-h-screen bg-slate-50 text-slate-700 font-sans selection:bg-indigo-500/30">
             <Sidebar />
 
             <main className="flex-1 md:ml-64 p-0">
-                <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
-                    <h1 className="text-lg font-semibold text-white flex items-center gap-2">
+                <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                    <h1 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                         테마별 시장 현황
-                        <span className="text-xs text-slate-500 font-normal ml-2">더미 데이터</span>
+                        <span className="text-xs text-slate-400 font-normal ml-2">더미 데이터</span>
                     </h1>
                 </header>
 
@@ -91,24 +91,24 @@ export default function ThemesPage() {
                             const isPositive = theme.change > 0;
                             const isNegative = theme.change < 0;
                             const changeColor = isPositive
-                                ? 'text-red-400'
+                                ? 'text-red-500'
                                 : isNegative
-                                    ? 'text-blue-400'
-                                    : 'text-slate-400';
+                                    ? 'text-blue-500'
+                                    : 'text-slate-500';
                             const changeBg = isPositive
-                                ? 'bg-red-500/10 border-red-500/20'
+                                ? 'bg-red-50 border-red-200'
                                 : isNegative
-                                    ? 'bg-blue-500/10 border-blue-500/20'
-                                    : 'bg-slate-500/10 border-slate-500/20';
+                                    ? 'bg-blue-50 border-blue-200'
+                                    : 'bg-slate-100 border-slate-200';
 
                             return (
                                 <div
                                     key={theme.name}
-                                    className="p-5 border border-slate-800 rounded-lg hover:bg-[#131b2e] hover:border-slate-700 transition-all cursor-pointer"
+                                    className="p-5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
                                 >
                                     {/* 헤더: 테마명 + 등락률 */}
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-lg font-bold text-white">{theme.name}</h3>
+                                        <h3 className="text-lg font-bold text-slate-900">{theme.name}</h3>
                                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${changeBg}`}>
                                             {isPositive ? (
                                                 <TrendingUp size={16} className={changeColor} />
@@ -128,7 +128,7 @@ export default function ThemesPage() {
                                         {theme.stocks.map((stock) => (
                                             <span
                                                 key={stock}
-                                                className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded"
+                                                className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded"
                                             >
                                                 {stock}
                                             </span>
@@ -138,7 +138,7 @@ export default function ThemesPage() {
                                     {/* 하단: 뉴스 개수 */}
                                     <div className="flex items-center justify-between text-xs text-slate-500">
                                         <span>관련 뉴스 {theme.newsCount}건</span>
-                                        <span className="text-indigo-400 hover:text-indigo-300">자세히 보기 →</span>
+                                        <span className="text-indigo-600 hover:text-indigo-500">자세히 보기 →</span>
                                     </div>
                                 </div>
                             );
@@ -146,7 +146,7 @@ export default function ThemesPage() {
                     </div>
 
                     {/* 안내 문구 */}
-                    <div className="mt-8 p-4 bg-slate-900/50 border border-slate-800 rounded-lg text-center">
+                    <div className="mt-8 p-4 bg-white border border-slate-200 rounded-lg text-center">
                         <p className="text-sm text-slate-500">
                             실제 데이터 연동 예정 - 현재는 더미 데이터입니다
                         </p>

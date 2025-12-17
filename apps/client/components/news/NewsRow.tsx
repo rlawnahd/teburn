@@ -32,12 +32,12 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
     const isPositive = sentiment === 'positive';
     const isNegative = sentiment === 'negative';
 
-    const sentimentColor = isPositive ? 'text-red-400' : isNegative ? 'text-blue-400' : 'text-slate-400';
+    const sentimentColor = isPositive ? 'text-red-500' : isNegative ? 'text-blue-500' : 'text-slate-500';
     const sentimentBg = isPositive
-        ? 'bg-red-500/10 border-red-500/20'
+        ? 'bg-red-50 border-red-200'
         : isNegative
-            ? 'bg-blue-500/10 border-blue-500/20'
-            : 'bg-slate-500/10 border-slate-500/20';
+            ? 'bg-blue-50 border-blue-200'
+            : 'bg-slate-100 border-slate-200';
 
     const handleClick = () => {
         window.open(data.link, '_blank', 'noopener,noreferrer');
@@ -65,12 +65,12 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
         return (
             <article
                 onClick={handleClick}
-                className="group p-5 border border-slate-800 rounded-lg hover:bg-[#131b2e] hover:border-slate-700 transition-all cursor-pointer mb-4"
+                className="group p-5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer mb-4"
             >
                 {/* 상단: 배지 + 시간 + 언론사 + AI 분석 버튼 */}
                 <div className="flex items-center gap-2 mb-3">
                     {hasAnalysis ? (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+                        <span className="flex items-center gap-1 text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-200">
                             <Sparkles size={12} />
                             AI 분석 완료
                         </span>
@@ -78,7 +78,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         <button
                             onClick={handleAnalyze}
                             disabled={isAnalyzing}
-                            className="flex items-center gap-1 text-xs font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded border border-yellow-300 hover:bg-yellow-100 transition-colors disabled:opacity-50"
                         >
                             {isAnalyzing ? (
                                 <>
@@ -94,7 +94,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         </button>
                     )}
                     <span className="text-xs text-slate-500">{data.createdAt}</span>
-                    <span className="text-xs px-1.5 py-0.5 bg-slate-800 rounded text-slate-500">{data.press}</span>
+                    <span className="text-xs px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{data.press}</span>
                 </div>
 
                 {/* 관련 종목 + 테마 */}
@@ -103,7 +103,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         {stocks.map((stock, i) => (
                             <span
                                 key={`stock-${i}`}
-                                className="text-xs font-semibold text-orange-300 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20"
+                                className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-200"
                             >
                                 {stock}
                             </span>
@@ -111,7 +111,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         {themes.map((theme, i) => (
                             <span
                                 key={`theme-${i}`}
-                                className="flex items-center gap-1 text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20"
+                                className="flex items-center gap-1 text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-200"
                             >
                                 <Tag size={10} />
                                 {theme}
@@ -121,26 +121,26 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                 )}
 
                 {/* 제목 */}
-                <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-indigo-400 transition-colors leading-tight">
+                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors leading-tight">
                     {data.title}
                 </h3>
 
                 {/* 요약 (긴 버전) */}
-                <p className="text-sm text-slate-400 mb-4 line-clamp-3 leading-relaxed">{data.summary}</p>
+                <p className="text-sm text-slate-600 mb-4 line-clamp-3 leading-relaxed">{data.summary}</p>
 
                 {/* AI 분석 박스 */}
                 {hasAnalysis ? (
-                    <div className="relative p-4 bg-slate-900/80 rounded-lg border border-slate-800/60 mb-4">
+                    <div className="relative p-4 bg-indigo-50 rounded-lg border border-indigo-200 mb-4">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l"></div>
-                        <p className="text-sm text-slate-300 pl-3 leading-relaxed">
-                            <span className="text-indigo-400 font-semibold text-xs mr-2">AI 분석</span>
+                        <p className="text-sm text-slate-700 pl-3 leading-relaxed">
+                            <span className="text-indigo-600 font-semibold text-xs mr-2">AI 분석</span>
                             {aiReason}
                         </p>
                     </div>
                 ) : (
-                    <div className="relative p-4 bg-slate-900/50 rounded-lg border border-dashed border-slate-700 mb-4">
+                    <div className="relative p-4 bg-slate-50 rounded-lg border border-dashed border-slate-300 mb-4">
                         <p className="text-sm text-slate-500 text-center">
-                            {isAnalyzing ? '🤖 AI가 뉴스를 분석하고 있습니다...' : '👆 AI 분석하기 버튼을 클릭하세요'}
+                            {isAnalyzing ? 'AI가 뉴스를 분석하고 있습니다...' : 'AI 분석하기 버튼을 클릭하세요'}
                         </p>
                     </div>
                 )}
@@ -161,15 +161,15 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 rounded-full">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full">
                             <span className="text-xs text-slate-500">영향도</span>
-                            <span className={`text-sm font-mono font-bold ${score >= 80 ? 'text-yellow-400' : score >= 60 ? 'text-slate-300' : 'text-slate-500'}`}>
+                            <span className={`text-sm font-mono font-bold ${score >= 80 ? 'text-yellow-600' : score >= 60 ? 'text-slate-700' : 'text-slate-500'}`}>
                                 {score}
                             </span>
                         </div>
                     </div>
 
-                    <ChevronRight size={18} className="text-slate-600 group-hover:text-slate-300 transition-colors" />
+                    <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
                 </div>
             </article>
         );
@@ -178,7 +178,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
     // 일반 뉴스 (6번째 이후) - 작은 리스트
     return (
         <article
-            className="group flex items-center gap-4 p-3 border-b border-slate-800/50 hover:bg-[#131b2e] transition-colors"
+            className="group flex items-center gap-4 p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors"
         >
             {/* 시간 */}
             <div className="w-14 text-xs text-slate-500 font-mono shrink-0">
@@ -187,12 +187,12 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
 
             {/* 언론사 */}
             <div className="w-16 shrink-0">
-                <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-500 truncate block">{data.press}</span>
+                <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 truncate block">{data.press}</span>
             </div>
 
             {/* 제목 (클릭하면 링크 열기) */}
             <div className="flex-1 min-w-0 cursor-pointer" onClick={handleClick}>
-                <h3 className="text-sm font-medium text-slate-300 group-hover:text-indigo-400 transition-colors truncate">
+                <h3 className="text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors truncate">
                     {data.title}
                 </h3>
             </div>
@@ -202,7 +202,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                 <button
                     onClick={handleAnalyze}
                     disabled={isAnalyzing}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors disabled:opacity-50 shrink-0"
+                    className="flex items-center gap-1 text-[10px] font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded border border-yellow-300 hover:bg-yellow-100 transition-colors disabled:opacity-50 shrink-0"
                 >
                     {isAnalyzing ? (
                         <Loader2 size={10} className="animate-spin" />
@@ -226,14 +226,14 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
 
             {/* 영향도 */}
             <div className="w-10 text-right">
-                <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-yellow-400' : score >= 60 ? 'text-slate-300' : 'text-slate-500'}`}>
+                <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-yellow-600' : score >= 60 ? 'text-slate-700' : 'text-slate-500'}`}>
                     {score}
                 </span>
             </div>
 
             <ChevronRight
                 size={16}
-                className="text-slate-700 group-hover:text-slate-400 transition-colors cursor-pointer"
+                className="text-slate-400 group-hover:text-slate-600 transition-colors cursor-pointer"
                 onClick={handleClick}
             />
         </article>

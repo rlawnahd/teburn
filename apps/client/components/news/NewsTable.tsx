@@ -13,18 +13,18 @@ interface Props {
 export default function NewsTable({ news, selectedLink, onSelect }: Props) {
     const getSentimentIcon = (sentiment: string) => {
         if (sentiment === 'positive') {
-            return <TrendingUp size={14} className="text-red-400" />;
+            return <TrendingUp size={14} className="text-red-500" />;
         }
         if (sentiment === 'negative') {
-            return <TrendingDown size={14} className="text-blue-400" />;
+            return <TrendingDown size={14} className="text-blue-500" />;
         }
-        return <Minus size={14} className="text-slate-500" />;
+        return <Minus size={14} className="text-slate-400" />;
     };
 
     const getSentimentBg = (sentiment: string) => {
-        if (sentiment === 'positive') return 'bg-red-500/10 text-red-400';
-        if (sentiment === 'negative') return 'bg-blue-500/10 text-blue-400';
-        return 'bg-slate-700/50 text-slate-400';
+        if (sentiment === 'positive') return 'bg-red-50 text-red-500';
+        if (sentiment === 'negative') return 'bg-blue-50 text-blue-500';
+        return 'bg-slate-100 text-slate-500';
     };
 
 
@@ -50,9 +50,9 @@ export default function NewsTable({ news, selectedLink, onSelect }: Props) {
     };
 
     return (
-        <div className="overflow-hidden rounded-lg border border-slate-800">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
             {/* 테이블 헤더 */}
-            <div className="grid grid-cols-[60px_100px_50px_1fr] gap-2 px-3 py-2 bg-slate-900/80 border-b border-slate-800 text-xs text-slate-500 font-medium">
+            <div className="grid grid-cols-[60px_100px_50px_1fr] gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-medium">
                 <div>시간</div>
                 <div>종목</div>
                 <div className="text-center">호/악</div>
@@ -70,10 +70,10 @@ export default function NewsTable({ news, selectedLink, onSelect }: Props) {
                         <div
                             key={`${item.link}-${idx}`}
                             onClick={() => onSelect(item)}
-                            className={`grid grid-cols-[60px_100px_50px_1fr] gap-2 px-3 py-2.5 border-b border-slate-800/50 cursor-pointer transition-all ${
+                            className={`grid grid-cols-[60px_100px_50px_1fr] gap-2 px-3 py-2.5 border-b border-slate-100 cursor-pointer transition-all ${
                                 isSelected
-                                    ? 'bg-indigo-500/10 border-l-2 border-l-indigo-500'
-                                    : 'hover:bg-slate-800/50'
+                                    ? 'bg-indigo-50 border-l-2 border-l-indigo-500'
+                                    : 'hover:bg-slate-50'
                             }`}
                         >
                             {/* 시간 */}
@@ -84,14 +84,14 @@ export default function NewsTable({ news, selectedLink, onSelect }: Props) {
                             {/* 종목 */}
                             <div className="flex items-center gap-1 overflow-hidden">
                                 {stocks.length > 0 ? (
-                                    <span className="text-xs font-semibold text-orange-300 truncate">
+                                    <span className="text-xs font-semibold text-orange-600 truncate">
                                         {stocks[0]}
                                         {stocks.length > 1 && (
-                                            <span className="text-slate-500 ml-1">+{stocks.length - 1}</span>
+                                            <span className="text-slate-400 ml-1">+{stocks.length - 1}</span>
                                         )}
                                     </span>
                                 ) : (
-                                    <span className="text-xs text-slate-600">-</span>
+                                    <span className="text-xs text-slate-400">-</span>
                                 )}
                             </div>
 
@@ -104,7 +104,7 @@ export default function NewsTable({ news, selectedLink, onSelect }: Props) {
 
                             {/* 제목 */}
                             <div className="min-w-0">
-                                <p className={`text-sm truncate ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                                <p className={`text-sm truncate ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
                                     {item.title}
                                 </p>
                             </div>
