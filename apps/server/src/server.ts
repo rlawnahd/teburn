@@ -5,7 +5,10 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import newsRoutes from './routes/news';
+import themesRoutes from './routes/themes';
+import stocksRoutes from './routes/stocks';
 import { crawlNaverFinanceNews } from './services/crawler';
+import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { analyzeNews } from './services/aiAnalyzer';
 import News from './models/News';
 
@@ -167,6 +170,20 @@ io.on('connection', async (socket) => {
         socket.emit('newNews', latestNews);
     }
 
+    // 실시간 주가 구독 요청
+    socket.on('subscribeStockPrices', () => {
+        console.log(`📈 클라이언트 ${socket.id} 실시간 주가 구독`);
+        socket.join('stockPrices');
+
+        // 현재 캐시된 테마 가격 즉시 전송
+        const themePrices = kisWebSocket.getThemePrices();
+        socket.emit('themePricesUpdate', themePrices);
+    });
+
+    socket.on('unsubscribeStockPrices', () => {
+        socket.leave('stockPrices');
+    });
+
     socket.on('disconnect', () => {
         console.log(`❌ 클라이언트 연결 해제: ${socket.id}`);
     });
@@ -174,6 +191,8 @@ io.on('connection', async (socket) => {
 
 // 6. API 라우트
 app.use('/api/news', newsRoutes);
+app.use('/api/themes', themesRoutes);
+app.use('/api/stocks', stocksRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
@@ -191,5 +210,24 @@ connectDB().then(() => {
         // 주기적 크롤링 시작
         setInterval(backgroundCrawl, CRAWL_INTERVAL);
         console.log(`⏰ 백그라운드 크롤링: ${CRAWL_INTERVAL / 1000}초마다 실행`);
+
+        // KIS 실시간 WebSocket 연결
+        kisWebSocket.connect().then(() => {
+            console.log('📊 KIS 실시간 주가 WebSocket 연결됨');
+
+            // 실시간 가격 업데이트 시 클라이언트에 푸시 (1초마다 배치)
+            let lastPush = Date.now();
+            kisWebSocket.onPriceUpdate((price: RealtimePrice) => {
+                const now = Date.now();
+                // 1초마다 테마 가격 업데이트 푸시
+                if (now - lastPush >= 1000) {
+                    const themePrices = kisWebSocket.getThemePrices();
+                    io.to('stockPrices').emit('themePricesUpdate', themePrices);
+                    lastPush = now;
+                }
+            });
+        }).catch((err) => {
+            console.error('❌ KIS WebSocket 연결 실패:', err.message);
+        });
     });
 });
