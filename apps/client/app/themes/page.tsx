@@ -19,10 +19,12 @@ import {
     Sun,
     Moon,
     Sunset,
+    BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
-import { fetchThemes, fetchThemeDetail, ThemeListItem } from '@/lib/api/themes';
+import { fetchThemes, fetchThemeDetail, ThemeListItem, fetchThemeHistory, ThemeHistoryItem } from '@/lib/api/themes';
 import { useRealtimeStockPrices, ThemeRealtimePrice, RealtimePrice, MarketStatusInfo } from '@/hooks/useRealtimeStockPrices';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 type ViewMode = 'dashboard' | 'heatmap';
 
@@ -317,6 +319,136 @@ function DashboardView({
     );
 }
 
+// 등락률 추이 차트 컴포넌트
+function ThemeHistoryChart({ themeName }: { themeName: string }) {
+    const [period, setPeriod] = useState<'today' | '1d' | '7d' | '30d'>('today');
+
+    const { data: history, isLoading } = useQuery({
+        queryKey: ['themeHistory', themeName, period],
+        queryFn: () => fetchThemeHistory(themeName, period),
+        refetchInterval: period === 'today' ? 10000 : false, // 오늘 데이터는 10초마다 갱신
+    });
+
+    const periodLabels = {
+        today: '오늘',
+        '1d': '1일',
+        '7d': '7일',
+        '30d': '30일',
+    };
+
+    // 차트 데이터 포맷
+    const chartData = (history || []).map((item) => {
+        const date = new Date(item.timestamp);
+        let label: string;
+        if (period === 'today' || period === '1d') {
+            label = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        } else {
+            label = `${date.getMonth() + 1}/${date.getDate()}`;
+        }
+        return {
+            time: label,
+            rate: item.avgChangeRate,
+            topStock: item.topStock,
+            topStockRate: item.topStockRate,
+        };
+    });
+
+    // Y축 범위 계산
+    const rates = chartData.map((d) => d.rate);
+    const maxRate = Math.max(...rates, 1);
+    const minRate = Math.min(...rates, -1);
+    const absMax = Math.max(Math.abs(maxRate), Math.abs(minRate));
+    const yDomain = [-Math.ceil(absMax), Math.ceil(absMax)];
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <BarChart3 size={16} />
+                    등락률 추이
+                </div>
+                <div className="flex gap-1">
+                    {(Object.keys(periodLabels) as Array<keyof typeof periodLabels>).map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setPeriod(p)}
+                            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                                period === p
+                                    ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                    : 'text-slate-500 hover:bg-slate-100'
+                            }`}
+                        >
+                            {periodLabels[p]}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {isLoading ? (
+                <div className="h-40 flex items-center justify-center text-slate-400">
+                    <RefreshCw size={16} className="animate-spin mr-2" />
+                    차트 로딩 중...
+                </div>
+            ) : chartData.length === 0 ? (
+                <div className="h-40 flex items-center justify-center text-slate-400 text-sm">
+                    해당 기간에 데이터가 없습니다
+                </div>
+            ) : (
+                <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                            <XAxis
+                                dataKey="time"
+                                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                axisLine={{ stroke: '#e2e8f0' }}
+                                tickLine={false}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis
+                                domain={yDomain}
+                                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                axisLine={false}
+                                tickLine={false}
+                                tickFormatter={(v) => `${v}%`}
+                            />
+                            <Tooltip
+                                content={({ active, payload }) => {
+                                    if (!active || !payload || !payload[0]) return null;
+                                    const data = payload[0].payload;
+                                    const rate = data.rate;
+                                    const isUp = rate > 0;
+                                    return (
+                                        <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-xs">
+                                            <div className="text-slate-500 mb-1">{data.time}</div>
+                                            <div className={`font-bold ${isUp ? 'text-red-500' : rate < 0 ? 'text-blue-500' : 'text-slate-500'}`}>
+                                                {isUp ? '+' : ''}{rate.toFixed(2)}%
+                                            </div>
+                                            {data.topStock && (
+                                                <div className="text-slate-400 mt-1">
+                                                    대장주: {data.topStock} ({data.topStockRate > 0 ? '+' : ''}{data.topStockRate.toFixed(1)}%)
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }}
+                            />
+                            <ReferenceLine y={0} stroke="#e2e8f0" strokeDasharray="3 3" />
+                            <Line
+                                type="monotone"
+                                dataKey="rate"
+                                stroke="#6366f1"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4, fill: '#6366f1' }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // 테마 상세 모달
 function ThemeDetailModal({
     theme,
@@ -393,6 +525,9 @@ function ThemeDetailModal({
                         </div>
                     ) : (
                         <div className="space-y-6">
+                            {/* 등락률 추이 차트 */}
+                            <ThemeHistoryChart themeName={theme.name} />
+
                             {/* 실시간 시세 (거래대금 순) */}
                             {sortedPrices.length > 0 && (
                                 <div>

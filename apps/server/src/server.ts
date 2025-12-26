@@ -10,6 +10,7 @@ import stocksRoutes from './routes/stocks';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { analyzeNews } from './services/aiAnalyzer';
+import { startHistoryCollection } from './services/themeHistoryService';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -226,6 +227,9 @@ connectDB().then(() => {
                     lastPush = now;
                 }
             });
+
+            // 테마 히스토리 수집 시작 (5분 간격)
+            startHistoryCollection();
         }).catch((err) => {
             console.error('❌ KIS WebSocket 연결 실패:', err.message);
         });

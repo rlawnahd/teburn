@@ -57,3 +57,33 @@ export const fetchThemesByStock = async (stockName: string): Promise<string[]> =
     );
     return data.data.themes;
 };
+
+// 테마 히스토리 아이템
+export interface ThemeHistoryItem {
+    timestamp: string;
+    avgChangeRate: number;
+    topStock: string;
+    topStockRate: number;
+}
+
+// 테마 히스토리 응답
+interface ThemeHistoryResponse {
+    success: boolean;
+    data: {
+        themeName: string;
+        period: string;
+        history: ThemeHistoryItem[];
+    };
+}
+
+// 테마 히스토리 조회
+export const fetchThemeHistory = async (
+    themeName: string,
+    period: 'today' | '1d' | '7d' | '30d' = 'today'
+): Promise<ThemeHistoryItem[]> => {
+    const { data } = await axios.get<ThemeHistoryResponse>(
+        `${API_URL}/themes/${encodeURIComponent(themeName)}/history`,
+        { params: { period } }
+    );
+    return data.data.history;
+};

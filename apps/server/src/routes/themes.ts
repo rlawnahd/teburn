@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import themesData from '../data/themes.json';
+import { getThemeHistory } from '../services/themeHistoryService';
 
 const router = Router();
 
@@ -111,6 +112,37 @@ router.get('/keyword/:keyword', (req: Request, res: Response) => {
             themes: relatedThemes,
         },
     });
+});
+
+// 테마별 등락률 히스토리 조회
+router.get('/:themeName/history', async (req: Request, res: Response) => {
+    try {
+        const { themeName } = req.params;
+        const { period = 'today' } = req.query;
+        const decodedName = decodeURIComponent(themeName);
+
+        const validPeriods = ['today', '1d', '7d', '30d'];
+        const selectedPeriod = validPeriods.includes(period as string)
+            ? (period as 'today' | '1d' | '7d' | '30d')
+            : 'today';
+
+        const history = await getThemeHistory(decodedName, selectedPeriod);
+
+        res.json({
+            success: true,
+            data: {
+                themeName: decodedName,
+                period: selectedPeriod,
+                history,
+            },
+        });
+    } catch (error: any) {
+        console.error('테마 히스토리 조회 에러:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || '테마 히스토리 조회 중 오류가 발생했습니다.',
+        });
+    }
 });
 
 export default router;
