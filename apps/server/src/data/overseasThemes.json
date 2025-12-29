@@ -1,0 +1,119 @@
+{
+  "AI/반도체": {
+    "stocks": [
+      {"symbol": "NVDA", "name": "엔비디아", "exchange": "NASDAQ"},
+      {"symbol": "AMD", "name": "AMD", "exchange": "NASDAQ"},
+      {"symbol": "AVGO", "name": "브로드컴", "exchange": "NASDAQ"},
+      {"symbol": "MRVL", "name": "마벨테크놀로지", "exchange": "NASDAQ"},
+      {"symbol": "MU", "name": "마이크론", "exchange": "NASDAQ"},
+      {"symbol": "INTC", "name": "인텔", "exchange": "NASDAQ"},
+      {"symbol": "QCOM", "name": "퀄컴", "exchange": "NASDAQ"},
+      {"symbol": "TSM", "name": "TSMC", "exchange": "NYSE"},
+      {"symbol": "ASML", "name": "ASML", "exchange": "NASDAQ"},
+      {"symbol": "ARM", "name": "ARM홀딩스", "exchange": "NASDAQ"}
+    ],
+    "keywords": ["GPU", "HBM", "AI칩", "데이터센터", "파운드리", "EUV"]
+  },
+  "빅테크": {
+    "stocks": [
+      {"symbol": "AAPL", "name": "애플", "exchange": "NASDAQ"},
+      {"symbol": "MSFT", "name": "마이크로소프트", "exchange": "NASDAQ"},
+      {"symbol": "GOOGL", "name": "알파벳", "exchange": "NASDAQ"},
+      {"symbol": "AMZN", "name": "아마존", "exchange": "NASDAQ"},
+      {"symbol": "META", "name": "메타", "exchange": "NASDAQ"},
+      {"symbol": "NFLX", "name": "넷플릭스", "exchange": "NASDAQ"}
+    ],
+    "keywords": ["FAANG", "MAG7", "플랫폼", "클라우드", "광고"]
+  },
+  "전기차": {
+    "stocks": [
+      {"symbol": "TSLA", "name": "테슬라", "exchange": "NASDAQ"},
+      {"symbol": "RIVN", "name": "리비안", "exchange": "NASDAQ"},
+      {"symbol": "LCID", "name": "루시드", "exchange": "NASDAQ"},
+      {"symbol": "NIO", "name": "니오", "exchange": "NYSE"},
+      {"symbol": "XPEV", "name": "샤오펑", "exchange": "NYSE"},
+      {"symbol": "LI", "name": "리오토", "exchange": "NASDAQ"},
+      {"symbol": "GM", "name": "GM", "exchange": "NYSE"},
+      {"symbol": "F", "name": "포드", "exchange": "NYSE"}
+    ],
+    "keywords": ["EV", "자율주행", "FSD", "배터리", "충전"]
+  },
+  "클라우드/SaaS": {
+    "stocks": [
+      {"symbol": "CRM", "name": "세일즈포스", "exchange": "NYSE"},
+      {"symbol": "SNOW", "name": "스노우플레이크", "exchange": "NYSE"},
+      {"symbol": "NOW", "name": "서비스나우", "exchange": "NYSE"},
+      {"symbol": "PLTR", "name": "팔란티어", "exchange": "NYSE"},
+      {"symbol": "DDOG", "name": "데이터독", "exchange": "NASDAQ"},
+      {"symbol": "MDB", "name": "몽고DB", "exchange": "NASDAQ"},
+      {"symbol": "NET", "name": "클라우드플레어", "exchange": "NYSE"}
+    ],
+    "keywords": ["SaaS", "AWS", "Azure", "빅데이터", "AI플랫폼"]
+  },
+  "바이오/헬스케어": {
+    "stocks": [
+      {"symbol": "LLY", "name": "일라이릴리", "exchange": "NYSE"},
+      {"symbol": "NVO", "name": "노보노디스크", "exchange": "NYSE"},
+      {"symbol": "JNJ", "name": "존슨앤존슨", "exchange": "NYSE"},
+      {"symbol": "UNH", "name": "유나이티드헬스", "exchange": "NYSE"},
+      {"symbol": "PFE", "name": "화이자", "exchange": "NYSE"},
+      {"symbol": "MRNA", "name": "모더나", "exchange": "NASDAQ"},
+      {"symbol": "ABBV", "name": "애브비", "exchange": "NYSE"}
+    ],
+    "keywords": ["비만치료제", "오젬픽", "위고비", "mRNA", "신약"]
+  },
+  "금융": {
+    "stocks": [
+      {"symbol": "JPM", "name": "JP모건", "exchange": "NYSE"},
+      {"symbol": "V", "name": "비자", "exchange": "NYSE"},
+      {"symbol": "MA", "name": "마스터카드", "exchange": "NYSE"},
+      {"symbol": "GS", "name": "골드만삭스", "exchange": "NYSE"},
+      {"symbol": "BRK.B", "name": "버크셔해서웨이", "exchange": "NYSE"},
+      {"symbol": "PYPL", "name": "페이팔", "exchange": "NASDAQ"}
+    ],
+    "keywords": ["은행", "결제", "핀테크", "투자은행"]
+  },
+  "에너지/원자재": {
+    "stocks": [
+      {"symbol": "XOM", "name": "엑손모빌", "exchange": "NYSE"},
+      {"symbol": "CVX", "name": "셰브론", "exchange": "NYSE"},
+      {"symbol": "NEE", "name": "넥스트에라에너지", "exchange": "NYSE"},
+      {"symbol": "LNG", "name": "셰니에르에너지", "exchange": "NYSE"},
+      {"symbol": "FSLR", "name": "퍼스트솔라", "exchange": "NASDAQ"},
+      {"symbol": "ENPH", "name": "엔페이즈에너지", "exchange": "NASDAQ"}
+    ],
+    "keywords": ["석유", "천연가스", "태양광", "신재생에너지", "원유"]
+  },
+  "로봇/자동화": {
+    "stocks": [
+      {"symbol": "ISRG", "name": "인튜이티브서지컬", "exchange": "NASDAQ"},
+      {"symbol": "ROK", "name": "록웰오토메이션", "exchange": "NYSE"},
+      {"symbol": "ABB", "name": "ABB", "exchange": "NYSE"},
+      {"symbol": "FANUY", "name": "화낙", "exchange": "OTC"},
+      {"symbol": "TER", "name": "테라다인", "exchange": "NASDAQ"}
+    ],
+    "keywords": ["산업로봇", "휴머노이드", "자동화", "스마트팩토리"]
+  },
+  "우주/방산": {
+    "stocks": [
+      {"symbol": "LMT", "name": "록히드마틴", "exchange": "NYSE"},
+      {"symbol": "RTX", "name": "RTX", "exchange": "NYSE"},
+      {"symbol": "NOC", "name": "노스롭그루먼", "exchange": "NYSE"},
+      {"symbol": "BA", "name": "보잉", "exchange": "NYSE"},
+      {"symbol": "GD", "name": "제너럴다이나믹스", "exchange": "NYSE"},
+      {"symbol": "RKLB", "name": "로켓랩", "exchange": "NASDAQ"}
+    ],
+    "keywords": ["방산", "우주", "위성", "스페이스X", "NASA"]
+  },
+  "소비재": {
+    "stocks": [
+      {"symbol": "COST", "name": "코스트코", "exchange": "NASDAQ"},
+      {"symbol": "WMT", "name": "월마트", "exchange": "NYSE"},
+      {"symbol": "NKE", "name": "나이키", "exchange": "NYSE"},
+      {"symbol": "SBUX", "name": "스타벅스", "exchange": "NASDAQ"},
+      {"symbol": "MCD", "name": "맥도날드", "exchange": "NYSE"},
+      {"symbol": "DIS", "name": "디즈니", "exchange": "NYSE"}
+    ],
+    "keywords": ["리테일", "소비", "브랜드", "프랜차이즈"]
+  }
+}

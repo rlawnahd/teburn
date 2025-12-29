@@ -3,15 +3,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-    Zap,
-    Newspaper,
-    TrendingUp,
     Search,
     X,
     RefreshCw,
-    Clock,
-    Wifi,
-    WifiOff,
     LayoutGrid,
     Grid3X3,
     Flame,
@@ -20,13 +14,18 @@ import {
     Moon,
     Sunset,
     BarChart3,
+    Globe,
+    Flag,
 } from 'lucide-react';
-import Link from 'next/link';
-import { fetchThemes, fetchThemeDetail, ThemeListItem, fetchThemeHistory, ThemeHistoryItem } from '@/lib/api/themes';
+import { fetchThemes, fetchThemeDetail, ThemeListItem, fetchThemeHistory } from '@/lib/api/themes';
+import { fetchOverseasThemes, fetchOverseasThemePrices } from '@/lib/api/overseasThemes';
 import { useRealtimeStockPrices, ThemeRealtimePrice, RealtimePrice, MarketStatusInfo } from '@/hooks/useRealtimeStockPrices';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import TreemapHeatmapView from '@/components/themes/TreemapHeatmapView';
+import Sidebar from '@/components/layout/Sidebar';
 
 type ViewMode = 'dashboard' | 'heatmap';
+type MarketTab = 'domestic' | 'overseas';
 
 // 장 상태 표시 컴포넌트
 function MarketStatusBadge({ marketStatus }: { marketStatus: MarketStatusInfo | null }) {
@@ -36,35 +35,35 @@ function MarketStatusBadge({ marketStatus }: { marketStatus: MarketStatusInfo | 
         switch (marketStatus.status) {
             case 'regular':
                 return {
-                    bg: 'bg-green-50',
-                    text: 'text-green-600',
-                    border: 'border-green-200',
-                    icon: <Sun size={12} className="text-green-500" />,
+                    bg: 'bg-[var(--success-bg)]',
+                    text: 'text-[var(--success-color)]',
+                    border: 'border-[var(--success-color)]/30',
+                    icon: <Sun size={12} className="text-[var(--success-color)]" />,
                     pulse: true,
                 };
             case 'pre_market':
                 return {
-                    bg: 'bg-amber-50',
-                    text: 'text-amber-600',
-                    border: 'border-amber-200',
-                    icon: <Sunset size={12} className="text-amber-500" />,
+                    bg: 'bg-[var(--warning-bg)]',
+                    text: 'text-[var(--warning-color)]',
+                    border: 'border-[var(--warning-color)]/30',
+                    icon: <Sunset size={12} className="text-[var(--warning-color)]" />,
                     pulse: true,
                 };
             case 'post_market':
                 return {
-                    bg: 'bg-orange-50',
-                    text: 'text-orange-600',
-                    border: 'border-orange-200',
-                    icon: <Sunset size={12} className="text-orange-500" />,
+                    bg: 'bg-[var(--warning-bg)]',
+                    text: 'text-[var(--warning-color)]',
+                    border: 'border-[var(--warning-color)]/30',
+                    icon: <Sunset size={12} className="text-[var(--warning-color)]" />,
                     pulse: true,
                 };
             case 'closed':
             default:
                 return {
-                    bg: 'bg-slate-100',
-                    text: 'text-slate-500',
-                    border: 'border-slate-200',
-                    icon: <Moon size={12} className="text-slate-400" />,
+                    bg: 'bg-[var(--bg-tertiary)]',
+                    text: 'text-[var(--text-tertiary)]',
+                    border: 'border-[var(--border-color)]',
+                    icon: <Moon size={12} className="text-[var(--text-tertiary)]" />,
                     pulse: false,
                 };
         }
@@ -73,7 +72,7 @@ function MarketStatusBadge({ marketStatus }: { marketStatus: MarketStatusInfo | 
     const style = getStatusStyle();
 
     return (
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`}>
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`}>
             {style.icon}
             <span>{marketStatus.statusText}</span>
             {style.pulse && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>}
@@ -87,36 +86,9 @@ function MarketStatusBadge({ marketStatus }: { marketStatus: MarketStatusInfo | 
     );
 }
 
-function Sidebar() {
-    return (
-        <aside className="w-56 bg-white border-r border-slate-200 hidden lg:flex flex-col fixed h-full z-20">
-            <div className="h-14 flex items-center px-4 border-b border-slate-200">
-                <Zap className="text-yellow-500 mr-2" size={18} fill="currentColor" />
-                <span className="text-base font-bold text-slate-900 tracking-wide">StockLight</span>
-            </div>
-            <nav className="flex-1 px-2 py-4 space-y-1">
-                <Link
-                    href="/"
-                    className="flex items-center gap-2 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all text-sm font-medium"
-                >
-                    <Newspaper size={16} />
-                    <span>뉴스 피드</span>
-                </Link>
-                <Link
-                    href="/themes"
-                    className="flex items-center gap-2 px-3 py-2 rounded-md bg-indigo-50 text-indigo-600 border-indigo-500 transition-all text-sm font-medium"
-                >
-                    <TrendingUp size={16} />
-                    <span>테마 현황</span>
-                </Link>
-            </nav>
-        </aside>
-    );
-}
-
 // 거래대금 포맷 함수 (억 단위)
 function formatTradingValue(value: number): string {
-    const billion = value / 100000000; // 억 단위
+    const billion = value / 100000000;
     if (billion >= 1000) {
         return `${(billion / 1000).toFixed(1)}조`;
     } else if (billion >= 1) {
@@ -133,34 +105,34 @@ function StockPriceTag({ price, rank }: { price: RealtimePrice; rank?: number })
 
     return (
         <div
-            className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-colors ${
+            className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
                 isPositive
-                    ? 'bg-red-50 border-red-200'
+                    ? 'bg-[var(--rise-bg)] border-[var(--rise-color)]/20'
                     : isNegative
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'bg-slate-50 border-slate-200'
+                      ? 'bg-[var(--fall-bg)] border-[var(--fall-color)]/20'
+                      : 'bg-[var(--bg-tertiary)] border-[var(--border-color)]'
             }`}
         >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
                 {rank !== undefined && (
                     <span className={`text-xs font-bold w-5 ${
-                        rank === 1 ? 'text-amber-500' : 'text-slate-400'
+                        rank === 1 ? 'text-[var(--warning-color)]' : 'text-[var(--text-tertiary)]'
                     }`}>
                         {rank}
                     </span>
                 )}
-                <span className="text-sm font-medium text-slate-700">{price.stockName}</span>
+                <span className="text-sm font-medium text-[var(--text-primary)]">{price.stockName}</span>
             </div>
-            <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400">
+            <div className="flex items-center gap-4">
+                <span className="text-xs text-[var(--text-tertiary)]">
                     {formatTradingValue(price.tradingValue)}
                 </span>
-                <span className="text-sm font-mono text-slate-600">
+                <span className="text-sm font-mono text-[var(--text-secondary)]">
                     {price.currentPrice.toLocaleString()}
                 </span>
                 <span
                     className={`text-xs font-bold min-w-[52px] text-right ${
-                        isPositive ? 'text-red-500' : isNegative ? 'text-blue-500' : 'text-slate-500'
+                        isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
                     }`}
                 >
                     {isPositive ? '+' : ''}
@@ -181,7 +153,6 @@ function DashboardView({
     priceMap: Map<string, ThemeRealtimePrice>;
     onThemeClick: (name: string) => void;
 }) {
-    // TOP 5 급등/급락 (실제 데이터가 있는 테마만 필터링)
     const themesWithData = sortedThemes.filter((t) => {
         const priceInfo = priceMap.get(t.name);
         return priceInfo && priceInfo.prices.length > 0;
@@ -203,16 +174,18 @@ function DashboardView({
     return (
         <div className="space-y-6">
             {/* TOP 5 요약 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* 급등 TOP 5 */}
-                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] p-5 shadow-[var(--shadow-sm)]">
                     <div className="flex items-center gap-2 mb-4">
-                        <Flame size={18} className="text-red-500" />
-                        <h3 className="font-bold text-slate-900">급등 테마 TOP 5</h3>
+                        <div className="w-8 h-8 rounded-xl bg-[var(--rise-bg)] flex items-center justify-center">
+                            <Flame size={16} className="text-[var(--rise-color)]" />
+                        </div>
+                        <h3 className="font-bold text-[var(--text-primary)]">급등 테마 TOP 5</h3>
                     </div>
                     <div className="space-y-2">
                         {top5Gainers.length === 0 ? (
-                            <div className="text-sm text-slate-400 py-4 text-center">상승 테마가 없습니다</div>
+                            <div className="text-sm text-[var(--text-tertiary)] py-6 text-center">상승 테마가 없습니다</div>
                         ) : (
                             top5Gainers.map((theme, i) => {
                                 const rate = priceMap.get(theme.name)?.avgChangeRate ?? 0;
@@ -221,21 +194,21 @@ function DashboardView({
                                 return (
                                     <div
                                         key={theme.name}
-                                        className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                                        className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[var(--rise-bg)] transition-colors cursor-pointer"
                                         onClick={() => onThemeClick(theme.name)}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="text-lg font-bold text-red-500 w-6">{i + 1}</span>
+                                            <span className="text-lg font-bold text-[var(--rise-color)] w-6">{i + 1}</span>
                                             <div>
-                                                <span className="font-medium text-slate-900">{theme.name}</span>
+                                                <span className="font-medium text-[var(--text-primary)]">{theme.name}</span>
                                                 {topStock && (
-                                                    <span className="text-xs text-slate-500 ml-2">
+                                                    <span className="text-xs text-[var(--text-tertiary)] ml-2">
                                                         {topStock.stockName} +{topStock.changeRate.toFixed(1)}%
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <span className="font-bold text-red-500">+{rate.toFixed(2)}%</span>
+                                        <span className="font-bold text-[var(--rise-color)]">+{rate.toFixed(2)}%</span>
                                     </div>
                                 );
                             })
@@ -244,14 +217,16 @@ function DashboardView({
                 </div>
 
                 {/* 급락 TOP 5 */}
-                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] p-5 shadow-[var(--shadow-sm)]">
                     <div className="flex items-center gap-2 mb-4">
-                        <Snowflake size={18} className="text-blue-500" />
-                        <h3 className="font-bold text-slate-900">급락 테마 TOP 5</h3>
+                        <div className="w-8 h-8 rounded-xl bg-[var(--fall-bg)] flex items-center justify-center">
+                            <Snowflake size={16} className="text-[var(--fall-color)]" />
+                        </div>
+                        <h3 className="font-bold text-[var(--text-primary)]">급락 테마 TOP 5</h3>
                     </div>
                     <div className="space-y-2">
                         {top5Losers.length === 0 ? (
-                            <div className="text-sm text-slate-400 py-4 text-center">하락 테마가 없습니다</div>
+                            <div className="text-sm text-[var(--text-tertiary)] py-6 text-center">하락 테마가 없습니다</div>
                         ) : (
                             top5Losers.map((theme, i) => {
                                 const rate = priceMap.get(theme.name)?.avgChangeRate ?? 0;
@@ -260,21 +235,21 @@ function DashboardView({
                                 return (
                                     <div
                                         key={theme.name}
-                                        className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+                                        className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[var(--fall-bg)] transition-colors cursor-pointer"
                                         onClick={() => onThemeClick(theme.name)}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="text-lg font-bold text-blue-500 w-6">{i + 1}</span>
+                                            <span className="text-lg font-bold text-[var(--fall-color)] w-6">{i + 1}</span>
                                             <div>
-                                                <span className="font-medium text-slate-900">{theme.name}</span>
+                                                <span className="font-medium text-[var(--text-primary)]">{theme.name}</span>
                                                 {worstStock && (
-                                                    <span className="text-xs text-slate-500 ml-2">
+                                                    <span className="text-xs text-[var(--text-tertiary)] ml-2">
                                                         {worstStock.stockName} {worstStock.changeRate.toFixed(1)}%
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <span className="font-bold text-blue-500">{rate.toFixed(2)}%</span>
+                                        <span className="font-bold text-[var(--fall-color)]">{rate.toFixed(2)}%</span>
                                     </div>
                                 );
                             })
@@ -284,7 +259,7 @@ function DashboardView({
             </div>
 
             {/* 미니 카드 그리드 */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {sortedThemes.map((theme) => {
                     const priceInfo = priceMap.get(theme.name);
                     const rate = priceInfo?.avgChangeRate ?? 0;
@@ -295,26 +270,25 @@ function DashboardView({
                         <div
                             key={theme.name}
                             onClick={() => onThemeClick(theme.name)}
-                            className="p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md bg-white border-slate-200 hover:border-slate-300"
+                            className="p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:scale-[1.02] bg-[var(--bg-primary)] border-[var(--border-color)]"
                         >
-                            <div className="text-sm font-bold text-slate-900 mb-1 truncate">{theme.name}</div>
+                            <div className="text-sm font-bold text-[var(--text-primary)] mb-1 truncate">{theme.name}</div>
                             {hasData ? (
                                 <div
-                                    className={`text-lg font-bold ${
-                                        isPositive ? 'text-red-500' : isNegative ? 'text-blue-500' : 'text-slate-400'
+                                    className={`text-xl font-bold ${
+                                        isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
                                     }`}
                                 >
                                     {isPositive ? '+' : ''}{rate.toFixed(2)}%
                                 </div>
                             ) : (
-                                <div className="text-sm text-slate-300">데이터 없음</div>
+                                <div className="text-sm text-[var(--text-tertiary)]">데이터 없음</div>
                             )}
-                            <div className="text-xs text-slate-500 mt-1">{theme.stockCount}종목</div>
+                            <div className="text-xs text-[var(--text-tertiary)] mt-1">{theme.stockCount}종목</div>
                         </div>
                     );
                 })}
             </div>
-
         </div>
     );
 }
@@ -326,7 +300,7 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
     const { data: history, isLoading } = useQuery({
         queryKey: ['themeHistory', themeName, period],
         queryFn: () => fetchThemeHistory(themeName, period),
-        refetchInterval: period === 'today' ? 10000 : false, // 오늘 데이터는 10초마다 갱신
+        refetchInterval: period === 'today' ? 10000 : false,
     });
 
     const periodLabels = {
@@ -336,7 +310,6 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
         '30d': '30일',
     };
 
-    // 차트 데이터 포맷
     const chartData = (history || []).map((item) => {
         const date = new Date(item.timestamp);
         let label: string;
@@ -353,7 +326,6 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
         };
     });
 
-    // Y축 범위 계산
     const rates = chartData.map((d) => d.rate);
     const maxRate = Math.max(...rates, 1);
     const minRate = Math.min(...rates, -1);
@@ -362,20 +334,20 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                    <BarChart3 size={16} />
+            <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                    <BarChart3 size={16} className="text-[var(--accent-blue)]" />
                     등락률 추이
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 bg-[var(--bg-tertiary)] p-1 rounded-xl">
                     {(Object.keys(periodLabels) as Array<keyof typeof periodLabels>).map((p) => (
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
-                            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                                 period === p
-                                    ? 'bg-indigo-100 text-indigo-700 font-medium'
-                                    : 'text-slate-500 hover:bg-slate-100'
+                                    ? 'bg-[var(--bg-primary)] text-[var(--accent-blue)] font-medium shadow-[var(--shadow-sm)]'
+                                    : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                             }`}
                         >
                             {periodLabels[p]}
@@ -385,12 +357,12 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
             </div>
 
             {isLoading ? (
-                <div className="h-40 flex items-center justify-center text-slate-400">
-                    <RefreshCw size={16} className="animate-spin mr-2" />
+                <div className="h-40 flex items-center justify-center text-[var(--text-tertiary)]">
+                    <RefreshCw size={16} className="animate-spin mr-2 text-[var(--accent-blue)]" />
                     차트 로딩 중...
                 </div>
             ) : chartData.length === 0 ? (
-                <div className="h-40 flex items-center justify-center text-slate-400 text-sm">
+                <div className="h-40 flex items-center justify-center text-[var(--text-tertiary)] text-sm">
                     해당 기간에 데이터가 없습니다
                 </div>
             ) : (
@@ -399,14 +371,14 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
                         <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                             <XAxis
                                 dataKey="time"
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                axisLine={{ stroke: '#e2e8f0' }}
+                                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                                axisLine={{ stroke: 'var(--border-color)' }}
                                 tickLine={false}
                                 interval="preserveStartEnd"
                             />
                             <YAxis
                                 domain={yDomain}
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={(v) => `${v}%`}
@@ -418,13 +390,13 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
                                     const rate = data.rate;
                                     const isUp = rate > 0;
                                     return (
-                                        <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-xs">
-                                            <div className="text-slate-500 mb-1">{data.time}</div>
-                                            <div className={`font-bold ${isUp ? 'text-red-500' : rate < 0 ? 'text-blue-500' : 'text-slate-500'}`}>
+                                        <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-[var(--shadow-lg)] p-3 text-xs">
+                                            <div className="text-[var(--text-tertiary)] mb-1">{data.time}</div>
+                                            <div className={`font-bold ${isUp ? 'text-[var(--rise-color)]' : rate < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
                                                 {isUp ? '+' : ''}{rate.toFixed(2)}%
                                             </div>
                                             {data.topStock && (
-                                                <div className="text-slate-400 mt-1">
+                                                <div className="text-[var(--text-tertiary)] mt-1">
                                                     대장주: {data.topStock} ({data.topStockRate > 0 ? '+' : ''}{data.topStockRate.toFixed(1)}%)
                                                 </div>
                                             )}
@@ -432,14 +404,14 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
                                     );
                                 }}
                             />
-                            <ReferenceLine y={0} stroke="#e2e8f0" strokeDasharray="3 3" />
+                            <ReferenceLine y={0} stroke="var(--border-color)" strokeDasharray="3 3" />
                             <Line
                                 type="monotone"
                                 dataKey="rate"
-                                stroke="#6366f1"
+                                stroke="var(--accent-blue)"
                                 strokeWidth={2}
                                 dot={false}
-                                activeDot={{ r: 4, fill: '#6366f1' }}
+                                activeDot={{ r: 4, fill: 'var(--accent-blue)' }}
                             />
                         </LineChart>
                     </ResponsiveContainer>
@@ -467,72 +439,65 @@ function ThemeDetailModal({
     const avgRate = priceInfo?.avgChangeRate ?? 0;
     const isPositive = avgRate > 0;
     const isNegative = avgRate < 0;
-
-    // 종목은 이미 서버에서 거래대금 기준으로 정렬됨
     const sortedPrices = priceInfo?.prices || [];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* 백드롭 */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 onClick={onClose}
             />
 
-            {/* 모달 */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden">
+            <div className="relative bg-[var(--bg-primary)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-lg max-h-[80vh] overflow-hidden">
                 {/* 헤더 */}
-                <div className={`px-6 py-4 border-b ${
-                    isPositive ? 'bg-red-50 border-red-100' : isNegative ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-100'
+                <div className={`px-6 py-5 border-b border-[var(--border-color)] ${
+                    isPositive ? 'bg-[var(--rise-bg)]' : isNegative ? 'bg-[var(--fall-bg)]' : 'bg-[var(--bg-tertiary)]'
                 }`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-slate-900">{theme.name}</h2>
+                            <h2 className="text-xl font-bold text-[var(--text-primary)]">{theme.name}</h2>
                             {priceInfo && priceInfo.prices.length > 0 && (
-                                <span className="text-xs text-green-500 animate-pulse flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                <span className="text-xs text-[var(--success-color)] animate-pulse flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--success-color)]"></span>
                                     LIVE
                                 </span>
                             )}
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1.5 rounded-lg hover:bg-white/50 text-slate-500 hover:text-slate-700 transition-colors"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[var(--bg-primary)]/50 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                         >
                             <X size={20} />
                         </button>
                     </div>
 
-                    {/* 평균 등락률 */}
                     {priceInfo && priceInfo.prices.length > 0 && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                             <span className={`text-3xl font-bold ${
-                                isPositive ? 'text-red-500' : isNegative ? 'text-blue-500' : 'text-slate-500'
+                                isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
                             }`}>
                                 {isPositive ? '+' : ''}{avgRate.toFixed(2)}%
                             </span>
-                            <span className="text-sm text-slate-500 ml-2">평균 등락률</span>
+                            <span className="text-sm text-[var(--text-secondary)] ml-2">평균 등락률</span>
                         </div>
                     )}
                 </div>
 
                 {/* 바디 */}
-                <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-12 text-slate-400">
-                            <RefreshCw size={20} className="animate-spin mr-2" />
+                        <div className="flex items-center justify-center py-12 text-[var(--text-tertiary)]">
+                            <RefreshCw size={20} className="animate-spin mr-2 text-[var(--accent-blue)]" />
                             로딩 중...
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* 등락률 추이 차트 */}
                             <ThemeHistoryChart themeName={theme.name} />
 
-                            {/* 실시간 시세 (거래대금 순) */}
                             {sortedPrices.length > 0 && (
                                 <div>
-                                    <div className="text-sm font-semibold text-slate-700 mb-3">
-                                        실시간 시세 <span className="text-slate-400 font-normal">(거래대금 순)</span>
+                                    <div className="text-sm font-semibold text-[var(--text-primary)] mb-3">
+                                        실시간 시세 <span className="text-[var(--text-tertiary)] font-normal">(거래대금 순)</span>
                                     </div>
                                     <div className="space-y-2">
                                         {sortedPrices.map((price, i) => (
@@ -542,17 +507,16 @@ function ThemeDetailModal({
                                 </div>
                             )}
 
-                            {/* 관련 종목 */}
                             {detail && (
                                 <div>
-                                    <div className="text-sm font-semibold text-slate-700 mb-3">
-                                        관련 종목 <span className="text-slate-400 font-normal">({detail.stocks.length}개)</span>
+                                    <div className="text-sm font-semibold text-[var(--text-primary)] mb-3">
+                                        관련 종목 <span className="text-[var(--text-tertiary)] font-normal">({detail.stocks.length}개)</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {detail.stocks.map((stock, i) => (
                                             <span
                                                 key={i}
-                                                className="text-sm px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                                                className="text-sm px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)] transition-colors"
                                             >
                                                 {stock}
                                             </span>
@@ -561,14 +525,13 @@ function ThemeDetailModal({
                                 </div>
                             )}
 
-                            {/* 키워드 */}
                             <div>
-                                <div className="text-sm font-semibold text-slate-700 mb-3">키워드</div>
-                                <div className="flex flex-wrap gap-1.5">
+                                <div className="text-sm font-semibold text-[var(--text-primary)] mb-3">키워드</div>
+                                <div className="flex flex-wrap gap-2">
                                     {theme.keywords.map((keyword, i) => (
                                         <span
                                             key={i}
-                                            className="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100"
+                                            className="text-xs px-3 py-1.5 rounded-full bg-[var(--accent-blue-light)] text-[var(--accent-blue)] font-medium"
                                         >
                                             {keyword}
                                         </span>
@@ -593,59 +556,55 @@ function HeatmapView({
     priceMap: Map<string, ThemeRealtimePrice>;
     onThemeClick: (name: string) => void;
 }) {
-    // 실제 데이터가 있는 테마만 필터링
     const themesWithData = sortedThemes.filter((t) => {
         const priceInfo = priceMap.get(t.name);
         return priceInfo && priceInfo.prices.length > 0;
     });
 
-    // 등락률 범위 계산
     const rates = themesWithData.map((t) => priceMap.get(t.name)?.avgChangeRate ?? 0);
     const maxRate = Math.max(...rates, 0.01);
     const minRate = Math.min(...rates, -0.01);
 
     const getColor = (rate: number, hasData: boolean) => {
-        if (!hasData) return 'bg-slate-100 text-slate-400';
+        if (!hasData) return 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]';
 
         if (rate > 0) {
-            // 빨간색 계열 (상승)
             const intensity = Math.min(rate / maxRate, 1);
-            if (intensity > 0.7) return 'bg-red-600 text-white';
-            if (intensity > 0.4) return 'bg-red-500 text-white';
-            if (intensity > 0.2) return 'bg-red-400 text-white';
-            return 'bg-red-300 text-red-900';
+            if (intensity > 0.7) return 'bg-[#dc2626] text-white';
+            if (intensity > 0.4) return 'bg-[#ef4444] text-white';
+            if (intensity > 0.2) return 'bg-[#f87171] text-white';
+            return 'bg-[#fca5a5] text-[#991b1b]';
         } else if (rate < 0) {
-            // 파란색 계열 (하락)
             const intensity = Math.min(Math.abs(rate) / Math.abs(minRate), 1);
-            if (intensity > 0.7) return 'bg-blue-600 text-white';
-            if (intensity > 0.4) return 'bg-blue-500 text-white';
-            if (intensity > 0.2) return 'bg-blue-400 text-white';
-            return 'bg-blue-300 text-blue-900';
+            if (intensity > 0.7) return 'bg-[#2563eb] text-white';
+            if (intensity > 0.4) return 'bg-[#3b82f6] text-white';
+            if (intensity > 0.2) return 'bg-[#60a5fa] text-white';
+            return 'bg-[#93c5fd] text-[#1e40af]';
         }
-        return 'bg-slate-200 text-slate-700';
+        return 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]';
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-5">
             {/* 범례 */}
-            <div className="flex items-center justify-center gap-2 text-xs">
-                <span className="text-blue-600">하락</span>
-                <div className="flex">
-                    <div className="w-6 h-4 bg-blue-600"></div>
-                    <div className="w-6 h-4 bg-blue-500"></div>
-                    <div className="w-6 h-4 bg-blue-400"></div>
-                    <div className="w-6 h-4 bg-blue-300"></div>
-                    <div className="w-6 h-4 bg-slate-200"></div>
-                    <div className="w-6 h-4 bg-red-300"></div>
-                    <div className="w-6 h-4 bg-red-400"></div>
-                    <div className="w-6 h-4 bg-red-500"></div>
-                    <div className="w-6 h-4 bg-red-600"></div>
+            <div className="flex items-center justify-center gap-3 text-xs bg-[var(--bg-primary)] rounded-xl p-3 border border-[var(--border-color)]">
+                <span className="text-[var(--fall-color)] font-medium">하락</span>
+                <div className="flex rounded-lg overflow-hidden">
+                    <div className="w-6 h-5 bg-[#2563eb]"></div>
+                    <div className="w-6 h-5 bg-[#3b82f6]"></div>
+                    <div className="w-6 h-5 bg-[#60a5fa]"></div>
+                    <div className="w-6 h-5 bg-[#93c5fd]"></div>
+                    <div className="w-6 h-5 bg-[var(--bg-tertiary)]"></div>
+                    <div className="w-6 h-5 bg-[#fca5a5]"></div>
+                    <div className="w-6 h-5 bg-[#f87171]"></div>
+                    <div className="w-6 h-5 bg-[#ef4444]"></div>
+                    <div className="w-6 h-5 bg-[#dc2626]"></div>
                 </div>
-                <span className="text-red-600">상승</span>
+                <span className="text-[var(--rise-color)] font-medium">상승</span>
             </div>
 
             {/* 히트맵 그리드 */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
                 {sortedThemes.map((theme) => {
                     const priceInfo = priceMap.get(theme.name);
                     const rate = priceInfo?.avgChangeRate ?? 0;
@@ -657,7 +616,7 @@ function HeatmapView({
                         <div
                             key={theme.name}
                             onClick={() => onThemeClick(theme.name)}
-                            className={`aspect-square p-2 rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-lg flex flex-col justify-between ${colorClass}`}
+                            className={`aspect-square p-3 rounded-2xl cursor-pointer transition-all hover:scale-105 hover:shadow-[var(--shadow-lg)] flex flex-col justify-between ${colorClass}`}
                         >
                             <div>
                                 <div className="font-bold text-sm truncate">{theme.name}</div>
@@ -687,20 +646,182 @@ function HeatmapView({
     );
 }
 
+// ========== 해외 테마 뷰 ==========
+function OverseasThemeView({
+    searchQuery,
+    onThemeClick,
+}: {
+    searchQuery: string;
+    onThemeClick: (themeName: string) => void;
+}) {
+    const { data: themes, isLoading } = useQuery({
+        queryKey: ['overseasThemes'],
+        queryFn: fetchOverseasThemes,
+    });
+
+    const filteredThemes = themes?.filter(
+        (theme) =>
+            theme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            theme.keywords.some((k) => k.toLowerCase().includes(searchQuery.toLowerCase()))
+    ) || [];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64 text-[var(--text-tertiary)]">
+                <RefreshCw size={24} className="animate-spin mr-3 text-[var(--accent-blue)]" />
+                해외 테마 로딩 중...
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* 안내 문구 */}
+            <div className="bg-[var(--warning-bg)] border border-[var(--warning-color)]/30 rounded-xl p-4 text-sm text-[var(--warning-color)]">
+                <Globe size={16} className="inline mr-2" />
+                해외 주식은 미국 시간 기준으로 장 마감 후 데이터가 표시됩니다. 테마를 클릭하면 실시간 시세를 조회합니다.
+            </div>
+
+            {/* 테마 카드 그리드 */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filteredThemes.map((theme) => (
+                    <div
+                        key={theme.name}
+                        onClick={() => onThemeClick(theme.name)}
+                        className="p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:scale-[1.02] bg-[var(--bg-primary)] border-[var(--border-color)] hover:border-[var(--accent-blue)]/50"
+                    >
+                        <div className="flex items-center gap-2 mb-2">
+                            <Globe size={14} className="text-[var(--accent-blue)]" />
+                            <span className="text-sm font-bold text-[var(--text-primary)] truncate">{theme.name}</span>
+                        </div>
+                        <div className="text-sm text-[var(--text-tertiary)]">클릭하여 조회</div>
+                        <div className="text-xs text-[var(--text-tertiary)] mt-1">{theme.stockCount}종목</div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                            {theme.keywords.slice(0, 2).map((kw, i) => (
+                                <span key={i} className="text-[10px] px-2 py-0.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-lg">
+                                    {kw}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// 해외 테마 상세 모달
+function OverseasThemeDetailModal({
+    themeName,
+    onClose,
+}: {
+    themeName: string;
+    onClose: () => void;
+}) {
+    const { data: priceInfo, isLoading } = useQuery({
+        queryKey: ['overseasThemePrices', themeName],
+        queryFn: () => fetchOverseasThemePrices(themeName),
+    });
+
+    const avgRate = priceInfo?.avgChangeRate ?? 0;
+    const isPositive = avgRate > 0;
+    const isNegative = avgRate < 0;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-[var(--bg-primary)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-lg max-h-[80vh] overflow-hidden">
+                {/* 헤더 */}
+                <div className={`px-6 py-5 border-b border-[var(--border-color)] ${
+                    isPositive ? 'bg-[var(--rise-bg)]' : isNegative ? 'bg-[var(--fall-bg)]' : 'bg-[var(--bg-tertiary)]'
+                }`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Globe size={20} className="text-[var(--accent-blue)]" />
+                            <h2 className="text-xl font-bold text-[var(--text-primary)]">{themeName}</h2>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[var(--bg-primary)]/50 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+                    {priceInfo && (
+                        <div className="mt-3">
+                            <span className={`text-3xl font-bold ${
+                                isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
+                            }`}>
+                                {isPositive ? '+' : ''}{avgRate.toFixed(2)}%
+                            </span>
+                            <span className="text-sm text-[var(--text-secondary)] ml-2">평균 등락률</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* 바디 */}
+                <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-12 text-[var(--text-tertiary)]">
+                            <RefreshCw size={20} className="animate-spin mr-2 text-[var(--accent-blue)]" />
+                            시세 조회 중...
+                        </div>
+                    ) : priceInfo ? (
+                        <div className="space-y-3">
+                            {priceInfo.prices.map((price, i) => {
+                                const isUp = price.changeRate > 0;
+                                const isDown = price.changeRate < 0;
+                                return (
+                                    <div
+                                        key={price.symbol}
+                                        className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
+                                            isUp ? 'bg-[var(--rise-bg)] border-[var(--rise-color)]/20' : isDown ? 'bg-[var(--fall-bg)] border-[var(--fall-color)]/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-color)]'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-xs font-bold w-5 ${i === 0 ? 'text-[var(--warning-color)]' : 'text-[var(--text-tertiary)]'}`}>
+                                                {i + 1}
+                                            </span>
+                                            <div>
+                                                <div className="font-medium text-[var(--text-primary)]">{price.symbol}</div>
+                                                <div className="text-xs text-[var(--text-tertiary)]">{price.korName}</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-mono text-[var(--text-secondary)]">${price.currentPrice.toFixed(2)}</div>
+                                            <div className={`text-sm font-bold ${
+                                                isUp ? 'text-[var(--rise-color)]' : isDown ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
+                                            }`}>
+                                                {isUp ? '+' : ''}{price.changeRate.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="text-center text-[var(--text-tertiary)] py-8">데이터를 불러올 수 없습니다</div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ========== 메인 페이지 ==========
 export default function ThemesPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+    const [selectedOverseasTheme, setSelectedOverseasTheme] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
+    const [marketTab, setMarketTab] = useState<MarketTab>('domestic');
 
-    // 테마 목록 조회
     const { data: themes, isLoading: themesLoading } = useQuery({
         queryKey: ['themes'],
         queryFn: fetchThemes,
     });
 
-    // 실시간 주가 구독
-    const { priceMap, isConnected, lastUpdate, marketStatus } = useRealtimeStockPrices();
+    const { priceMap, marketStatus } = useRealtimeStockPrices();
 
     const openThemeModal = (themeName: string) => {
         setSelectedTheme(themeName);
@@ -710,7 +831,14 @@ export default function ThemesPage() {
         setSelectedTheme(null);
     };
 
-    // 검색 필터링
+    const openOverseasThemeModal = (themeName: string) => {
+        setSelectedOverseasTheme(themeName);
+    };
+
+    const closeOverseasThemeModal = () => {
+        setSelectedOverseasTheme(null);
+    };
+
     const filteredThemes =
         themes?.filter(
             (theme) =>
@@ -718,90 +846,89 @@ export default function ThemesPage() {
                 theme.keywords.some((k) => k.toLowerCase().includes(searchQuery.toLowerCase()))
         ) || [];
 
-    // 등락률 기준 정렬 (상승률 높은 순)
     const sortedThemes = [...filteredThemes].sort((a, b) => {
         const rateA = priceMap.get(a.name)?.avgChangeRate ?? 0;
         const rateB = priceMap.get(b.name)?.avgChangeRate ?? 0;
         return rateB - rateA;
     });
 
-    // 마지막 업데이트 시간 포맷
-    const formatUpdateTime = () => {
-        if (!lastUpdate) return '';
-        return `${lastUpdate.getHours().toString().padStart(2, '0')}:${lastUpdate.getMinutes().toString().padStart(2, '0')}:${lastUpdate.getSeconds().toString().padStart(2, '0')}`;
-    };
-
     return (
-        <div className="flex min-h-screen bg-slate-100 text-slate-700 font-sans">
+        <div className="flex min-h-screen bg-[var(--bg-secondary)]">
             <Sidebar />
 
-            <main className="flex-1 lg:ml-56">
+            <main className="flex-1 lg:ml-64">
                 {/* 헤더 */}
-                <header className="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-white sticky top-0 z-10">
+                <header className="h-16 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-primary)] sticky top-0 z-10 transition-colors duration-200">
                     <div className="flex items-center gap-4">
-                        <h1 className="text-base font-semibold text-slate-900">테마별 종목 현황</h1>
-                        <span className="text-sm text-slate-500">총 {themes?.length || 0}개 테마</span>
-
-                        {/* 장 상태 표시 */}
-                        <MarketStatusBadge marketStatus={marketStatus} />
-
-                        {/* 실시간 연결 상태 */}
-                        {isConnected ? (
-                            <span className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                <Wifi size={12} />
-                                실시간
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
-                                <WifiOff size={12} />
-                                연결 끊김
-                            </span>
-                        )}
-
-                        {lastUpdate && (
-                            <span className="flex items-center gap-1 text-xs text-slate-400">
-                                <Clock size={12} />
-                                {formatUpdateTime()}
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        {/* 뷰 모드 전환 */}
-                        <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                        {/* 국내/해외 탭 */}
+                        <div className="flex items-center bg-[var(--bg-tertiary)] rounded-xl p-1">
                             <button
-                                onClick={() => setViewMode('dashboard')}
-                                className={`p-1.5 rounded-md transition-colors ${
-                                    viewMode === 'dashboard'
-                                        ? 'bg-white text-indigo-600 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                onClick={() => setMarketTab('domestic')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    marketTab === 'domestic'
+                                        ? 'bg-[var(--bg-primary)] text-[var(--accent-blue)] shadow-[var(--shadow-sm)]'
+                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                                 }`}
-                                title="대시보드"
                             >
-                                <LayoutGrid size={18} />
+                                <Flag size={14} />
+                                국내
                             </button>
                             <button
-                                onClick={() => setViewMode('heatmap')}
-                                className={`p-1.5 rounded-md transition-colors ${
-                                    viewMode === 'heatmap'
-                                        ? 'bg-white text-indigo-600 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                onClick={() => setMarketTab('overseas')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    marketTab === 'overseas'
+                                        ? 'bg-[var(--bg-primary)] text-[var(--accent-blue)] shadow-[var(--shadow-sm)]'
+                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                                 }`}
-                                title="히트맵"
                             >
-                                <Grid3X3 size={18} />
+                                <Globe size={14} />
+                                해외
                             </button>
                         </div>
 
+                        {marketTab === 'domestic' && (
+                            <MarketStatusBadge marketStatus={marketStatus} />
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        {/* 뷰 모드 전환 (국내만) */}
+                        {marketTab === 'domestic' && (
+                            <div className="flex items-center bg-[var(--bg-tertiary)] rounded-xl p-1">
+                                <button
+                                    onClick={() => setViewMode('dashboard')}
+                                    className={`p-2 rounded-lg transition-all ${
+                                        viewMode === 'dashboard'
+                                            ? 'bg-[var(--bg-primary)] text-[var(--accent-blue)] shadow-[var(--shadow-sm)]'
+                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                    }`}
+                                    title="대시보드"
+                                >
+                                    <LayoutGrid size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('heatmap')}
+                                    className={`p-2 rounded-lg transition-all ${
+                                        viewMode === 'heatmap'
+                                            ? 'bg-[var(--bg-primary)] text-[var(--accent-blue)] shadow-[var(--shadow-sm)]'
+                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                    }`}
+                                    title="히트맵"
+                                >
+                                    <Grid3X3 size={18} />
+                                </button>
+                            </div>
+                        )}
+
                         {/* 검색 */}
                         <div className="relative">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="테마 또는 키워드 검색"
-                                className="w-64 pl-9 pr-4 py-2 text-sm bg-slate-100 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-slate-300 transition-colors"
+                                className="w-64 pl-10 pr-4 py-2.5 text-sm bg-[var(--bg-tertiary)] border border-transparent rounded-xl focus:outline-none focus:bg-[var(--bg-primary)] focus:border-[var(--accent-blue)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] transition-all"
                             />
                         </div>
                     </div>
@@ -809,40 +936,49 @@ export default function ThemesPage() {
 
                 {/* 컨텐츠 */}
                 <div className="p-6">
-                    {themesLoading ? (
-                        <div className="flex items-center justify-center h-64 text-slate-500">
-                            <RefreshCw size={24} className="animate-spin mr-3" />
-                            테마 데이터 로딩 중...
-                        </div>
-                    ) : filteredThemes.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                            <Search size={48} className="mb-4 text-slate-300" />
-                            <p className="text-lg">
-                                {searchQuery ? `"${searchQuery}"에 대한 결과가 없습니다` : '테마 데이터가 없습니다'}
-                            </p>
-                        </div>
+                    {marketTab === 'domestic' ? (
+                        themesLoading ? (
+                            <div className="flex items-center justify-center h-64 text-[var(--text-tertiary)]">
+                                <RefreshCw size={24} className="animate-spin mr-3 text-[var(--accent-blue)]" />
+                                테마 데이터 로딩 중...
+                            </div>
+                        ) : filteredThemes.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-64 text-[var(--text-tertiary)]">
+                                <div className="w-16 h-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
+                                    <Search size={32} className="text-[var(--text-tertiary)]" />
+                                </div>
+                                <p className="text-lg font-medium text-[var(--text-primary)]">
+                                    {searchQuery ? `"${searchQuery}"에 대한 결과가 없습니다` : '테마 데이터가 없습니다'}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {viewMode === 'dashboard' && (
+                                    <DashboardView
+                                        sortedThemes={sortedThemes}
+                                        priceMap={priceMap}
+                                        onThemeClick={openThemeModal}
+                                    />
+                                )}
+                                {viewMode === 'heatmap' && (
+                                    <TreemapHeatmapView
+                                        sortedThemes={sortedThemes}
+                                        priceMap={priceMap}
+                                        onThemeClick={openThemeModal}
+                                    />
+                                )}
+                            </>
+                        )
                     ) : (
-                        <>
-                            {viewMode === 'dashboard' && (
-                                <DashboardView
-                                    sortedThemes={sortedThemes}
-                                    priceMap={priceMap}
-                                    onThemeClick={openThemeModal}
-                                />
-                            )}
-                            {viewMode === 'heatmap' && (
-                                <HeatmapView
-                                    sortedThemes={sortedThemes}
-                                    priceMap={priceMap}
-                                    onThemeClick={openThemeModal}
-                                />
-                            )}
-                        </>
+                        <OverseasThemeView
+                            searchQuery={searchQuery}
+                            onThemeClick={openOverseasThemeModal}
+                        />
                     )}
                 </div>
             </main>
 
-            {/* 테마 상세 모달 */}
+            {/* 국내 테마 상세 모달 */}
             {selectedTheme && (() => {
                 const theme = themes?.find((t) => t.name === selectedTheme);
                 if (!theme) return null;
@@ -854,6 +990,14 @@ export default function ThemesPage() {
                     />
                 );
             })()}
+
+            {/* 해외 테마 상세 모달 */}
+            {selectedOverseasTheme && (
+                <OverseasThemeDetailModal
+                    themeName={selectedOverseasTheme}
+                    onClose={closeOverseasThemeModal}
+                />
+            )}
         </div>
     );
 }

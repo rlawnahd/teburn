@@ -6,35 +6,8 @@ import { fetchAnalyzedNews, NewsItem, AnalysisResult } from '@/lib/api/news';
 import { useRealtimeNews } from '@/hooks/useRealtimeNews';
 import NewsCard from '@/components/news/NewsCard';
 import NewsModal from '@/components/news/NewsModal';
-import { Zap, Newspaper, TrendingUp, Wifi, WifiOff, Radio, Database, RefreshCw } from 'lucide-react';
-import Link from 'next/link';
-
-function Sidebar() {
-    return (
-        <aside className="w-56 bg-white border-r border-slate-200 hidden lg:flex flex-col fixed h-full z-20">
-            <div className="h-14 flex items-center px-4 border-b border-slate-200">
-                <Zap className="text-yellow-500 mr-2" size={18} fill="currentColor" />
-                <span className="text-base font-bold text-slate-900 tracking-wide">StockLight</span>
-            </div>
-            <nav className="flex-1 px-2 py-4 space-y-1">
-                <Link
-                    href="/"
-                    className="flex items-center gap-2 px-3 py-2 rounded-md bg-indigo-50 text-indigo-600  border-indigo-500 transition-all text-sm font-medium"
-                >
-                    <Newspaper size={16} />
-                    <span>뉴스 피드</span>
-                </Link>
-                <Link
-                    href="/themes"
-                    className="flex items-center gap-2 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all text-sm font-medium"
-                >
-                    <TrendingUp size={16} />
-                    <span>테마 현황</span>
-                </Link>
-            </nav>
-        </aside>
-    );
-}
+import Sidebar from '@/components/layout/Sidebar';
+import { Wifi, WifiOff, Radio, Database, RefreshCw } from 'lucide-react';
 
 type TabType = 'realtime' | 'analyzed';
 
@@ -93,41 +66,59 @@ export default function StockLightPro() {
     };
 
     return (
-        <div className="flex min-h-screen bg-slate-100 text-slate-700 font-sans">
+        <div className="flex min-h-screen bg-[var(--bg-secondary)]">
             <Sidebar />
 
-            <main className="flex-1 lg:ml-56">
+            <main className="flex-1 lg:ml-64">
                 {/* 헤더 */}
-                <header className="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-white sticky top-0 z-10">
-                    <div className="flex items-center gap-4">
+                <header
+                    className="
+                        h-16 border-b border-[var(--border-color)]
+                        flex items-center justify-between px-6
+                        bg-[var(--bg-primary)] sticky top-0 z-10
+                        transition-colors duration-200
+                    "
+                >
+                    <div className="flex items-center gap-5">
                         {/* 탭 */}
-                        <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                        <div className="flex items-center bg-[var(--bg-tertiary)] rounded-xl p-1">
                             <button
                                 onClick={() => setActiveTab('realtime')}
-                                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                                    activeTab === 'realtime'
-                                        ? 'bg-white text-slate-900 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                className={`
+                                    flex items-center gap-2 px-5 py-2.5 rounded-lg
+                                    text-sm font-semibold transition-all duration-150
+                                    ${activeTab === 'realtime'
+                                        ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]'
+                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                    }
+                                `}
                             >
-                                <Radio size={14} />
+                                <Radio size={16} />
                                 실시간
                                 {isConnected && (
-                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    <span className="w-2 h-2 rounded-full bg-[var(--success-color)] animate-pulse-soft" />
                                 )}
                             </button>
                             <button
                                 onClick={() => setActiveTab('analyzed')}
-                                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                                    activeTab === 'analyzed'
-                                        ? 'bg-white text-slate-900 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                className={`
+                                    flex items-center gap-2 px-5 py-2.5 rounded-lg
+                                    text-sm font-semibold transition-all duration-150
+                                    ${activeTab === 'analyzed'
+                                        ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]'
+                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                    }
+                                `}
                             >
-                                <Database size={14} />
+                                <Database size={16} />
                                 분석완료
                                 {analyzedNews.length > 0 && (
-                                    <span className="ml-1 px-1.5 py-0.5 text-xs bg-indigo-100 text-indigo-600 rounded-full font-bold">
+                                    <span
+                                        className="
+                                            ml-1 px-2 py-0.5 text-xs font-bold rounded-full
+                                            bg-[var(--accent-blue-light)] text-[var(--accent-blue)]
+                                        "
+                                    >
                                         {analyzedNews.length}
                                     </span>
                                 )}
@@ -135,26 +126,35 @@ export default function StockLightPro() {
                         </div>
 
                         {/* 연결 상태 */}
-                        {isConnected ? (
-                            <span className="flex items-center gap-1.5 text-sm text-green-600">
-                                <Wifi size={14} />
-                                연결됨
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-1.5 text-sm text-slate-400">
-                                <WifiOff size={14} />
-                                연결 끊김
-                            </span>
-                        )}
+                        <div
+                            className={`
+                                flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium
+                                ${isConnected
+                                    ? 'bg-[var(--success-bg)] text-[var(--success-color)]'
+                                    : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
+                                }
+                            `}
+                        >
+                            {isConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
+                            {isConnected ? '연결됨' : '연결 끊김'}
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-slate-500">{mergedNews.length}개 뉴스</span>
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm text-[var(--text-tertiary)] font-medium">
+                            {mergedNews.length}개 뉴스
+                        </span>
                         <button
                             onClick={() => refetch()}
-                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                            className="
+                                w-10 h-10 flex items-center justify-center
+                                rounded-xl bg-[var(--bg-tertiary)]
+                                text-[var(--text-secondary)]
+                                hover:bg-[var(--border-color)] hover:text-[var(--text-primary)]
+                                transition-all duration-150
+                            "
                         >
-                            <RefreshCw size={16} />
+                            <RefreshCw size={18} />
                         </button>
                     </div>
                 </header>
@@ -162,26 +162,41 @@ export default function StockLightPro() {
                 {/* 뉴스 카드 그리드 */}
                 <div className="p-6">
                     {isAnalyzedLoading && activeTab === 'analyzed' ? (
-                        <div className="flex items-center justify-center h-64 text-slate-500">
-                            <RefreshCw size={24} className="animate-spin mr-3" />
-                            불러오는 중...
+                        <div className="flex flex-col items-center justify-center h-64 text-[var(--text-tertiary)]">
+                            <RefreshCw size={32} className="animate-spin mb-4 text-[var(--accent-blue)]" />
+                            <p className="text-base font-medium">불러오는 중...</p>
                         </div>
                     ) : mergedNews.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                            <Radio size={48} className="mb-4 text-slate-300" />
-                            <p className="text-lg">
-                                {activeTab === 'realtime' ? '실시간 뉴스를 기다리는 중...' : '분석된 뉴스가 없습니다'}
+                        <div className="flex flex-col items-center justify-center h-64">
+                            <div
+                                className="
+                                    w-20 h-20 rounded-full mb-6
+                                    bg-[var(--bg-tertiary)] flex items-center justify-center
+                                "
+                            >
+                                <Radio size={32} className="text-[var(--text-tertiary)]" />
+                            </div>
+                            <p className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+                                {activeTab === 'realtime' ? '뉴스를 기다리는 중' : '분석된 뉴스가 없습니다'}
+                            </p>
+                            <p className="text-sm text-[var(--text-tertiary)]">
+                                {activeTab === 'realtime' ? '새로운 뉴스가 곧 도착합니다' : '뉴스를 클릭하여 AI 분석을 시작하세요'}
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                             {mergedNews.map((news, idx) => (
-                                <NewsCard
+                                <div
                                     key={`${news.link}-${idx}`}
-                                    news={news}
-                                    isSelected={selectedNews?.link === news.link}
-                                    onClick={() => handleCardClick(news)}
-                                />
+                                    className="animate-fadeIn"
+                                    style={{ animationDelay: `${idx * 50}ms` }}
+                                >
+                                    <NewsCard
+                                        news={news}
+                                        isSelected={selectedNews?.link === news.link}
+                                        onClick={() => handleCardClick(news)}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}

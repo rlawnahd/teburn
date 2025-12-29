@@ -1,0 +1,74 @@
+[
+  {
+    "symbol": "JEPI",
+    "name": "JPMorgan Equity Premium Income ETF",
+    "korName": "JP모건 프리미엄인컴",
+    "issuer": "JPMorgan",
+    "yieldRate": 7.5,
+    "expenseRatio": 0.35,
+    "aum": 36.2,
+    "description": "S&P 500 대형주 + ELN(주가연계채권)을 통한 옵션 프리미엄 수취",
+    "strategy": "커버드콜 + ELN",
+    "underlying": "S&P 500 대형주"
+  },
+  {
+    "symbol": "JEPQ",
+    "name": "JPMorgan Nasdaq Equity Premium Income ETF",
+    "korName": "JP모건 나스닥 프리미엄인컴",
+    "issuer": "JPMorgan",
+    "yieldRate": 9.5,
+    "expenseRatio": 0.35,
+    "aum": 18.5,
+    "description": "나스닥 100 대형 기술주 + ELN을 통한 옵션 프리미엄 수취",
+    "strategy": "커버드콜 + ELN",
+    "underlying": "NASDAQ 100"
+  },
+  {
+    "symbol": "QYLD",
+    "name": "Global X NASDAQ 100 Covered Call ETF",
+    "korName": "글로벌X 나스닥100 커버드콜",
+    "issuer": "Global X",
+    "yieldRate": 11.5,
+    "expenseRatio": 0.60,
+    "aum": 7.8,
+    "description": "나스닥 100 지수에 대한 ATM 콜옵션 매도",
+    "strategy": "ATM 커버드콜",
+    "underlying": "NASDAQ 100"
+  },
+  {
+    "symbol": "XYLD",
+    "name": "Global X S&P 500 Covered Call ETF",
+    "korName": "글로벌X S&P500 커버드콜",
+    "issuer": "Global X",
+    "yieldRate": 10.2,
+    "expenseRatio": 0.60,
+    "aum": 2.9,
+    "description": "S&P 500 지수에 대한 ATM 콜옵션 매도",
+    "strategy": "ATM 커버드콜",
+    "underlying": "S&P 500"
+  },
+  {
+    "symbol": "DIVO",
+    "name": "Amplify CWP Enhanced Dividend Income ETF",
+    "korName": "앰플리파이 배당인컴",
+    "issuer": "Amplify",
+    "yieldRate": 4.8,
+    "expenseRatio": 0.55,
+    "aum": 3.2,
+    "description": "고배당 대형주 + 선택적 커버드콜 전략",
+    "strategy": "부분 커버드콜",
+    "underlying": "대형 배당주"
+  },
+  {
+    "symbol": "RYLD",
+    "name": "Global X Russell 2000 Covered Call ETF",
+    "korName": "글로벌X 러셀2000 커버드콜",
+    "issuer": "Global X",
+    "yieldRate": 12.1,
+    "expenseRatio": 0.60,
+    "aum": 1.5,
+    "description": "러셀 2000 소형주 지수에 대한 ATM 콜옵션 매도",
+    "strategy": "ATM 커버드콜",
+    "underlying": "Russell 2000"
+  }
+]

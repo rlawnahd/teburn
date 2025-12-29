@@ -18,7 +18,8 @@
         "mongoose": "^8.7.0",
         "openai": "^6.10.0",
         "socket.io": "^4.8.1",
-        "ws": "^8.18.3"
+        "ws": "^8.18.3",
+        "yahoo-finance2": "^3.10.2"
     },
     "devDependencies": {
         "@types/cors": "^2.8.19",

@@ -7,6 +7,8 @@ import cors from 'cors';
 import newsRoutes from './routes/news';
 import themesRoutes from './routes/themes';
 import stocksRoutes from './routes/stocks';
+import overseasThemesRoutes from './routes/overseasThemes';
+import etfRoutes from './routes/etf';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { analyzeNews } from './services/aiAnalyzer';
@@ -194,6 +196,8 @@ io.on('connection', async (socket) => {
 app.use('/api/news', newsRoutes);
 app.use('/api/themes', themesRoutes);
 app.use('/api/stocks', stocksRoutes);
+app.use('/api/overseas-themes', overseasThemesRoutes);
+app.use('/api/etf', etfRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');

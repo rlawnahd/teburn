@@ -1,17 +1,7 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
-
-const geistSans = Geist({
-    variable: '--font-geist-sans',
-    subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-    variable: '--font-geist-mono',
-    subsets: ['latin'],
-});
+import ThemeProvider from '@/components/ui/ThemeProvider';
 
 export const metadata: Metadata = {
     title: 'StockLight',
@@ -24,9 +14,18 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="ko">
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <QueryProvider>{children}</QueryProvider>
+        <html lang="ko" suppressHydrationWarning>
+            <head>
+                <link
+                    rel="stylesheet"
+                    as="style"
+                    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+                />
+            </head>
+            <body className="antialiased">
+                <ThemeProvider>
+                    <QueryProvider>{children}</QueryProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

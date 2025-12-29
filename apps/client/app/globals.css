@@ -1,19 +1,318 @@
 @import "tailwindcss";
 
+/* ============================
+   토스 증권 스타일 디자인 시스템
+   ============================ */
+
+/* ============================
+   라이트 테마 (기본)
+   ============================ */
 :root {
-  --background: #f8fafc;
-  --foreground: #1e293b;
+  /* 배경색 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f8fa;
+  --bg-tertiary: #f1f3f5;
+  --bg-elevated: #ffffff;
+
+  /* 텍스트 색상 */
+  --text-primary: #191f28;
+  --text-secondary: #4e5968;
+  --text-tertiary: #8b95a1;
+  --text-disabled: #b0b8c1;
+
+  /* 테두리 */
+  --border-color: #e5e8eb;
+  --border-strong: #d1d6db;
+
+  /* 브랜드 색상 */
+  --accent-blue: #3182f6;
+  --accent-blue-light: #e8f3ff;
+  --accent-blue-dark: #1b64da;
+
+  /* 주식 색상 */
+  --rise-color: #f04452;
+  --rise-bg: #fff0f1;
+  --fall-color: #3182f6;
+  --fall-bg: #e8f3ff;
+  --neutral-color: #8b95a1;
+  --neutral-bg: #f7f8fa;
+
+  /* 상태 색상 */
+  --success-color: #03c75a;
+  --success-bg: #e8fff0;
+  --warning-color: #ff9500;
+  --warning-bg: #fff8e6;
+  --error-color: #f04452;
+  --error-bg: #fff0f1;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+
+  /* 반경 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* 트랜지션 */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
 }
 
+/* ============================
+   다크 테마
+   ============================ */
+[data-theme="dark"] {
+  /* 배경색 */
+  --bg-primary: #17171c;
+  --bg-secondary: #1f2028;
+  --bg-tertiary: #2c2d35;
+  --bg-elevated: #26272f;
+
+  /* 텍스트 색상 */
+  --text-primary: #ececef;
+  --text-secondary: #a9abb8;
+  --text-tertiary: #6b6e7b;
+  --text-disabled: #4a4d57;
+
+  /* 테두리 */
+  --border-color: #2c2d35;
+  --border-strong: #3d3f4a;
+
+  /* 브랜드 색상 */
+  --accent-blue: #4593fc;
+  --accent-blue-light: #1a2744;
+  --accent-blue-dark: #6aabff;
+
+  /* 주식 색상 */
+  --rise-color: #ff6b6b;
+  --rise-bg: #2d1f20;
+  --fall-color: #4593fc;
+  --fall-bg: #1a2744;
+  --neutral-color: #6b6e7b;
+  --neutral-bg: #2c2d35;
+
+  /* 상태 색상 */
+  --success-color: #1dd975;
+  --success-bg: #1a2d20;
+  --warning-color: #ffb84d;
+  --warning-bg: #2d2a1a;
+  --error-color: #ff6b6b;
+  --error-bg: #2d1f20;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================
+   Tailwind 테마 연동
+   ============================ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+}
+
+/* ============================
+   기본 스타일
+   ============================ */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* ============================
+   타이포그래피
+   ============================ */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+/* 숫자 폰트 (Tabular Figures) */
+.font-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ============================
+   스크롤바 스타일
+   ============================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* ============================
+   유틸리티 클래스
+   ============================ */
+
+/* 카드 스타일 */
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+/* 상승/하락 색상 */
+.text-rise {
+  color: var(--rise-color);
+}
+
+.text-fall {
+  color: var(--fall-color);
+}
+
+.bg-rise {
+  background: var(--rise-bg);
+}
+
+.bg-fall {
+  background: var(--fall-bg);
+}
+
+/* 버튼 스타일 */
+.btn-primary {
+  background: var(--accent-blue);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background: var(--accent-blue-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: var(--border-color);
+}
+
+/* ============================
+   애니메이션
+   ============================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ============================
+   선택 스타일
+   ============================ */
+::selection {
+  background: var(--accent-blue);
+  color: white;
+}
+
+/* ============================
+   포커스 스타일
+   ============================ */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ============================
+   입력 필드
+   ============================ */
+input, textarea, select {
+  background: var(--bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+input:focus, textarea:focus, select:focus {
+  background: var(--bg-primary);
+  border-color: var(--accent-blue);
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
 }

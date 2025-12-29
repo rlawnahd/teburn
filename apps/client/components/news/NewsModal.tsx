@@ -14,26 +14,26 @@ interface Props {
 const sentimentConfig = {
     positive: {
         label: '호재',
-        bg: 'bg-red-500',
-        lightBg: 'bg-red-50',
-        border: 'border-red-200',
-        text: 'text-red-600',
+        bg: 'bg-[var(--rise-color)]',
+        lightBg: 'bg-[var(--rise-bg)]',
+        border: 'border-[var(--rise-color)]/30',
+        text: 'text-[var(--rise-color)]',
         icon: TrendingUp,
     },
     negative: {
         label: '악재',
-        bg: 'bg-blue-500',
-        lightBg: 'bg-blue-50',
-        border: 'border-blue-200',
-        text: 'text-blue-600',
+        bg: 'bg-[var(--fall-color)]',
+        lightBg: 'bg-[var(--fall-bg)]',
+        border: 'border-[var(--fall-color)]/30',
+        text: 'text-[var(--fall-color)]',
         icon: TrendingDown,
     },
     neutral: {
         label: '중립',
-        bg: 'bg-slate-400',
-        lightBg: 'bg-slate-50',
-        border: 'border-slate-200',
-        text: 'text-slate-600',
+        bg: 'bg-[var(--text-tertiary)]',
+        lightBg: 'bg-[var(--bg-tertiary)]',
+        border: 'border-[var(--border-color)]',
+        text: 'text-[var(--text-secondary)]',
         icon: null,
     },
 };
@@ -42,7 +42,6 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [localAnalysis, setLocalAnalysis] = useState<Record<string, AnalysisResult>>({});
 
-    // ESC 키로 닫기
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -92,26 +91,25 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
         <>
             {/* 백드롭 */}
             <div
-                className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
                 onClick={onClose}
             />
 
             {/* 모달 */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div
-                    className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+                    className="bg-[var(--bg-primary)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* 헤더 */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-color)]">
                         <div className="flex items-center gap-3">
-                            {/* 호재/악재 배지 */}
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold text-white ${config.bg}`}>
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold text-white ${config.bg}`}>
                                 {Icon && <Icon size={16} />}
                                 {config.label}
                             </span>
 
-                            <div className="flex items-center gap-3 text-sm text-slate-500">
+                            <div className="flex items-center gap-3 text-sm text-[var(--text-tertiary)]">
                                 <span className="flex items-center gap-1">
                                     <Clock size={14} />
                                     {news.createdAt}
@@ -125,7 +123,7 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
 
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -134,20 +132,20 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                     {/* 본문 */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-5">
                         {/* 제목 */}
-                        <h2 className="text-xl font-bold text-slate-900 leading-tight">
+                        <h2 className="text-xl font-bold text-[var(--text-primary)] leading-tight">
                             {news.title}
                         </h2>
 
                         {/* 종목 태그 */}
                         {(stocks.length > 0 || negativeStocks.length > 0) && (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {stocks.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-red-500 w-10">호재</span>
+                                        <span className="text-xs font-bold text-[var(--rise-color)] w-10">호재</span>
                                         {stocks.map((stock, i) => (
                                             <span
                                                 key={`stock-${i}`}
-                                                className="text-sm font-semibold px-3 py-1 rounded-lg bg-red-100 text-red-700 border border-red-200"
+                                                className="text-sm font-semibold px-3 py-1.5 rounded-xl bg-[var(--rise-bg)] text-[var(--rise-color)]"
                                             >
                                                 {stock}
                                             </span>
@@ -156,11 +154,11 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                                 )}
                                 {negativeStocks.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-blue-500 w-10">악재</span>
+                                        <span className="text-xs font-bold text-[var(--fall-color)] w-10">악재</span>
                                         {negativeStocks.map((stock, i) => (
                                             <span
                                                 key={`neg-${i}`}
-                                                className="text-sm font-semibold px-3 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-200"
+                                                className="text-sm font-semibold px-3 py-1.5 rounded-xl bg-[var(--fall-bg)] text-[var(--fall-color)]"
                                             >
                                                 {stock}
                                             </span>
@@ -173,11 +171,11 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                         {/* 테마 */}
                         {themes.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <Tag size={14} className="text-slate-400" />
+                                <Tag size={14} className="text-[var(--text-tertiary)]" />
                                 {themes.map((theme, i) => (
                                     <span
                                         key={`theme-${i}`}
-                                        className="text-sm px-3 py-1 rounded-lg bg-slate-100 text-slate-600"
+                                        className="text-sm px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
                                     >
                                         {theme}
                                     </span>
@@ -186,20 +184,20 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                         )}
 
                         {/* 요약 */}
-                        <div className="p-4 bg-slate-50 rounded-xl">
-                            <p className="text-sm text-slate-700 leading-relaxed">
+                        <div className="p-5 bg-[var(--bg-tertiary)] rounded-2xl">
+                            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                                 {news.summary}
                             </p>
                         </div>
 
                         {/* AI 분석 */}
                         {hasAnalysis ? (
-                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-200">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Sparkles size={16} className="text-indigo-600" />
-                                    <span className="text-sm font-bold text-indigo-600">AI 분석</span>
+                            <div className="p-5 bg-[var(--accent-blue-light)] rounded-2xl border border-[var(--accent-blue)]/20">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Sparkles size={16} className="text-[var(--accent-blue)]" />
+                                    <span className="text-sm font-bold text-[var(--accent-blue)]">AI 분석</span>
                                 </div>
-                                <p className="text-sm text-slate-700 leading-relaxed">
+                                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                                     {aiReason}
                                 </p>
                             </div>
@@ -207,7 +205,7 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                             <button
                                 onClick={handleAnalyze}
                                 disabled={isAnalyzing}
-                                className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold transition-all disabled:opacity-50 shadow-lg hover:shadow-xl"
+                                className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 rounded-2xl text-white font-bold transition-all disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-[1.02]"
                             >
                                 {isAnalyzing ? (
                                     <>
@@ -225,10 +223,10 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                     </div>
 
                     {/* 푸터 */}
-                    <div className="px-6 py-4 border-t border-slate-200 bg-slate-50">
+                    <div className="px-6 py-4 border-t border-[var(--border-color)] bg-[var(--bg-tertiary)]">
                         <button
                             onClick={handleOpenLink}
-                            className="flex items-center justify-center gap-2 w-full py-3 bg-white border border-slate-300 rounded-xl text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                            className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl text-[var(--text-secondary)] font-medium hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] transition-colors"
                         >
                             <ExternalLink size={16} />
                             원문 보기
