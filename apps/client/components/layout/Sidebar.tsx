@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, TrendingUp } from 'lucide-react';
+import { Flame, TrendingUp } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface NavItem {
@@ -32,21 +32,21 @@ export default function Sidebar() {
           <div
             className="
               w-9 h-9 rounded-xl flex items-center justify-center
-              bg-gradient-to-br from-amber-400 to-orange-500
-              shadow-lg shadow-amber-500/20
-              group-hover:shadow-amber-500/30 group-hover:scale-105
+              bg-gradient-to-br from-orange-500 to-red-600
+              shadow-lg shadow-orange-500/25
+              group-hover:shadow-red-500/40 group-hover:scale-105
               transition-all duration-200
             "
           >
-            <Zap size={18} className="text-white" fill="currentColor" />
+            <Flame size={20} className="text-white" fill="currentColor" />
           </div>
           <span
             className="
               text-lg font-bold tracking-tight
-              text-[var(--text-primary)]
+              bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent
             "
           >
-            StockLight
+            TEBURN
           </span>
         </Link>
       </div>

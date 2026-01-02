@@ -33,7 +33,7 @@ export default function ThemeProvider({ children, defaultTheme = 'light' }: Them
   useEffect(() => {
     setMounted(true);
 
-    const savedTheme = localStorage.getItem('stocklight-theme') as Theme | null;
+    const savedTheme = localStorage.getItem('teburn-theme') as Theme | null;
 
     if (savedTheme) {
       setThemeState(savedTheme);
@@ -49,7 +49,7 @@ export default function ThemeProvider({ children, defaultTheme = 'light' }: Them
     if (!mounted) return;
 
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('stocklight-theme', theme);
+    localStorage.setItem('teburn-theme', theme);
   }, [theme, mounted]);
 
   // 시스템 테마 변경 감지
@@ -57,7 +57,7 @@ export default function ThemeProvider({ children, defaultTheme = 'light' }: Them
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handleChange = (e: MediaQueryListEvent) => {
-      const savedTheme = localStorage.getItem('stocklight-theme');
+      const savedTheme = localStorage.getItem('teburn-theme');
       // 사용자가 직접 설정하지 않은 경우에만 시스템 설정 따르기
       if (!savedTheme) {
         setThemeState(e.matches ? 'dark' : 'light');

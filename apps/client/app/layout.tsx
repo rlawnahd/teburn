@@ -4,8 +4,8 @@ import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 
 export const metadata: Metadata = {
-    title: 'StockLight',
-    description: 'AI 기반 주식 뉴스 분석 대시보드',
+    title: 'TEBURN - 지금 타오르는 테마를 찾아라',
+    description: '오늘 불붙은 테마를 가장 빠르게, 실시간 테마 주식 모니터링',
 };
 
 export default function RootLayout({
