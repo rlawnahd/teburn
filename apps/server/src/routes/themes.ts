@@ -2,26 +2,49 @@ import { Router, Request, Response } from 'express';
 import Theme from '../models/Theme';
 import { getThemeHistory } from '../services/themeHistoryService';
 import { updateAllThemes, migrateFromJson } from '../services/themeCrawler';
+import { themePriceCache } from '../services/themePriceCache';
 
 const router = Router();
 
-// 모든 테마 목록 조회 (활성화된 테마만)
+// 모든 테마 목록 조회 (활성화된 테마만, 캐시된 가격 포함)
 router.get('/', async (_req: Request, res: Response) => {
     try {
         const themes = await Theme.find({ isActive: true })
             .select('name stocks keywords')
             .lean();
 
-        const themeList = themes.map(theme => ({
-            name: theme.name,
-            stockCount: theme.stocks.length,
-            keywords: theme.keywords.slice(0, 5),
-        }));
+        const themeList = themes.map(theme => {
+            const cachedPrice = themePriceCache.getThemePrice(theme.name);
+            return {
+                name: theme.name,
+                stockCount: theme.stocks.length,
+                keywords: theme.keywords.slice(0, 5),
+                // 캐시된 가격 정보 추가
+                avgChangeRate: cachedPrice?.avgChangeRate ?? null,
+                topStocks: cachedPrice?.topStocks ?? [],
+                priceUpdatedAt: cachedPrice?.updatedAt ?? null,
+            };
+        });
+
+        // 등락률 기준 정렬 (null은 맨 뒤로)
+        themeList.sort((a, b) => {
+            if (a.avgChangeRate === null && b.avgChangeRate === null) return 0;
+            if (a.avgChangeRate === null) return 1;
+            if (b.avgChangeRate === null) return -1;
+            return b.avgChangeRate - a.avgChangeRate;
+        });
+
+        const cacheStats = themePriceCache.getStats();
 
         res.json({
             success: true,
             data: themeList,
             total: themeList.length,
+            cacheStats: {
+                lastUpdateTime: cacheStats.lastUpdateTime,
+                cachedThemes: cacheStats.themeCount,
+                cachedStocks: cacheStats.stockCount,
+            },
         });
     } catch (error) {
         console.error('테마 목록 조회 에러:', error);
@@ -32,7 +55,29 @@ router.get('/', async (_req: Request, res: Response) => {
     }
 });
 
-// 특정 테마 상세 조회
+// 모든 테마 가격 조회 (캐시된 데이터)
+router.get('/prices', async (_req: Request, res: Response) => {
+    try {
+        const pricesData = themePriceCache.getAllThemePrices();
+
+        res.json({
+            success: true,
+            data: pricesData.themes,
+            marketStatus: pricesData.marketStatus,
+            lastUpdateTime: pricesData.lastUpdateTime,
+            totalThemes: pricesData.totalThemes,
+            cachedStockCount: pricesData.cachedStockCount,
+        });
+    } catch (error) {
+        console.error('테마 가격 조회 에러:', error);
+        res.status(500).json({
+            success: false,
+            message: '테마 가격 조회 중 오류가 발생했습니다.',
+        });
+    }
+});
+
+// 특정 테마 상세 조회 (캐시된 가격 포함)
 router.get('/:themeName', async (req: Request, res: Response) => {
     try {
         const { themeName } = req.params;
@@ -48,15 +93,34 @@ router.get('/:themeName', async (req: Request, res: Response) => {
             return;
         }
 
+        // 캐시된 가격 정보 조회
+        const cachedPrice = themePriceCache.getThemePrice(decodedName);
+
+        // 종목별 캐시된 가격 매핑
+        const stocksWithPrice = theme.stocks.map(stock => {
+            const stockPrice = stock.code ? themePriceCache.getStockPrice(stock.code) : null;
+            return {
+                name: stock.name,
+                code: stock.code,
+                currentPrice: stockPrice?.currentPrice ?? null,
+                changePrice: stockPrice?.changePrice ?? null,
+                changeRate: stockPrice?.changeRate ?? null,
+                volume: stockPrice?.volume ?? null,
+            };
+        });
+
         res.json({
             success: true,
             data: {
                 name: theme.name,
                 stocks: theme.stocks.map(s => s.name),
                 stocksWithCode: theme.stocks,
+                stocksWithPrice,
                 keywords: theme.keywords,
                 isCustom: theme.isCustom,
                 lastCrawledAt: theme.lastCrawledAt,
+                avgChangeRate: cachedPrice?.avgChangeRate ?? null,
+                priceUpdatedAt: cachedPrice?.updatedAt ?? null,
             },
         });
     } catch (error) {

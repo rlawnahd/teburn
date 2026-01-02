@@ -11,6 +11,7 @@ import { crawlNaverFinanceNews } from './services/crawler';
 import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { startHistoryCollection } from './services/themeHistoryService';
 import { migrateFromJson, startThemeUpdateScheduler } from './services/themeCrawler';
+import { themePriceCache } from './services/themePriceCache';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -167,5 +168,8 @@ connectDB().then(async () => {
         }).catch((err) => {
             console.error('❌ KIS WebSocket 연결 실패:', err.message);
         });
+
+        // 모든 테마 주가 배치 캐싱 스케줄러 시작 (5분 간격)
+        themePriceCache.startScheduler();
     });
 });
