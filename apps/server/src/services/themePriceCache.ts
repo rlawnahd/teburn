@@ -2,6 +2,10 @@
 import { getStockPrice, StockPrice } from './kisApi';
 import Theme from '../models/Theme';
 import { getMarketStatus, MarketStatusInfo } from '../utils/marketStatus';
+import stockCodesData from '../data/stockCodes.json';
+
+// 종목명 → 종목코드 매핑 (stockCodes.json에서 로드)
+const STOCK_CODE_MAP: Record<string, string> = stockCodesData as Record<string, string>;
 
 // 캐시된 주가 정보
 export interface CachedStockPrice {
@@ -69,20 +73,34 @@ class ThemePriceCacheService {
             const themes = await Theme.find({ isActive: true }).lean();
             console.log(`📋 총 ${themes.length}개 테마 발견`);
 
-            // 2. 모든 고유 종목 코드 수집
+            // 2. 모든 고유 종목 코드 수집 (DB 코드 + stockCodes.json 폴백)
             const stockCodeSet = new Set<string>();
             const stockCodeToName = new Map<string, string>();
+            let foundFromJson = 0;
 
             for (const theme of themes) {
                 // 각 테마에서 상위 N개 종목만 (API 호출 최적화)
                 const stocks = theme.stocks.slice(0, this.STOCKS_PER_THEME);
                 for (const stock of stocks) {
-                    if (stock.code && stock.code.length === 6) {
-                        stockCodeSet.add(stock.code);
-                        stockCodeToName.set(stock.code, stock.name);
+                    let code = stock.code;
+
+                    // DB에 코드가 없으면 stockCodes.json에서 찾기
+                    if (!code || code.length !== 6) {
+                        const lookupCode = STOCK_CODE_MAP[stock.name];
+                        if (lookupCode) {
+                            code = lookupCode;
+                            foundFromJson++;
+                        }
+                    }
+
+                    if (code && code.length === 6) {
+                        stockCodeSet.add(code);
+                        stockCodeToName.set(code, stock.name);
                     }
                 }
             }
+
+            console.log(`📋 종목코드: DB에서 ${stockCodeSet.size - foundFromJson}개, JSON에서 ${foundFromJson}개 발견`);
 
             const stockCodes = Array.from(stockCodeSet);
             console.log(`🔢 총 ${stockCodes.length}개 고유 종목 주가 조회 시작...`);
@@ -132,8 +150,14 @@ class ThemePriceCacheService {
                 const prices: CachedStockPrice[] = [];
 
                 for (const stock of themeStocks) {
-                    if (stock.code) {
-                        const cached = this.stockPriceCache.get(stock.code);
+                    // DB 코드 또는 JSON 폴백
+                    let code = stock.code;
+                    if (!code || code.length !== 6) {
+                        code = STOCK_CODE_MAP[stock.name] || '';
+                    }
+
+                    if (code) {
+                        const cached = this.stockPriceCache.get(code);
                         if (cached) {
                             prices.push(cached);
                         }
