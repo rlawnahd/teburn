@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { ThemeListItem } from '@/lib/api/themes';
 import { ThemeRealtimePrice } from '@/hooks/useRealtimeStockPrices';
@@ -43,6 +43,7 @@ function CustomizedContent(props: CustomizedContentProps) {
         avgChangeRate = 0,
         stockCount = 0,
         topStock,
+        topStockRate,
         size = 0,
         onThemeClick,
     } = props;
@@ -50,9 +51,21 @@ function CustomizedContent(props: CustomizedContentProps) {
     const bgColor = getColorByChangeRate(avgChangeRate);
     const textColor = getTextColorByChangeRate(avgChangeRate);
 
-    const showContent = width > 60 && height > 40;
-    const showDetails = width > 100 && height > 60;
-    const showTopStock = width > 120 && height > 80;
+    // 크기에 따른 표시 레벨
+    const area = width * height;
+    const isLarge = area > 15000;
+    const isMedium = area > 6000;
+    const isSmall = area > 2000;
+    const isTiny = area > 800;
+
+    // 폰트 크기 계산 (영역에 비례)
+    const nameFontSize = isLarge ? 14 : isMedium ? 12 : isSmall ? 10 : 8;
+    const rateFontSize = isLarge ? 16 : isMedium ? 14 : isSmall ? 11 : 9;
+    const detailFontSize = isLarge ? 10 : 9;
+
+    // 텍스트 truncate
+    const maxNameLength = Math.floor(width / (nameFontSize * 0.6));
+    const displayName = name.length > maxNameLength ? name.slice(0, maxNameLength - 1) + '…' : name;
 
     return (
         <g>
@@ -64,64 +77,68 @@ function CustomizedContent(props: CustomizedContentProps) {
                 fill={bgColor}
                 stroke="var(--bg-primary)"
                 strokeWidth={2}
-                rx={8}
-                ry={8}
+                rx={6}
+                ry={6}
                 style={{ cursor: 'pointer' }}
                 onClick={() => onThemeClick(name)}
             />
-            {showContent && (
+            {isTiny && (
                 <>
+                    {/* 테마명 */}
                     <text
                         x={x + width / 2}
-                        y={y + height / 2 - (showDetails ? 12 : 0)}
+                        y={y + (isMedium ? height / 2 - (isLarge ? 14 : 8) : height / 2 - 4)}
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fill={textColor}
-                        fontSize={Math.min(14, width / 6)}
-                        fontWeight="bold"
+                        fontSize={nameFontSize}
+                        fontWeight="600"
                         style={{ pointerEvents: 'none' }}
                     >
-                        {name}
+                        {displayName}
                     </text>
 
-                    {showDetails && (
+                    {/* 등락률 */}
+                    {isSmall && (
                         <text
                             x={x + width / 2}
-                            y={y + height / 2 + 8}
+                            y={y + height / 2 + (isLarge ? 6 : isMedium ? 4 : 2)}
                             textAnchor="middle"
                             dominantBaseline="middle"
                             fill={textColor}
-                            fontSize={Math.min(16, width / 5)}
+                            fontSize={rateFontSize}
                             fontWeight="bold"
                             style={{ pointerEvents: 'none' }}
                         >
-                            {avgChangeRate > 0 ? '+' : ''}
-                            {avgChangeRate.toFixed(2)}%
+                            {avgChangeRate > 0 ? '+' : ''}{avgChangeRate.toFixed(2)}%
                         </text>
                     )}
 
-                    {showTopStock && topStock && (
+                    {/* 대장주 */}
+                    {isLarge && topStock && (
                         <text
                             x={x + width / 2}
-                            y={y + height / 2 + 26}
+                            y={y + height / 2 + 24}
                             textAnchor="middle"
                             dominantBaseline="middle"
                             fill={textColor}
-                            fontSize={10}
-                            opacity={0.8}
+                            fontSize={detailFontSize}
+                            opacity={0.85}
                             style={{ pointerEvents: 'none' }}
                         >
-                            {topStock}
+                            {topStock.length > 8 ? topStock.slice(0, 7) + '…' : topStock}
+                            {topStockRate !== undefined && ` ${topStockRate > 0 ? '+' : ''}${topStockRate.toFixed(1)}%`}
                         </text>
                     )}
 
-                    {showDetails && (
+                    {/* 종목수 + 거래대금 (좌상단) */}
+                    {isMedium && (
                         <text
-                            x={x + 8}
-                            y={y + 16}
+                            x={x + 6}
+                            y={y + 14}
                             fill={textColor}
                             fontSize={9}
-                            opacity={0.7}
+                            opacity={0.75}
                             style={{ pointerEvents: 'none' }}
                         >
                             {stockCount}종목 · {formatTradingValueShort(size)}
@@ -158,7 +175,7 @@ function CustomTooltip({
 
     return (
         <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-[var(--shadow-xl)] p-4 text-sm min-w-[200px]">
-            <div className="font-bold text-[var(--text-primary)] mb-3">{data.name}</div>
+            <div className="font-bold text-[var(--text-primary)] mb-3 text-base">{data.name}</div>
             <div className="space-y-2">
                 <div className="flex justify-between">
                     <span className="text-[var(--text-tertiary)]">평균 등락률</span>
@@ -199,6 +216,20 @@ export default function TreemapHeatmapView({
     priceMap,
     onThemeClick,
 }: TreemapHeatmapViewProps) {
+    const [containerHeight, setContainerHeight] = useState(600);
+
+    // 테마 수에 따라 높이 조정
+    useEffect(() => {
+        const themeCount = sortedThemes.length;
+        if (themeCount > 100) {
+            setContainerHeight(800);
+        } else if (themeCount > 50) {
+            setContainerHeight(700);
+        } else {
+            setContainerHeight(600);
+        }
+    }, [sortedThemes.length]);
+
     // 초기 레이아웃(size)을 고정하기 위한 ref
     const initialLayoutRef = useRef<Map<string, number> | null>(null);
     const isInitializedRef = useRef(false);
@@ -221,6 +252,17 @@ export default function TreemapHeatmapView({
         }
     }, [currentData]);
 
+    // 필터 변경 시 레이아웃 재계산
+    useEffect(() => {
+        if (sortedThemes.length > 0) {
+            const layoutMap = new Map<string, number>();
+            currentData.forEach((item) => {
+                layoutMap.set(item.name, item.size);
+            });
+            initialLayoutRef.current = layoutMap;
+        }
+    }, [sortedThemes.length, currentData]);
+
     // 레이아웃은 초기값 유지, 색상/등락률만 업데이트
     const treemapData = useMemo(() => {
         if (!initialLayoutRef.current || currentData.length === 0) {
@@ -234,10 +276,15 @@ export default function TreemapHeatmapView({
         }));
     }, [currentData]);
 
-    if (treemapData.length === 0) {
+    // 데이터가 있는 테마만 표시
+    const themesWithData = treemapData.filter(t => t.size > 0);
+    const themesWithoutData = sortedThemes.length - themesWithData.length;
+
+    if (themesWithData.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[500px] text-[var(--text-tertiary)]">
-                실시간 데이터를 기다리는 중...
+            <div className="flex flex-col items-center justify-center h-[500px] text-[var(--text-tertiary)]">
+                <div className="text-lg mb-2">데이터를 기다리는 중...</div>
+                <div className="text-sm">잠시 후 자동으로 업데이트됩니다</div>
             </div>
         );
     }
@@ -259,15 +306,18 @@ export default function TreemapHeatmapView({
                     <div className="w-6 h-5 bg-[#dc2626]"></div>
                 </div>
                 <span className="text-[var(--rise-color)] font-medium">상승</span>
-                <span className="text-[var(--text-tertiary)] ml-4">| 셀 크기: 거래대금</span>
+                <div className="h-4 w-px bg-[var(--border-color)] mx-2"></div>
+                <span className="text-[var(--text-tertiary)]">셀 크기: 거래대금</span>
+                <span className="text-[var(--text-tertiary)]">|</span>
+                <span className="text-[var(--text-secondary)]">{themesWithData.length}개 테마</span>
             </div>
 
             {/* 트리맵 */}
             <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] p-5 shadow-[var(--shadow-sm)]">
-                <div className="h-[500px]">
+                <div style={{ height: containerHeight }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <Treemap
-                            data={treemapData}
+                            data={themesWithData}
                             dataKey="size"
                             aspectRatio={4 / 3}
                             stroke="var(--bg-primary)"
@@ -281,9 +331,9 @@ export default function TreemapHeatmapView({
             </div>
 
             {/* 데이터 없는 테마 표시 */}
-            {sortedThemes.length > treemapData.length && (
+            {themesWithoutData > 0 && (
                 <div className="text-xs text-[var(--text-tertiary)] text-center">
-                    * 실시간 데이터가 없는 {sortedThemes.length - treemapData.length}개 테마는 표시되지 않습니다
+                    * 가격 데이터가 없는 {themesWithoutData}개 테마는 표시되지 않습니다
                 </div>
             )}
         </div>

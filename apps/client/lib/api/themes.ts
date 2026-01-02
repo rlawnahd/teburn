@@ -2,11 +2,27 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
-// 테마 목록 아이템
+// 캐시된 종목 가격 정보
+export interface CachedStockPrice {
+    stockCode: string;
+    stockName: string;
+    currentPrice: number;
+    changePrice: number;
+    changeRate: number;
+    volume: number;
+    tradingValue: number;
+    updatedAt: string;
+}
+
+// 테마 목록 아이템 (캐시된 가격 포함)
 export interface ThemeListItem {
     name: string;
     stockCount: number;
     keywords: string[];
+    // 캐시된 가격 정보
+    avgChangeRate: number | null;
+    topStocks: CachedStockPrice[];
+    priceUpdatedAt: string | null;
 }
 
 // 테마 상세 정보
@@ -16,11 +32,19 @@ export interface ThemeDetail {
     keywords: string[];
 }
 
+// 캐시 통계
+export interface CacheStats {
+    lastUpdateTime: string | null;
+    cachedThemes: number;
+    cachedStocks: number;
+}
+
 // API 응답 타입
 interface ThemeListResponse {
     success: boolean;
     data: ThemeListItem[];
     total: number;
+    cacheStats: CacheStats;
 }
 
 interface ThemeDetailResponse {

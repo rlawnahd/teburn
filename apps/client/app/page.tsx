@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import {
@@ -13,8 +13,10 @@ import {
     Sun,
     Moon,
     Sunset,
+    Filter,
+    X,
 } from 'lucide-react';
-import { fetchThemes, ThemeListItem } from '@/lib/api/themes';
+import { fetchThemes, ThemeListItem, CachedStockPrice } from '@/lib/api/themes';
 import { useRealtimeStockPrices, ThemeRealtimePrice, MarketStatusInfo } from '@/hooks/useRealtimeStockPrices';
 import TreemapHeatmapView from '@/components/themes/TreemapHeatmapView';
 import Sidebar from '@/components/layout/Sidebar';
@@ -22,6 +24,38 @@ import Sidebar from '@/components/layout/Sidebar';
 import { TrendingUp, TrendingDown, DollarSign, Crown } from 'lucide-react';
 
 type ViewMode = 'dashboard' | 'heatmap';
+
+// 테마 카테고리 정의
+const THEME_CATEGORIES: Record<string, { label: string; keywords: string[] }> = {
+    all: { label: '전체', keywords: [] },
+    tech: { label: '기술', keywords: ['반도체', 'AI', '클라우드', '소프트웨어', '데이터센터', '사이버보안', 'IT', '5G', '6G', '메타버스', '블록체인', 'NFT', '빅데이터'] },
+    battery: { label: '2차전지', keywords: ['2차전지', '배터리', '리튬', '전고체', '양극재', '음극재', '전해액', '분리막', '폐배터리'] },
+    bio: { label: '바이오', keywords: ['바이오', '제약', '신약', '의료', '헬스케어', '셀트리온', '삼바', 'mRNA', '줄기세포', '치매', '비만치료제'] },
+    auto: { label: '자동차', keywords: ['자동차', '전기차', '수소차', '자율주행', '모빌리티', '타이어'] },
+    energy: { label: '에너지', keywords: ['원전', '신재생', '태양광', '풍력', '수소', '전력기기', 'SMR', '에너지저장', 'ESS'] },
+    defense: { label: '방산', keywords: ['방산', '항공', '우주', 'K-방산', '드론', 'UAM'] },
+    shipbuild: { label: '조선/해운', keywords: ['조선', '해운', 'LNG', '친환경선박'] },
+    finance: { label: '금융', keywords: ['금융', '은행', '증권', '보험', '핀테크'] },
+    consumer: { label: '소비재', keywords: ['화장품', '음식료', '패션', '면세점', '여행', '항공', '호텔', '카지노', '엔터', '게임', 'K-뷰티', 'K-푸드'] },
+    materials: { label: '소재', keywords: ['철강', '화학', '정유', '비철금속', '희토류'] },
+    infra: { label: '인프라', keywords: ['건설', '건자재', '시멘트', '통신', '유틸리티', '가스'] },
+    robot: { label: '로봇', keywords: ['로봇', '자동화', '스마트팩토리', '협동로봇'] },
+};
+
+// 테마가 어떤 카테고리에 속하는지 판단
+function getThemeCategory(themeName: string, keywords: string[]): string {
+    const allText = [themeName, ...keywords].join(' ').toLowerCase();
+
+    for (const [category, { keywords: categoryKeywords }] of Object.entries(THEME_CATEGORIES)) {
+        if (category === 'all') continue;
+        for (const keyword of categoryKeywords) {
+            if (allText.includes(keyword.toLowerCase())) {
+                return category;
+            }
+        }
+    }
+    return 'other';
+}
 
 // 거래대금 포맷 함수
 function formatTradingValue(value: number): string {
@@ -35,21 +69,35 @@ function formatTradingValue(value: number): string {
     }
 }
 
+// 통합 테마 데이터 (실시간 + 캐시)
+interface MergedThemeData {
+    name: string;
+    stockCount: number;
+    keywords: string[];
+    avgChangeRate: number;
+    prices: Array<{
+        stockName: string;
+        changeRate: number;
+        tradingValue: number;
+        currentPrice: number;
+    }>;
+    hasRealtimeData: boolean;
+    category: string;
+}
+
 // 플립 카드 컴포넌트
 function ThemeFlipCard({
     theme,
-    priceInfo,
     onClick,
 }: {
-    theme: { name: string; stockCount: number; keywords: string[] };
-    priceInfo?: { avgChangeRate: number; prices: Array<{ stockName: string; changeRate: number; tradingValue: number; currentPrice: number }> };
+    theme: MergedThemeData;
     onClick: () => void;
 }) {
-    const rate = priceInfo?.avgChangeRate ?? 0;
-    const hasData = priceInfo && priceInfo.prices.length > 0;
+    const rate = theme.avgChangeRate;
+    const hasData = theme.prices.length > 0;
     const isPositive = rate > 0;
     const isNegative = rate < 0;
-    const prices = priceInfo?.prices || [];
+    const prices = theme.prices;
 
     // 대장주 (등락률 기준)
     const leaderStock = [...prices].sort((a, b) => b.changeRate - a.changeRate)[0];
@@ -78,7 +126,12 @@ function ThemeFlipCard({
                 >
                     <div className="flex flex-col h-full justify-between">
                         <div>
-                            <div className="text-sm font-bold text-[var(--text-primary)] truncate">{theme.name}</div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="text-sm font-bold text-[var(--text-primary)] truncate flex-1">{theme.name}</div>
+                                {theme.hasRealtimeData && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0" title="실시간" />
+                                )}
+                            </div>
                             <div className="text-xs text-[var(--text-tertiary)] mt-0.5">{theme.stockCount}종목</div>
                         </div>
                         {hasData ? (
@@ -97,7 +150,7 @@ function ThemeFlipCard({
                                 ) : null}
                             </div>
                         ) : (
-                            <div className="text-sm text-[var(--text-tertiary)]">데이터 없음</div>
+                            <div className="text-sm text-[var(--text-tertiary)]">데이터 로딩 중...</div>
                         )}
                     </div>
                 </div>
@@ -146,7 +199,7 @@ function ThemeFlipCard({
                         </div>
                     ) : (
                         <div className="flex items-center justify-center h-full text-sm text-[var(--text-tertiary)]">
-                            데이터 없음
+                            데이터 로딩 중...
                         </div>
                     )}
                 </div>
@@ -214,32 +267,78 @@ function MarketStatusBadge({ marketStatus }: { marketStatus: MarketStatusInfo | 
     );
 }
 
+// 카테고리 필터 탭
+function CategoryTabs({
+    selectedCategory,
+    onCategoryChange,
+    themeCounts,
+}: {
+    selectedCategory: string;
+    onCategoryChange: (category: string) => void;
+    themeCounts: Record<string, number>;
+}) {
+    return (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {Object.entries(THEME_CATEGORIES).map(([key, { label }]) => {
+                const count = themeCounts[key] || 0;
+                const isSelected = selectedCategory === key;
+
+                if (key !== 'all' && count === 0) return null;
+
+                return (
+                    <button
+                        key={key}
+                        onClick={() => onCategoryChange(key)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all
+                            ${isSelected
+                                ? 'bg-[var(--accent-blue)] text-white shadow-md'
+                                : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'
+                            }`}
+                    >
+                        {label}
+                        <span className={`${isSelected ? 'text-white/70' : 'text-[var(--text-tertiary)]'}`}>
+                            {count}
+                        </span>
+                    </button>
+                );
+            })}
+            {(themeCounts['other'] || 0) > 0 && (
+                <button
+                    onClick={() => onCategoryChange('other')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all
+                        ${selectedCategory === 'other'
+                            ? 'bg-[var(--accent-blue)] text-white shadow-md'
+                            : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'
+                        }`}
+                >
+                    기타
+                    <span className={`${selectedCategory === 'other' ? 'text-white/70' : 'text-[var(--text-tertiary)]'}`}>
+                        {themeCounts['other']}
+                    </span>
+                </button>
+            )}
+        </div>
+    );
+}
+
 // ========== 1. 대시보드 뷰 ==========
 function DashboardView({
-    sortedThemes,
-    priceMap,
+    themes,
     onThemeClick,
 }: {
-    sortedThemes: ThemeListItem[];
-    priceMap: Map<string, ThemeRealtimePrice>;
+    themes: MergedThemeData[];
     onThemeClick: (name: string) => void;
 }) {
-    const themesWithData = sortedThemes.filter((t) => {
-        const priceInfo = priceMap.get(t.name);
-        return priceInfo && priceInfo.prices.length > 0;
-    });
+    const themesWithData = themes.filter((t) => t.prices.length > 0);
 
     const top5Gainers = themesWithData
-        .filter((t) => (priceMap.get(t.name)?.avgChangeRate ?? 0) > 0)
+        .filter((t) => t.avgChangeRate > 0)
+        .sort((a, b) => b.avgChangeRate - a.avgChangeRate)
         .slice(0, 5);
 
-    const top5Losers = [...themesWithData]
-        .filter((t) => (priceMap.get(t.name)?.avgChangeRate ?? 0) < 0)
-        .sort((a, b) => {
-            const rateA = priceMap.get(a.name)?.avgChangeRate ?? 0;
-            const rateB = priceMap.get(b.name)?.avgChangeRate ?? 0;
-            return rateA - rateB;
-        })
+    const top5Losers = themesWithData
+        .filter((t) => t.avgChangeRate < 0)
+        .sort((a, b) => a.avgChangeRate - b.avgChangeRate)
         .slice(0, 5);
 
     return (
@@ -259,9 +358,7 @@ function DashboardView({
                             <div className="text-sm text-[var(--text-tertiary)] py-6 text-center">상승 테마가 없습니다</div>
                         ) : (
                             top5Gainers.map((theme, i) => {
-                                const rate = priceMap.get(theme.name)?.avgChangeRate ?? 0;
-                                const prices = priceMap.get(theme.name)?.prices || [];
-                                const topStock = [...prices].sort((a, b) => b.changeRate - a.changeRate)[0];
+                                const topStock = [...theme.prices].sort((a, b) => b.changeRate - a.changeRate)[0];
                                 return (
                                     <div
                                         key={theme.name}
@@ -271,15 +368,20 @@ function DashboardView({
                                         <div className="flex items-center gap-3">
                                             <span className="text-lg font-bold text-[var(--rise-color)] w-6">{i + 1}</span>
                                             <div>
-                                                <span className="font-medium text-[var(--text-primary)]">{theme.name}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-medium text-[var(--text-primary)]">{theme.name}</span>
+                                                    {theme.hasRealtimeData && (
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                                    )}
+                                                </div>
                                                 {topStock && (
-                                                    <span className="text-xs text-[var(--text-tertiary)] ml-2">
+                                                    <span className="text-xs text-[var(--text-tertiary)]">
                                                         {topStock.stockName} +{topStock.changeRate.toFixed(1)}%
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <span className="font-bold text-[var(--rise-color)]">+{rate.toFixed(2)}%</span>
+                                        <span className="font-bold text-[var(--rise-color)]">+{theme.avgChangeRate.toFixed(2)}%</span>
                                     </div>
                                 );
                             })
@@ -300,9 +402,7 @@ function DashboardView({
                             <div className="text-sm text-[var(--text-tertiary)] py-6 text-center">하락 테마가 없습니다</div>
                         ) : (
                             top5Losers.map((theme, i) => {
-                                const rate = priceMap.get(theme.name)?.avgChangeRate ?? 0;
-                                const prices = priceMap.get(theme.name)?.prices || [];
-                                const worstStock = [...prices].sort((a, b) => a.changeRate - b.changeRate)[0];
+                                const worstStock = [...theme.prices].sort((a, b) => a.changeRate - b.changeRate)[0];
                                 return (
                                     <div
                                         key={theme.name}
@@ -312,15 +412,20 @@ function DashboardView({
                                         <div className="flex items-center gap-3">
                                             <span className="text-lg font-bold text-[var(--fall-color)] w-6">{i + 1}</span>
                                             <div>
-                                                <span className="font-medium text-[var(--text-primary)]">{theme.name}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-medium text-[var(--text-primary)]">{theme.name}</span>
+                                                    {theme.hasRealtimeData && (
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                                    )}
+                                                </div>
                                                 {worstStock && (
-                                                    <span className="text-xs text-[var(--text-tertiary)] ml-2">
+                                                    <span className="text-xs text-[var(--text-tertiary)]">
                                                         {worstStock.stockName} {worstStock.changeRate.toFixed(1)}%
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <span className="font-bold text-[var(--fall-color)]">{rate.toFixed(2)}%</span>
+                                        <span className="font-bold text-[var(--fall-color)]">{theme.avgChangeRate.toFixed(2)}%</span>
                                     </div>
                                 );
                             })
@@ -331,114 +436,13 @@ function DashboardView({
 
             {/* 플립 카드 그리드 */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {sortedThemes.map((theme) => (
+                {themes.map((theme) => (
                     <ThemeFlipCard
                         key={theme.name}
                         theme={theme}
-                        priceInfo={priceMap.get(theme.name)}
                         onClick={() => onThemeClick(theme.name)}
                     />
                 ))}
-            </div>
-        </div>
-    );
-}
-
-// ========== 2. 히트맵 뷰 ==========
-function HeatmapView({
-    sortedThemes,
-    priceMap,
-    onThemeClick,
-}: {
-    sortedThemes: ThemeListItem[];
-    priceMap: Map<string, ThemeRealtimePrice>;
-    onThemeClick: (name: string) => void;
-}) {
-    const themesWithData = sortedThemes.filter((t) => {
-        const priceInfo = priceMap.get(t.name);
-        return priceInfo && priceInfo.prices.length > 0;
-    });
-
-    const rates = themesWithData.map((t) => priceMap.get(t.name)?.avgChangeRate ?? 0);
-    const maxRate = Math.max(...rates, 0.01);
-    const minRate = Math.min(...rates, -0.01);
-
-    const getColor = (rate: number, hasData: boolean) => {
-        if (!hasData) return 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]';
-
-        if (rate > 0) {
-            const intensity = Math.min(rate / maxRate, 1);
-            if (intensity > 0.7) return 'bg-[#dc2626] text-white';
-            if (intensity > 0.4) return 'bg-[#ef4444] text-white';
-            if (intensity > 0.2) return 'bg-[#f87171] text-white';
-            return 'bg-[#fca5a5] text-[#991b1b]';
-        } else if (rate < 0) {
-            const intensity = Math.min(Math.abs(rate) / Math.abs(minRate), 1);
-            if (intensity > 0.7) return 'bg-[#2563eb] text-white';
-            if (intensity > 0.4) return 'bg-[#3b82f6] text-white';
-            if (intensity > 0.2) return 'bg-[#60a5fa] text-white';
-            return 'bg-[#93c5fd] text-[#1e40af]';
-        }
-        return 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]';
-    };
-
-    return (
-        <div className="space-y-5">
-            {/* 범례 */}
-            <div className="flex items-center justify-center gap-3 text-xs bg-[var(--bg-primary)] rounded-xl p-3 border border-[var(--border-color)]">
-                <span className="text-[var(--fall-color)] font-medium">하락</span>
-                <div className="flex rounded-lg overflow-hidden">
-                    <div className="w-6 h-5 bg-[#2563eb]"></div>
-                    <div className="w-6 h-5 bg-[#3b82f6]"></div>
-                    <div className="w-6 h-5 bg-[#60a5fa]"></div>
-                    <div className="w-6 h-5 bg-[#93c5fd]"></div>
-                    <div className="w-6 h-5 bg-[var(--bg-tertiary)]"></div>
-                    <div className="w-6 h-5 bg-[#fca5a5]"></div>
-                    <div className="w-6 h-5 bg-[#f87171]"></div>
-                    <div className="w-6 h-5 bg-[#ef4444]"></div>
-                    <div className="w-6 h-5 bg-[#dc2626]"></div>
-                </div>
-                <span className="text-[var(--rise-color)] font-medium">상승</span>
-            </div>
-
-            {/* 히트맵 그리드 */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
-                {sortedThemes.map((theme) => {
-                    const priceInfo = priceMap.get(theme.name);
-                    const rate = priceInfo?.avgChangeRate ?? 0;
-                    const hasData = !!(priceInfo && priceInfo.prices.length > 0);
-                    const colorClass = getColor(rate, hasData);
-                    const topStock = priceInfo?.prices[0];
-
-                    return (
-                        <div
-                            key={theme.name}
-                            onClick={() => onThemeClick(theme.name)}
-                            className={`aspect-square p-3 rounded-2xl cursor-pointer transition-all hover:scale-105 hover:shadow-[var(--shadow-lg)] flex flex-col justify-between ${colorClass}`}
-                        >
-                            <div>
-                                <div className="font-bold text-sm truncate">{theme.name}</div>
-                                <div className="text-xs opacity-80">{theme.stockCount}종목</div>
-                            </div>
-                            <div>
-                                {hasData ? (
-                                    <>
-                                        <div className="text-lg font-bold">
-                                            {rate > 0 ? '+' : ''}{rate.toFixed(2)}%
-                                        </div>
-                                        {topStock && (
-                                            <div className="text-xs opacity-80 truncate">
-                                                {topStock.stockName}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="text-xs">데이터 없음</div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
             </div>
         </div>
     );
@@ -449,30 +453,118 @@ export default function ThemesPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
+    const [selectedCategory, setSelectedCategory] = useState('all');
 
     const { data: themes, isLoading: themesLoading } = useQuery({
         queryKey: ['themes'],
         queryFn: fetchThemes,
+        refetchInterval: 5 * 60 * 1000, // 5분마다 새로고침
     });
 
-    const { priceMap, marketStatus } = useRealtimeStockPrices();
+    const { priceMap: realtimePriceMap, marketStatus } = useRealtimeStockPrices();
 
     const handleThemeClick = (themeName: string) => {
         router.push(`/themes/${encodeURIComponent(themeName)}`);
     };
 
-    const filteredThemes =
-        themes?.filter(
-            (theme) =>
-                theme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                theme.keywords.some((k) => k.toLowerCase().includes(searchQuery.toLowerCase()))
-        ) || [];
+    // 실시간 + 캐시 데이터 병합
+    const mergedThemes: MergedThemeData[] = useMemo(() => {
+        if (!themes) return [];
 
-    const sortedThemes = [...filteredThemes].sort((a, b) => {
-        const rateA = priceMap.get(a.name)?.avgChangeRate ?? 0;
-        const rateB = priceMap.get(b.name)?.avgChangeRate ?? 0;
-        return rateB - rateA;
-    });
+        return themes.map((theme) => {
+            const realtimeData = realtimePriceMap.get(theme.name);
+            const hasRealtimeData = !!(realtimeData && realtimeData.prices.length > 0);
+
+            // 실시간 데이터가 있으면 실시간 사용, 없으면 캐시 사용
+            let avgChangeRate = 0;
+            let prices: MergedThemeData['prices'] = [];
+
+            if (hasRealtimeData && realtimeData) {
+                avgChangeRate = realtimeData.avgChangeRate;
+                prices = realtimeData.prices.map((p) => ({
+                    stockName: p.stockName,
+                    changeRate: p.changeRate,
+                    tradingValue: p.tradingValue,
+                    currentPrice: p.currentPrice,
+                }));
+            } else if (theme.avgChangeRate !== null && theme.topStocks.length > 0) {
+                avgChangeRate = theme.avgChangeRate;
+                prices = theme.topStocks.map((s) => ({
+                    stockName: s.stockName,
+                    changeRate: s.changeRate,
+                    tradingValue: s.tradingValue,
+                    currentPrice: s.currentPrice,
+                }));
+            }
+
+            const category = getThemeCategory(theme.name, theme.keywords);
+
+            return {
+                name: theme.name,
+                stockCount: theme.stockCount,
+                keywords: theme.keywords,
+                avgChangeRate,
+                prices,
+                hasRealtimeData,
+                category,
+            };
+        });
+    }, [themes, realtimePriceMap]);
+
+    // 카테고리별 테마 수 계산
+    const themeCounts = useMemo(() => {
+        const counts: Record<string, number> = { all: mergedThemes.length };
+        for (const theme of mergedThemes) {
+            counts[theme.category] = (counts[theme.category] || 0) + 1;
+        }
+        return counts;
+    }, [mergedThemes]);
+
+    // 필터링 및 정렬
+    const filteredThemes = useMemo(() => {
+        let result = mergedThemes;
+
+        // 카테고리 필터
+        if (selectedCategory !== 'all') {
+            result = result.filter((t) => t.category === selectedCategory);
+        }
+
+        // 검색 필터
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(
+                (theme) =>
+                    theme.name.toLowerCase().includes(query) ||
+                    theme.keywords.some((k) => k.toLowerCase().includes(query))
+            );
+        }
+
+        // 등락률 기준 정렬
+        return result.sort((a, b) => b.avgChangeRate - a.avgChangeRate);
+    }, [mergedThemes, selectedCategory, searchQuery]);
+
+    // 히트맵용 priceMap 생성 (실시간 + 캐시 병합)
+    const mergedPriceMap = useMemo(() => {
+        const map = new Map<string, ThemeRealtimePrice>();
+        for (const theme of mergedThemes) {
+            map.set(theme.name, {
+                themeName: theme.name,
+                avgChangeRate: theme.avgChangeRate,
+                prices: theme.prices.map((p) => ({
+                    stockCode: '',
+                    stockName: p.stockName,
+                    currentPrice: p.currentPrice,
+                    changePrice: 0,
+                    changeRate: p.changeRate,
+                    volume: 0,
+                    tradingValue: p.tradingValue,
+                    tradeTime: '',
+                })),
+                updatedAt: new Date().toISOString(),
+            });
+        }
+        return map;
+    }, [mergedThemes]);
 
     return (
         <div className="flex min-h-screen bg-[var(--bg-secondary)]">
@@ -484,6 +576,11 @@ export default function ThemesPage() {
                     <div className="flex items-center gap-4">
                         <h1 className="text-lg font-bold text-[var(--text-primary)]">국내 테마</h1>
                         <MarketStatusBadge marketStatus={marketStatus} />
+                        {mergedThemes.length > 0 && (
+                            <span className="text-xs text-[var(--text-tertiary)]">
+                                총 {mergedThemes.length}개
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -523,9 +620,26 @@ export default function ThemesPage() {
                                 placeholder="테마 또는 키워드 검색"
                                 className="w-64 pl-10 pr-4 py-2.5 text-sm bg-[var(--bg-tertiary)] border border-transparent rounded-xl focus:outline-none focus:bg-[var(--bg-primary)] focus:border-[var(--accent-blue)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] transition-all"
                             />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </header>
+
+                {/* 카테고리 필터 */}
+                <div className="px-6 py-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)]">
+                    <CategoryTabs
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={setSelectedCategory}
+                        themeCounts={themeCounts}
+                    />
+                </div>
 
                 {/* 컨텐츠 */}
                 <div className="p-6">
@@ -542,20 +656,34 @@ export default function ThemesPage() {
                             <p className="text-lg font-medium text-[var(--text-primary)]">
                                 {searchQuery ? `"${searchQuery}"에 대한 결과가 없습니다` : '테마 데이터가 없습니다'}
                             </p>
+                            {selectedCategory !== 'all' && (
+                                <button
+                                    onClick={() => setSelectedCategory('all')}
+                                    className="mt-3 text-sm text-[var(--accent-blue)] hover:underline"
+                                >
+                                    전체 테마 보기
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <>
                             {viewMode === 'dashboard' && (
                                 <DashboardView
-                                    sortedThemes={sortedThemes}
-                                    priceMap={priceMap}
+                                    themes={filteredThemes}
                                     onThemeClick={handleThemeClick}
                                 />
                             )}
                             {viewMode === 'heatmap' && (
                                 <TreemapHeatmapView
-                                    sortedThemes={sortedThemes}
-                                    priceMap={priceMap}
+                                    sortedThemes={filteredThemes.map(t => ({
+                                        name: t.name,
+                                        stockCount: t.stockCount,
+                                        keywords: t.keywords,
+                                        avgChangeRate: t.avgChangeRate,
+                                        topStocks: [],
+                                        priceUpdatedAt: null,
+                                    }))}
+                                    priceMap={mergedPriceMap}
                                     onThemeClick={handleThemeClick}
                                 />
                             )}
