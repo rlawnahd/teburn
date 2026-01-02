@@ -19,7 +19,141 @@ import { useRealtimeStockPrices, ThemeRealtimePrice, MarketStatusInfo } from '@/
 import TreemapHeatmapView from '@/components/themes/TreemapHeatmapView';
 import Sidebar from '@/components/layout/Sidebar';
 
+import { TrendingUp, TrendingDown, DollarSign, Crown } from 'lucide-react';
+
 type ViewMode = 'dashboard' | 'heatmap';
+
+// 거래대금 포맷 함수
+function formatTradingValue(value: number): string {
+    const billion = value / 100000000;
+    if (billion >= 1000) {
+        return `${(billion / 1000).toFixed(1)}조`;
+    } else if (billion >= 1) {
+        return `${billion.toFixed(0)}억`;
+    } else {
+        return `${(value / 10000).toFixed(0)}만`;
+    }
+}
+
+// 플립 카드 컴포넌트
+function ThemeFlipCard({
+    theme,
+    priceInfo,
+    onClick,
+}: {
+    theme: { name: string; stockCount: number; keywords: string[] };
+    priceInfo?: { avgChangeRate: number; prices: Array<{ stockName: string; changeRate: number; tradingValue: number; currentPrice: number }> };
+    onClick: () => void;
+}) {
+    const rate = priceInfo?.avgChangeRate ?? 0;
+    const hasData = priceInfo && priceInfo.prices.length > 0;
+    const isPositive = rate > 0;
+    const isNegative = rate < 0;
+    const prices = priceInfo?.prices || [];
+
+    // 대장주 (등락률 기준)
+    const leaderStock = [...prices].sort((a, b) => b.changeRate - a.changeRate)[0];
+    // 총 거래대금
+    const totalTradingValue = prices.reduce((sum, p) => sum + p.tradingValue, 0);
+    // 상위 3종목 (거래대금 기준 - 이미 정렬되어 있음)
+    const top3Stocks = prices.slice(0, 3);
+
+    return (
+        <div
+            onClick={onClick}
+            className="group cursor-pointer h-[140px]"
+            style={{ perspective: '1000px' }}
+        >
+            <div
+                className="relative w-full h-full transition-transform duration-500 ease-out group-hover:[transform:rotateY(180deg)]"
+                style={{ transformStyle: 'preserve-3d' }}
+            >
+                {/* 앞면 */}
+                <div
+                    className={`absolute inset-0 p-4 rounded-2xl border
+                        bg-[var(--bg-primary)] border-[var(--border-color)]
+                        ${hasData ? 'shadow-[var(--shadow-sm)]' : ''}
+                    `}
+                    style={{ backfaceVisibility: 'hidden' }}
+                >
+                    <div className="flex flex-col h-full justify-between">
+                        <div>
+                            <div className="text-sm font-bold text-[var(--text-primary)] truncate">{theme.name}</div>
+                            <div className="text-xs text-[var(--text-tertiary)] mt-0.5">{theme.stockCount}종목</div>
+                        </div>
+                        {hasData ? (
+                            <div className="flex items-end justify-between">
+                                <div
+                                    className={`text-2xl font-bold tracking-tight ${
+                                        isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
+                                    }`}
+                                >
+                                    {isPositive ? '+' : ''}{rate.toFixed(2)}%
+                                </div>
+                                {isPositive ? (
+                                    <TrendingUp size={20} className="text-[var(--rise-color)] opacity-50" />
+                                ) : isNegative ? (
+                                    <TrendingDown size={20} className="text-[var(--fall-color)] opacity-50" />
+                                ) : null}
+                            </div>
+                        ) : (
+                            <div className="text-sm text-[var(--text-tertiary)]">데이터 없음</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 뒷면 */}
+                <div
+                    className={`absolute inset-0 p-3 rounded-2xl border
+                        ${isPositive ? 'bg-gradient-to-br from-[var(--rise-bg)] to-[var(--bg-primary)] border-[var(--rise-color)]/30'
+                            : isNegative ? 'bg-gradient-to-br from-[var(--fall-bg)] to-[var(--bg-primary)] border-[var(--fall-color)]/30'
+                            : 'bg-[var(--bg-tertiary)] border-[var(--border-color)]'}
+                        shadow-[var(--shadow-lg)]
+                    `}
+                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                >
+                    {hasData ? (
+                        <div className="flex flex-col h-full text-xs">
+                            {/* 대장주 */}
+                            {leaderStock && (
+                                <div className="flex items-center gap-1.5 mb-2">
+                                    <Crown size={12} className="text-amber-500 flex-shrink-0" />
+                                    <span className="text-[var(--text-secondary)] font-medium truncate flex-1">{leaderStock.stockName}</span>
+                                    <span className={`font-bold flex-shrink-0 ${leaderStock.changeRate > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                                        {leaderStock.changeRate > 0 ? '+' : ''}{leaderStock.changeRate.toFixed(1)}%
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* 거래대금 */}
+                            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-[var(--border-color)]/50">
+                                <DollarSign size={12} className="text-[var(--accent-blue)] flex-shrink-0" />
+                                <span className="text-[var(--text-tertiary)]">거래대금</span>
+                                <span className="font-bold text-[var(--text-primary)] ml-auto">{formatTradingValue(totalTradingValue)}</span>
+                            </div>
+
+                            {/* 상위 종목 */}
+                            <div className="flex-1 space-y-1 overflow-hidden">
+                                {top3Stocks.map((stock, i) => (
+                                    <div key={i} className="flex items-center justify-between text-[10px]">
+                                        <span className="text-[var(--text-tertiary)] truncate flex-1 mr-2">{stock.stockName}</span>
+                                        <span className={`font-medium flex-shrink-0 ${stock.changeRate > 0 ? 'text-[var(--rise-color)]' : stock.changeRate < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
+                                            {stock.changeRate > 0 ? '+' : ''}{stock.changeRate.toFixed(1)}%
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-sm text-[var(--text-tertiary)]">
+                            데이터 없음
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // 장 상태 표시 컴포넌트
 function MarketStatusBadge({ marketStatus }: { marketStatus: MarketStatusInfo | null }) {
@@ -195,36 +329,16 @@ function DashboardView({
                 </div>
             </div>
 
-            {/* 미니 카드 그리드 */}
+            {/* 플립 카드 그리드 */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {sortedThemes.map((theme) => {
-                    const priceInfo = priceMap.get(theme.name);
-                    const rate = priceInfo?.avgChangeRate ?? 0;
-                    const hasData = priceInfo && priceInfo.prices.length > 0;
-                    const isPositive = rate > 0;
-                    const isNegative = rate < 0;
-                    return (
-                        <div
-                            key={theme.name}
-                            onClick={() => onThemeClick(theme.name)}
-                            className="p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:scale-[1.02] bg-[var(--bg-primary)] border-[var(--border-color)]"
-                        >
-                            <div className="text-sm font-bold text-[var(--text-primary)] mb-1 truncate">{theme.name}</div>
-                            {hasData ? (
-                                <div
-                                    className={`text-xl font-bold ${
-                                        isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
-                                    }`}
-                                >
-                                    {isPositive ? '+' : ''}{rate.toFixed(2)}%
-                                </div>
-                            ) : (
-                                <div className="text-sm text-[var(--text-tertiary)]">데이터 없음</div>
-                            )}
-                            <div className="text-xs text-[var(--text-tertiary)] mt-1">{theme.stockCount}종목</div>
-                        </div>
-                    );
-                })}
+                {sortedThemes.map((theme) => (
+                    <ThemeFlipCard
+                        key={theme.name}
+                        theme={theme}
+                        priceInfo={priceMap.get(theme.name)}
+                        onClick={() => onThemeClick(theme.name)}
+                    />
+                ))}
             </div>
         </div>
     );

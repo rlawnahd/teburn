@@ -10,6 +10,7 @@ import stocksRoutes from './routes/stocks';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { startHistoryCollection } from './services/themeHistoryService';
+import { migrateFromJson, startThemeUpdateScheduler } from './services/themeCrawler';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -127,10 +128,16 @@ app.get('/', (req, res) => {
 });
 
 // 7. 서버 실행
-connectDB().then(() => {
+connectDB().then(async () => {
+    // 기존 JSON 데이터 마이그레이션 (DB에 데이터 없을 때만)
+    await migrateFromJson();
+
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server is running at http://localhost:${PORT}`);
         console.log(`🔌 WebSocket 활성화됨`);
+
+        // 테마 자동 업데이트 스케줄러 시작 (1일 1회)
+        startThemeUpdateScheduler();
 
         // 초기 크롤링
         backgroundCrawl();

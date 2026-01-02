@@ -1,31 +1,145 @@
 # StockLight
 
-뉴스를 종목과 즉시 연결해 호재/악재를 보여주는 PC 웹 대시보드를 목표로 합니다. 프론트는 Next.js, 백엔드는 Express + MongoDB로 구성된 모노레포입니다.
+테마별 주식 시세와 관련 뉴스를 실시간으로 모니터링하는 PC 웹 대시보드입니다. 네이버 금융 테마 데이터와 KIS 실시간 시세를 연동하여 테마별 등락률, 대장주, 관련 뉴스를 한눈에 확인할 수 있습니다.
+
+## 주요 기능
+
+### 테마 관리
+- 네이버 금융에서 테마 목록 및 구성 종목 자동 크롤링
+- 매일 1회 자동 업데이트
+- 테마별 키워드 관리
+
+### 실시간 시세
+- KIS WebSocket을 통한 실시간 주가 연동
+- 테마별 평균 등락률 계산
+- 대장주 및 거래대금 순위 표시
+- 등락률 추이 차트 (오늘/1일/7일/30일)
+
+### 뉴스 연동
+- 네이버 금융 증권 뉴스 10초마다 자동 크롤링
+- 테마명, 종목명, 키워드 기반 관련 뉴스 매칭
+- 뉴스 탭에서 페이지네이션으로 조회
+
+### UI/UX
+- 토스 스타일 모던 디자인
+- 플립 카드 효과 (호버 시 대장주/거래대금 표시)
+- 테마 상세 페이지 (시세/뉴스 탭 분리)
+- 실시간 LIVE 인디케이터
 
 ## 기술 스택
-- 프론트엔드: Next.js 16 (App Router), React 19, TypeScript, Tailwind
-- 백엔드: Express, TypeScript, Mongoose
-- 패키지 매니저/모노레포: pnpm workspaces
+
+- **프론트엔드**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Recharts
+- **백엔드**: Express, TypeScript, Mongoose, Socket.IO
+- **데이터**: MongoDB, KIS Open API (실시간 시세)
+- **패키지 매니저**: pnpm workspaces (모노레포)
 
 ## 디렉터리 구조
-- `apps/client`: Next.js 웹 클라이언트
-- `apps/server`: Express API 서버 (TS)
-- 루트: 워크스페이스 설정(`pnpm-workspace.yaml`), 공통 스크립트/의존성
+
+```
+apps/
+├── client/                 # Next.js 웹 클라이언트
+│   ├── app/
+│   │   ├── page.tsx       # 메인 페이지 (테마 카드 목록)
+│   │   └── themes/[themeName]/
+│   │       └── page.tsx   # 테마 상세 페이지
+│   ├── components/
+│   │   └── layout/
+│   │       └── Sidebar.tsx
+│   ├── hooks/
+│   │   └── useRealtimeStockPrices.ts
+│   └── lib/api/           # API 클라이언트
+│
+├── server/                 # Express API 서버
+│   └── src/
+│       ├── models/        # MongoDB 스키마
+│       │   ├── News.ts
+│       │   └── Theme.ts
+│       ├── routes/        # API 라우트
+│       │   ├── news.ts
+│       │   ├── themes.ts
+│       │   └── stocks.ts
+│       ├── services/      # 비즈니스 로직
+│       │   ├── crawler.ts           # 뉴스 크롤러
+│       │   ├── themeCrawler.ts      # 테마 크롤러
+│       │   ├── kisWebSocket.ts      # KIS 실시간 시세
+│       │   └── themeHistoryService.ts
+│       └── server.ts      # 서버 엔트리
+```
 
 ## 빠른 시작
-1) 요구사항: Node 18+ 추천, pnpm 설치
-2) 의존성 설치 (루트): `pnpm install`
-3) 환경변수 설정: `cp apps/server/.env.example apps/server/.env` 후 `MONGO_URI` 채우기 (`PORT` 기본 8080)
-4) 개발 서버 동시 실행: 루트에서 `pnpm dev` (client: 3000, server: 8080)
-   - 개별 실행: `pnpm dev:client`, `pnpm dev:server`
 
-## 자주 쓰는 스크립트
-- 루트: `pnpm dev` / `pnpm dev:client` / `pnpm dev:server`
-- 서버: `pnpm build` (TS -> dist), `pnpm start` (빌드 결과 실행)
-- 클라이언트: `pnpm lint`, `pnpm build`, `pnpm start`
+### 요구사항
+- Node.js 18+
+- pnpm
+- MongoDB
 
-## 다음 단계 TODO
-- MongoDB Atlas 연결 확인 및 헬스체크 엔드포인트 테스트
-- 네이버 뉴스 API/키 연동, OpenAI 분석 로직 추가
-- 뉴스 수집/분석 결과 스키마 정의 및 API 라우트 설계
-- 클라이언트: 3단 대시보드 레이아웃, API 연동, 상태 관리(TanStack Query) 적용
+### 설치 및 실행
+
+```bash
+# 1. 의존성 설치
+pnpm install
+
+# 2. 환경변수 설정
+cp apps/server/.env.example apps/server/.env
+```
+
+`.env` 파일에 다음 값을 설정:
+```
+MONGO_URI=mongodb://...
+PORT=4000
+
+# KIS Open API (실시간 시세용)
+KIS_APP_KEY=...
+KIS_APP_SECRET=...
+KIS_ACCOUNT_NO=...
+```
+
+```bash
+# 3. 개발 서버 실행
+pnpm dev
+
+# 클라이언트: http://localhost:3000
+# 서버: http://localhost:4000
+```
+
+## API 엔드포인트
+
+### 테마
+- `GET /api/themes` - 테마 목록 조회
+- `GET /api/themes/:themeName` - 테마 상세 조회
+- `GET /api/themes/:themeName/realtime` - 테마 실시간 시세
+- `GET /api/themes/all-rates` - 전체 테마 등락률
+- `GET /api/themes/:themeName/history` - 테마 등락률 히스토리
+
+### 뉴스
+- `GET /api/news` - 뉴스 목록
+- `GET /api/news/by-theme/:themeName` - 테마별 관련 뉴스
+
+### 주식
+- `GET /api/stocks/:stockCode` - 종목 현재가
+
+## 스크립트
+
+```bash
+# 개발
+pnpm dev              # 클라이언트 + 서버 동시 실행
+pnpm dev:client       # 클라이언트만 실행
+pnpm dev:server       # 서버만 실행
+
+# 빌드
+pnpm build            # 전체 빌드
+pnpm --filter client build
+pnpm --filter server build
+
+# 린트
+pnpm --filter client lint
+```
+
+## WebSocket 이벤트
+
+### 클라이언트 → 서버
+- `subscribeStockPrices` - 실시간 주가 구독
+- `unsubscribeStockPrices` - 구독 해제
+
+### 서버 → 클라이언트
+- `themePricesUpdate` - 테마별 실시간 시세 업데이트 (1초마다)

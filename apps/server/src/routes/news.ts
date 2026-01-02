@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { crawlNaverFinanceNews } from '../services/crawler';
 import { analyzeNews } from '../services/aiAnalyzer';
 import News from '../models/News';
+import Theme from '../models/Theme';
 
 const router = Router();
 
@@ -217,16 +218,30 @@ router.post('/analyze', async (req, res) => {
 router.get('/by-theme/:themeName', async (req, res) => {
     try {
         const { themeName } = req.params;
+        const decodedName = decodeURIComponent(themeName);
         const limit = parseInt(req.query.limit as string) || 10;
 
-        // 테마명 또는 제목에 키워드가 포함된 뉴스 검색 (최신순)
-        const relatedNews = await News.find({
-            $or: [
-                { themes: { $regex: themeName, $options: 'i' } },
-                { title: { $regex: themeName, $options: 'i' } },
-                { summary: { $regex: themeName, $options: 'i' } },
-            ],
-        })
+        // DB에서 테마 데이터 조회
+        const themeInfo = await Theme.findOne({ name: decodedName, isActive: true }).lean();
+        const searchTerms: string[] = [decodedName];
+
+        if (themeInfo) {
+            // 종목명 추가 (상위 5개)
+            const stockNames = themeInfo.stocks.slice(0, 5).map(s => s.name);
+            searchTerms.push(...stockNames);
+            // 키워드 추가
+            searchTerms.push(...themeInfo.keywords);
+        }
+
+        // 각 검색어에 대해 title 또는 summary에 포함되는지 검색
+        const orConditions: object[] = [];
+        for (const term of searchTerms) {
+            orConditions.push({ title: { $regex: term, $options: 'i' } });
+            orConditions.push({ summary: { $regex: term, $options: 'i' } });
+        }
+
+        // 테마명 또는 관련 키워드/종목이 포함된 뉴스 검색 (최신순)
+        const relatedNews = await News.find({ $or: orConditions })
             .sort({ publishedAt: -1, crawledAt: -1 })
             .limit(limit)
             .lean();
