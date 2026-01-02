@@ -3,6 +3,9 @@ node_modules
 .pnpm-store
 *.log
 
+# Build
+dist
+
 # Next.js
 .next
 out
