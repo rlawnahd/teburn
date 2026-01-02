@@ -12,12 +12,28 @@ import {
     ExternalLink,
     TrendingUp,
     ChevronDown,
+    Flame,
 } from 'lucide-react';
-import { fetchThemes, fetchThemeDetail, fetchThemeHistory } from '@/lib/api/themes';
+import { fetchThemes, fetchThemeDetail, fetchThemeHistory, StockWithPrice } from '@/lib/api/themes';
 import { fetchNewsByTheme } from '@/lib/api/news';
 import { useRealtimeStockPrices, RealtimePrice } from '@/hooks/useRealtimeStockPrices';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import Sidebar from '@/components/layout/Sidebar';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+
+// 캐시된 가격을 RealtimePrice 형식으로 변환
+function convertToRealtimePrice(stock: StockWithPrice): RealtimePrice | null {
+    if (stock.currentPrice === null || stock.changeRate === null) return null;
+    return {
+        stockCode: stock.code,
+        stockName: stock.name,
+        currentPrice: stock.currentPrice,
+        changePrice: stock.changePrice || 0,
+        changeRate: stock.changeRate,
+        volume: stock.volume || 0,
+        tradingValue: (stock.currentPrice || 0) * (stock.volume || 0),
+        tradeTime: '',
+    };
+}
 
 type TabType = 'price' | 'news';
 
@@ -230,11 +246,13 @@ function PriceTabContent({
     theme,
     detail,
     sortedPrices,
+    isRealtime,
 }: {
     themeName: string;
     theme: { keywords: string[] } | undefined;
     detail: { stocks: string[] } | undefined;
     sortedPrices: RealtimePrice[];
+    isRealtime: boolean;
 }) {
     return (
         <div className="space-y-6">
@@ -243,7 +261,7 @@ function PriceTabContent({
             {sortedPrices.length > 0 && (
                 <div className="bg-background rounded-2xl border border-(--border-color) p-6">
                     <div className="text-sm font-semibold text-foreground mb-4">
-                        실시간 시세 <span className="text-(--text-tertiary) font-normal">(거래대금 순)</span>
+                        {isRealtime ? '실시간 시세' : '종목 시세'} <span className="text-(--text-tertiary) font-normal">(거래대금 순)</span>
                     </div>
                     <div className="space-y-2">
                         {sortedPrices.map((price, i) => (
@@ -409,23 +427,42 @@ export default function ThemeDetailPage() {
     });
 
     const { priceMap } = useRealtimeStockPrices();
-    const priceInfo = priceMap.get(themeName);
-    const avgRate = priceInfo?.avgChangeRate ?? 0;
+    const realtimePriceInfo = priceMap.get(themeName);
+
+    // 실시간 데이터가 있으면 사용, 없으면 API 캐시 데이터 사용
+    const hasRealtimeData = realtimePriceInfo && realtimePriceInfo.prices.length > 0;
+
+    // 캐시된 가격 데이터를 RealtimePrice 형식으로 변환
+    const cachedPrices: RealtimePrice[] = (detail?.stocksWithPrice || [])
+        .map(convertToRealtimePrice)
+        .filter((p): p is RealtimePrice => p !== null)
+        .sort((a, b) => b.tradingValue - a.tradingValue);
+
+    const avgRate = hasRealtimeData
+        ? realtimePriceInfo.avgChangeRate
+        : (detail?.avgChangeRate ?? 0);
     const isPositive = avgRate > 0;
     const isNegative = avgRate < 0;
-    const sortedPrices = priceInfo?.prices || [];
+    const sortedPrices = hasRealtimeData ? realtimePriceInfo.prices : cachedPrices;
 
     if (!theme && !detailLoading) {
         return (
-            <div className="flex min-h-screen bg-(--bg-secondary)">
-                <Sidebar />
-                <main className="flex-1 lg:ml-64 flex items-center justify-center">
+            <div className="min-h-screen bg-(--bg-secondary)">
+                <header className="h-16 border-b border-(--border-color) flex items-center justify-between px-6 bg-background sticky top-0 z-10">
+                    <Link href="/" className="flex items-center gap-2.5 group">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/25">
+                            <Flame size={20} className="text-white" fill="currentColor" />
+                        </div>
+                        <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                            TEBURN
+                        </span>
+                    </Link>
+                    <ThemeToggle />
+                </header>
+                <main className="flex items-center justify-center h-[calc(100vh-4rem)]">
                     <div className="text-center">
                         <p className="text-(--text-tertiary) mb-4">테마를 찾을 수 없습니다</p>
-                        <Link
-                            href="/"
-                            className="text-(--accent-blue) hover:underline"
-                        >
+                        <Link href="/" className="text-(--accent-blue) hover:underline">
                             홈으로 돌아가기
                         </Link>
                     </div>
@@ -435,47 +472,62 @@ export default function ThemeDetailPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-(--bg-secondary)">
-            <Sidebar />
+        <div className="min-h-screen bg-(--bg-secondary)">
+            {/* 상단 네비게이션 */}
+            <nav className="h-14 border-b border-(--border-color) flex items-center justify-between px-6 bg-background sticky top-0 z-20">
+                <Link href="/" className="flex items-center gap-2.5 group">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 shadow-md shadow-orange-500/25">
+                        <Flame size={16} className="text-white" fill="currentColor" />
+                    </div>
+                    <span className="text-base font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                        TEBURN
+                    </span>
+                </Link>
+                <ThemeToggle />
+            </nav>
 
-            <main className="flex-1 lg:ml-64">
-                {/* 헤더 */}
-                <header className={`border-b border-(--border-color) sticky top-0 z-10 transition-colors duration-200 ${
-                    isPositive ? 'bg-(--rise-bg)' : isNegative ? 'bg-(--fall-bg)' : 'bg-background'
-                }`}>
-                    <div className="px-6 py-5">
-                        <div className="flex items-center gap-4 mb-3">
-                            <button
-                                onClick={() => router.back()}
-                                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-background/50 text-(--text-secondary) hover:text-foreground transition-colors"
-                            >
-                                <ArrowLeft size={20} />
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-xl font-bold text-foreground">{themeName}</h1>
-                                {priceInfo && priceInfo.prices.length > 0 && (
-                                    <span className="text-xs text-(--success-color) animate-pulse flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-(--success-color)"></span>
-                                        LIVE
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        {priceInfo && priceInfo.prices.length > 0 && (
-                            <div className="ml-13">
-                                <span className={`text-3xl font-bold ${
-                                    isPositive ? 'text-(--rise-color)' : isNegative ? 'text-(--fall-color)' : 'text-(--text-tertiary)'
-                                }`}>
-                                    {isPositive ? '+' : ''}{avgRate.toFixed(2)}%
+            {/* 테마 헤더 */}
+            <header className={`border-b border-(--border-color) sticky top-14 z-10 transition-colors duration-200 ${
+                isPositive ? 'bg-(--rise-bg)' : isNegative ? 'bg-(--fall-bg)' : 'bg-background'
+            }`}>
+                <div className="px-6 py-5">
+                    <div className="flex items-center gap-4 mb-3">
+                        <button
+                            onClick={() => router.back()}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-background/50 text-(--text-secondary) hover:text-foreground transition-colors"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-xl font-bold text-foreground">{themeName}</h1>
+                            {hasRealtimeData ? (
+                                <span className="text-xs text-(--success-color) animate-pulse flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-(--success-color)"></span>
+                                    LIVE
                                 </span>
-                                <span className="text-sm text-(--text-secondary) ml-2">평균 등락률</span>
-                            </div>
-                        )}
+                            ) : sortedPrices.length > 0 ? (
+                                <span className="text-xs text-(--text-tertiary) flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-(--text-tertiary)"></span>
+                                    캐시
+                                </span>
+                            ) : null}
+                        </div>
                     </div>
 
-                    {/* 탭 */}
-                    <div className="px-6 flex gap-1">
+                    {sortedPrices.length > 0 && (
+                        <div className="ml-13">
+                            <span className={`text-3xl font-bold ${
+                                isPositive ? 'text-(--rise-color)' : isNegative ? 'text-(--fall-color)' : 'text-(--text-tertiary)'
+                            }`}>
+                                {isPositive ? '+' : ''}{avgRate.toFixed(2)}%
+                            </span>
+                            <span className="text-sm text-(--text-secondary) ml-2">평균 등락률</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* 탭 */}
+                <div className="px-6 flex gap-1">
                         <button
                             onClick={() => setActiveTab('price')}
                             className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -501,29 +553,29 @@ export default function ThemeDetailPage() {
                     </div>
                 </header>
 
-                {/* 컨텐츠 */}
-                <div className="p-6">
-                    {detailLoading ? (
-                        <div className="flex items-center justify-center py-12 text-(--text-tertiary)">
-                            <RefreshCw size={20} className="animate-spin mr-2 text-(--accent-blue)" />
-                            로딩 중...
-                        </div>
-                    ) : (
-                        <>
-                            {activeTab === 'price' && (
-                                <PriceTabContent
-                                    themeName={themeName}
-                                    theme={theme}
-                                    detail={detail}
-                                    sortedPrices={sortedPrices}
-                                />
-                            )}
-                            {activeTab === 'news' && (
-                                <NewsTabContent themeName={themeName} />
-                            )}
-                        </>
-                    )}
-                </div>
+            {/* 컨텐츠 */}
+            <main className="p-6">
+                {detailLoading ? (
+                    <div className="flex items-center justify-center py-12 text-(--text-tertiary)">
+                        <RefreshCw size={20} className="animate-spin mr-2 text-(--accent-blue)" />
+                        로딩 중...
+                    </div>
+                ) : (
+                    <>
+                        {activeTab === 'price' && (
+                            <PriceTabContent
+                                themeName={themeName}
+                                theme={theme}
+                                detail={detail}
+                                sortedPrices={sortedPrices}
+                                isRealtime={!!hasRealtimeData}
+                            />
+                        )}
+                        {activeTab === 'news' && (
+                            <NewsTabContent themeName={themeName} />
+                        )}
+                    </>
+                )}
             </main>
         </div>
     );

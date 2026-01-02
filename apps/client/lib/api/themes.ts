@@ -25,11 +25,24 @@ export interface ThemeListItem {
     priceUpdatedAt: string | null;
 }
 
+// 종목별 가격 정보 (상세 페이지용)
+export interface StockWithPrice {
+    name: string;
+    code: string;
+    currentPrice: number | null;
+    changePrice: number | null;
+    changeRate: number | null;
+    volume: number | null;
+}
+
 // 테마 상세 정보
 export interface ThemeDetail {
     name: string;
     stocks: string[];
+    stocksWithPrice: StockWithPrice[];
     keywords: string[];
+    avgChangeRate: number | null;
+    priceUpdatedAt: string | null;
 }
 
 // 캐시 통계

@@ -10,7 +10,8 @@ import stocksRoutes from './routes/stocks';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { startHistoryCollection } from './services/themeHistoryService';
-import { migrateFromJson, startThemeUpdateScheduler } from './services/themeCrawler';
+import { startThemeUpdateScheduler } from './services/themeCrawler';
+import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
 import News from './models/News';
 
@@ -130,8 +131,11 @@ app.get('/', (req, res) => {
 
 // 7. 서버 실행
 connectDB().then(async () => {
-    // 기존 JSON 데이터 마이그레이션 (DB에 데이터 없을 때만)
-    await migrateFromJson();
+    // 레거시 테마(JSON 마이그레이션) 삭제 - 네이버 크롤링 테마만 사용
+    const deleted = await Theme.deleteMany({ isCustom: true });
+    if (deleted.deletedCount > 0) {
+        console.log(`🗑️ 레거시 테마 ${deleted.deletedCount}개 삭제됨`);
+    }
 
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server is running at http://localhost:${PORT}`);
