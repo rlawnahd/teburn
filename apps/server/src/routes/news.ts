@@ -99,6 +99,47 @@ router.get('/', async (req, res) => {
     }
 });
 
+// 전체 뉴스 조회 (AI 분석 없이)
+router.get('/all', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit as string) || 50;
+        const page = parseInt(req.query.page as string) || 1;
+        const skip = (page - 1) * limit;
+
+        // 모든 뉴스 조회 (최신순)
+        const allNews = await News.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const total = await News.countDocuments();
+
+        const formattedNews = allNews.map((news, index) => ({
+            id: skip + index,
+            title: news.title,
+            link: news.link,
+            press: news.press,
+            summary: news.summary,
+            createdAt: news.publishedAt || news.createdAt,
+        }));
+
+        res.json({
+            success: true,
+            data: formattedNews,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
+    } catch (error) {
+        console.error('❌ All News API Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
 // DB에 저장된 분석 완료 뉴스 조회
 router.get('/analyzed', async (req, res) => {
     try {

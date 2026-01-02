@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Search, RefreshCw, LayoutGrid, Grid3X3, Flame, Snowflake, Sun, Moon, Sunset, X, TrendingUp, TrendingDown, DollarSign, Crown } from 'lucide-react';
-import { fetchThemes, ThemeListItem, CachedStockPrice } from '@/lib/api/themes';
+import { fetchThemes } from '@/lib/api/themes';
 import { useRealtimeStockPrices, ThemeRealtimePrice, MarketStatusInfo } from '@/hooks/useRealtimeStockPrices';
 import TreemapHeatmapView from '@/components/themes/TreemapHeatmapView';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -659,6 +659,21 @@ export default function ThemesPage() {
                             TEBURN
                         </span>
                     </Link>
+
+                    <div className="h-6 w-px bg-[var(--border-color)]" />
+
+                    {/* 네비게이션 */}
+                    <nav className="flex items-center gap-1">
+                        <div className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--accent-blue)] bg-[var(--accent-blue)]/10">
+                            테마
+                        </div>
+                        <Link
+                            href="/news"
+                            className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                        >
+                            뉴스
+                        </Link>
+                    </nav>
 
                     <div className="h-6 w-px bg-[var(--border-color)]" />
 

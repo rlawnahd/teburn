@@ -101,3 +101,31 @@ export const fetchNewsByTheme = async (themeName: string, limit = 5): Promise<Th
     );
     return data.data;
 };
+
+// 전체 뉴스 조회 (AI 분석 없이)
+export interface SimpleNewsItem {
+    id: number;
+    title: string;
+    link: string;
+    press: string;
+    summary: string;
+    createdAt: string;
+}
+
+interface AllNewsResponse {
+    success: boolean;
+    data: SimpleNewsItem[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}
+
+export const fetchAllNews = async (page = 1, limit = 50): Promise<AllNewsResponse> => {
+    const { data } = await axios.get<AllNewsResponse>(
+        `${API_URL}/news/all?page=${page}&limit=${limit}`
+    );
+    return data;
+};
