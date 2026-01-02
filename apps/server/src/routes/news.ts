@@ -213,4 +213,43 @@ router.post('/analyze', async (req, res) => {
     }
 });
 
+// 테마/키워드별 관련 뉴스 조회
+router.get('/by-theme/:themeName', async (req, res) => {
+    try {
+        const { themeName } = req.params;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        // 테마명 또는 제목에 키워드가 포함된 뉴스 검색 (최신순)
+        const relatedNews = await News.find({
+            $or: [
+                { themes: { $regex: themeName, $options: 'i' } },
+                { title: { $regex: themeName, $options: 'i' } },
+                { summary: { $regex: themeName, $options: 'i' } },
+            ],
+        })
+            .sort({ publishedAt: -1, crawledAt: -1 })
+            .limit(limit)
+            .lean();
+
+        const formattedNews = relatedNews.map((news, index) => ({
+            id: index,
+            title: news.title,
+            link: news.link,
+            press: news.press,
+            summary: news.summary,
+            createdAt: news.publishedAt,
+            sentiment: news.sentiment,
+            score: news.score,
+        }));
+
+        res.json({
+            message: 'Success',
+            data: formattedNews,
+        });
+    } catch (error) {
+        console.error('❌ Theme News API Error:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 export default router;

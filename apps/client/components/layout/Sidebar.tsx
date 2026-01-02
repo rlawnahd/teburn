@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, Newspaper, TrendingUp, PiggyBank } from 'lucide-react';
+import { Zap, TrendingUp } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface NavItem {
@@ -12,9 +12,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/', label: '뉴스 피드', icon: Newspaper },
-  { href: '/themes', label: '테마 현황', icon: TrendingUp },
-  { href: '/etf', label: 'ETF 배당', icon: PiggyBank },
+  { href: '/', label: '테마 현황', icon: TrendingUp },
 ];
 
 export default function Sidebar() {

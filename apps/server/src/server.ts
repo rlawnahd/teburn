@@ -7,11 +7,8 @@ import cors from 'cors';
 import newsRoutes from './routes/news';
 import themesRoutes from './routes/themes';
 import stocksRoutes from './routes/stocks';
-import overseasThemesRoutes from './routes/overseasThemes';
-import etfRoutes from './routes/etf';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
-import { analyzeNews } from './services/aiAnalyzer';
 import { startHistoryCollection } from './services/themeHistoryService';
 import News from './models/News';
 
@@ -30,8 +27,8 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || '';
 
-// 크롤링 주기 (30초)
-const CRAWL_INTERVAL = 30 * 1000;
+// 크롤링 주기 (10초)
+const CRAWL_INTERVAL = 10 * 1000;
 
 // 2. 미들웨어 설정
 app.use(express.json());
@@ -54,22 +51,8 @@ const connectDB = async () => {
     }
 };
 
-// 4. 백그라운드 크롤링 + AI 분석
+// 4. 백그라운드 크롤링 (AI 분석 없이 DB 저장)
 let lastNewsLinks: Set<string> = new Set();
-let latestNews: Array<{
-    id: number;
-    title: string;
-    link: string;
-    press: string;
-    summary: string;
-    createdAt: string;
-    isDetailed: boolean;
-    sentiment: 'positive' | 'negative' | 'neutral';
-    aiReason: string;
-    stocks: string[];
-    themes: string[];
-    score: number;
-}> = [];
 
 const backgroundCrawl = async () => {
     try {
@@ -80,33 +63,11 @@ const backgroundCrawl = async () => {
         const newNews = crawledNews.filter((news) => !lastNewsLinks.has(news.link));
 
         if (newNews.length > 0) {
-            console.log(`📰 새 뉴스 ${newNews.length}개 발견!`);
+            console.log(`📰 새 뉴스 ${newNews.length}개 발견! DB 저장 중...`);
 
-            // 실시간 뉴스 전송 (AI 분석 없이 빠르게)
-            const realtimeNews = newNews.map((item, index) => ({
-                id: Date.now() + index,
-                ...item,
-                isDetailed: false,
-                sentiment: 'neutral' as const,
-                aiReason: '',
-                stocks: [],
-                themes: [],
-                score: 50,
-            }));
-
-            io.emit('newNews', realtimeNews);
-
-            // 최신 뉴스 목록 업데이트 (새 클라이언트 연결 시 사용)
-            latestNews = [...realtimeNews, ...latestNews].slice(0, 30);
-
-            // 백그라운드 AI 분석 비활성화 (클릭 시 분석으로 변경)
-            // TODO: 나중에 다시 활성화하려면 주석 해제
-            /*
-            const toAnalyze = newNews.slice(0, 3);
-            for (const news of toAnalyze) {
+            // DB에 바로 저장 (AI 분석 없이)
+            for (const news of newNews) {
                 try {
-                    console.log(`🤖 백그라운드 AI 분석: ${news.title.substring(0, 30)}...`);
-                    const analysis = await analyzeNews(news.title, news.summary);
                     await News.findOneAndUpdate(
                         { link: news.link },
                         {
@@ -115,28 +76,15 @@ const backgroundCrawl = async () => {
                             press: news.press,
                             summary: news.summary,
                             publishedAt: news.createdAt,
-                            sentiment: analysis.sentiment,
-                            aiReason: analysis.reason,
-                            stocks: analysis.stocks,
-                            themes: analysis.themes,
-                            score: analysis.score,
-                            analyzedAt: new Date(),
+                            crawledAt: new Date(),
                         },
                         { upsert: true, new: true }
                     );
-                    io.emit('newsAnalyzed', {
-                        link: news.link,
-                        sentiment: analysis.sentiment,
-                        aiReason: analysis.reason,
-                        stocks: analysis.stocks,
-                        themes: analysis.themes,
-                        score: analysis.score,
-                    });
                 } catch (err) {
-                    console.error(`❌ AI 분석 실패: ${news.title}`, err);
+                    console.error(`❌ 뉴스 저장 실패: ${news.title}`, err);
                 }
             }
-            */
+            console.log(`✅ ${newNews.length}개 뉴스 DB 저장 완료`);
         }
 
         // 링크 목록 업데이트
@@ -146,32 +94,9 @@ const backgroundCrawl = async () => {
     }
 };
 
-// 5. WebSocket 연결 처리
-io.on('connection', async (socket) => {
+// 5. WebSocket 연결 처리 (실시간 주가 전용)
+io.on('connection', (socket) => {
     console.log(`🔌 클라이언트 연결: ${socket.id}`);
-
-    // 연결 즉시 최신 뉴스 전송
-    if (latestNews.length > 0) {
-        console.log(`📤 기존 뉴스 ${latestNews.length}개 전송`);
-        socket.emit('newNews', latestNews);
-    } else {
-        // 아직 크롤링된 뉴스가 없으면 즉시 크롤링
-        console.log(`📥 신규 클라이언트용 즉시 크롤링...`);
-        const crawledNews = await crawlNaverFinanceNews();
-        const initialNews = crawledNews.map((item, index) => ({
-            id: Date.now() + index,
-            ...item,
-            isDetailed: false,
-            sentiment: 'neutral' as const,
-            aiReason: '',
-            stocks: [],
-            themes: [],
-            score: 50,
-        }));
-        latestNews = initialNews.slice(0, 30);
-        lastNewsLinks = new Set(crawledNews.map((n) => n.link));
-        socket.emit('newNews', latestNews);
-    }
 
     // 실시간 주가 구독 요청
     socket.on('subscribeStockPrices', () => {
@@ -196,8 +121,6 @@ io.on('connection', async (socket) => {
 app.use('/api/news', newsRoutes);
 app.use('/api/themes', themesRoutes);
 app.use('/api/stocks', stocksRoutes);
-app.use('/api/overseas-themes', overseasThemesRoutes);
-app.use('/api/etf', etfRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');

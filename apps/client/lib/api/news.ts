@@ -76,3 +76,28 @@ export const fetchAnalyzedNews = async (page = 1, limit = 20): Promise<AnalyzedN
     );
     return data;
 };
+
+// 테마별 관련 뉴스 간단 타입
+export interface ThemeNewsItem {
+    id: number;
+    title: string;
+    link: string;
+    press: string;
+    summary: string;
+    createdAt: string;
+    sentiment?: 'positive' | 'negative' | 'neutral';
+    score?: number;
+}
+
+interface ThemeNewsResponse {
+    message: string;
+    data: ThemeNewsItem[];
+}
+
+// 테마별 관련 뉴스 조회
+export const fetchNewsByTheme = async (themeName: string, limit = 5): Promise<ThemeNewsItem[]> => {
+    const { data } = await axios.get<ThemeNewsResponse>(
+        `${API_URL}/news/by-theme/${encodeURIComponent(themeName)}?limit=${limit}`
+    );
+    return data.data;
+};
