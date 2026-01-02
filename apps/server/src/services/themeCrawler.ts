@@ -131,9 +131,9 @@ export const updateAllThemes = async (): Promise<void> => {
                     continue;
                 }
 
-                // DB 업데이트 (upsert)
+                // DB 업데이트 (upsert) - name으로 찾기 (unique 인덱스)
                 const result = await Theme.findOneAndUpdate(
-                    { naverCode: theme.naverCode },
+                    { name: theme.name },
                     {
                         name: theme.name,
                         naverCode: theme.naverCode,
