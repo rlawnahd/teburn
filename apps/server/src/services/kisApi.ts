@@ -63,8 +63,8 @@ export interface StockPrice {
     open: number;              // 시가
 }
 
-// 국내주식 현재가 조회
-export async function getStockPrice(stockCode: string): Promise<StockPrice | null> {
+// 국내주식 현재가 조회 (재시도 로직 포함)
+export async function getStockPrice(stockCode: string, retries = 2): Promise<StockPrice | null> {
     try {
         const token = await getAccessToken();
 
@@ -82,6 +82,7 @@ export async function getStockPrice(stockCode: string): Promise<StockPrice | nul
                     FID_COND_MRKT_DIV_CODE: 'J',  // 시장구분 (J: 주식)
                     FID_INPUT_ISCD: stockCode,    // 종목코드
                 },
+                timeout: 5000,  // 5초 타임아웃
             }
         );
 
@@ -104,7 +105,15 @@ export async function getStockPrice(stockCode: string): Promise<StockPrice | nul
             open: parseInt(data.stck_oprc) || 0,
         };
     } catch (error: any) {
-        console.error(`주가 조회 에러 (${stockCode}):`, error.response?.data || error.message);
+        const errMsg = error.response?.data || error.message;
+
+        // socket hang up 등 네트워크 에러 시 재시도
+        if (retries > 0 && (error.code === 'ECONNRESET' || errMsg.includes('socket hang up'))) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            return getStockPrice(stockCode, retries - 1);
+        }
+
+        console.error(`주가 조회 에러 (${stockCode}):`, errMsg);
         return null;
     }
 }
@@ -118,8 +127,8 @@ export async function getMultipleStockPrices(stockCodes: string[]): Promise<Map<
         if (price) {
             results.set(code, price);
         }
-        // API rate limit 방지 (초당 20건 제한)
-        await new Promise(resolve => setTimeout(resolve, 60));
+        // API rate limit 방지 (초당 20건 제한, 여유있게 100ms)
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     return results;
@@ -142,8 +151,8 @@ export async function getStockPricesByNames(stockNames: string[]): Promise<Map<s
             results.set(name, price);
         }
 
-        // API rate limit 방지
-        await new Promise(resolve => setTimeout(resolve, 60));
+        // API rate limit 방지 (초당 20건 제한, 여유있게 100ms)
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     return results;
