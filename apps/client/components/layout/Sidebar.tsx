@@ -32,7 +32,7 @@ export default function Sidebar() {
           <div
             className="
               w-9 h-9 rounded-xl flex items-center justify-center
-              bg-gradient-to-br from-orange-500 to-red-600
+              bg-linear-to-br from-orange-500 to-red-600
               shadow-lg shadow-orange-500/25
               group-hover:shadow-red-500/40 group-hover:scale-105
               transition-all duration-200
@@ -43,7 +43,7 @@ export default function Sidebar() {
           <span
             className="
               text-lg font-bold tracking-tight
-              bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent
+              bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent
             "
           >
             TEBURN

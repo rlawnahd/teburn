@@ -3,14 +3,14 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { Search, RefreshCw, LayoutGrid, Grid3X3, Flame, Snowflake, Sun, Moon, Sunset, X, TrendingUp, TrendingDown, DollarSign, Crown } from 'lucide-react';
-import { fetchThemes } from '@/lib/api/themes';
-import { useRealtimeStockPrices, ThemeRealtimePrice, MarketStatusInfo } from '@/hooks/useRealtimeStockPrices';
+import { Search, RefreshCw, LayoutGrid, Grid3X3, Flame, Snowflake, Sun, Moon, Sunset, X, TrendingUp, TrendingDown, DollarSign, Crown, Activity } from 'lucide-react';
+import { fetchThemesWithMeta, MarketStatusInfo, ThemeListItem } from '@/lib/api/themes';
 import TreemapHeatmapView from '@/components/themes/TreemapHeatmapView';
+import MomentumScoreView from '@/components/themes/MomentumScoreView';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import Link from 'next/link';
 
-type ViewMode = 'dashboard' | 'heatmap';
+type ViewMode = 'dashboard' | 'heatmap' | 'momentum';
 
 // 테마 카테고리 정의
 const THEME_CATEGORIES: Record<string, { label: string; keywords: string[] }> = {
@@ -110,8 +110,8 @@ function formatTradingValue(value: number): string {
     }
 }
 
-// 통합 테마 데이터 (실시간 + 캐시)
-interface MergedThemeData {
+// 테마 데이터 (캐시 기반)
+interface ThemeData {
     name: string;
     stockCount: number;
     keywords: string[];
@@ -122,12 +122,11 @@ interface MergedThemeData {
         tradingValue: number;
         currentPrice: number;
     }>;
-    hasRealtimeData: boolean;
     category: string;
 }
 
 // 플립 카드 컴포넌트
-function ThemeFlipCard({ theme, onClick }: { theme: MergedThemeData; onClick: () => void }) {
+function ThemeFlipCard({ theme, onClick }: { theme: ThemeData; onClick: () => void }) {
     const rate = theme.avgChangeRate;
     const hasData = theme.prices.length > 0;
     const isPositive = rate > 0;
@@ -155,16 +154,8 @@ function ThemeFlipCard({ theme, onClick }: { theme: MergedThemeData; onClick: ()
                 >
                     <div className="flex flex-col h-full justify-between">
                         <div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="text-sm font-bold text-[var(--text-primary)] truncate flex-1">
-                                    {theme.name}
-                                </div>
-                                {theme.hasRealtimeData && (
-                                    <div
-                                        className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
-                                        title="실시간"
-                                    />
-                                )}
+                            <div className="text-sm font-bold text-[var(--text-primary)] truncate">
+                                {theme.name}
                             </div>
                             <div className="text-xs text-[var(--text-tertiary)] mt-0.5">{theme.stockCount}종목</div>
                         </div>
@@ -199,9 +190,9 @@ function ThemeFlipCard({ theme, onClick }: { theme: MergedThemeData; onClick: ()
                     className={`absolute inset-0 p-3 rounded-2xl border
                         ${
                             isPositive
-                                ? 'bg-gradient-to-br from-[var(--rise-bg)] to-[var(--bg-primary)] border-[var(--rise-color)]/30'
+                                ? 'bg-linear-to-br from-[var(--rise-bg)] to-[var(--bg-primary)] border-[var(--rise-color)]/30'
                                 : isNegative
-                                ? 'bg-gradient-to-br from-[var(--fall-bg)] to-[var(--bg-primary)] border-[var(--fall-color)]/30'
+                                ? 'bg-linear-to-br from-[var(--fall-bg)] to-[var(--bg-primary)] border-[var(--fall-color)]/30'
                                 : 'bg-[var(--bg-tertiary)] border-[var(--border-color)]'
                         }
                         shadow-[var(--shadow-lg)]
@@ -395,7 +386,7 @@ function CategoryTabs({
 }
 
 // ========== 1. 대시보드 뷰 ==========
-function DashboardView({ themes, onThemeClick }: { themes: MergedThemeData[]; onThemeClick: (name: string) => void }) {
+function DashboardView({ themes, onThemeClick }: { themes: ThemeData[]; onThemeClick: (name: string) => void }) {
     const themesWithData = themes.filter((t) => t.prices.length > 0);
 
     const top5Gainers = themesWithData
@@ -439,18 +430,13 @@ function DashboardView({ themes, onThemeClick }: { themes: MergedThemeData[]; on
                                                 {i + 1}
                                             </span>
                                             <div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="font-medium text-[var(--text-primary)]">
-                                                        {theme.name}
-                                                    </span>
-                                                    {theme.hasRealtimeData && (
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                                    )}
-                                                </div>
+                                                <span className="font-medium text-[var(--text-primary)]">
+                                                    {theme.name}
+                                                </span>
                                                 {topStock && (
-                                                    <span className="text-xs text-[var(--text-tertiary)]">
+                                                    <div className="text-xs text-[var(--text-tertiary)]">
                                                         {topStock.stockName} +{topStock.changeRate.toFixed(1)}%
-                                                    </span>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -491,18 +477,13 @@ function DashboardView({ themes, onThemeClick }: { themes: MergedThemeData[]; on
                                                 {i + 1}
                                             </span>
                                             <div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="font-medium text-[var(--text-primary)]">
-                                                        {theme.name}
-                                                    </span>
-                                                    {theme.hasRealtimeData && (
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                                    )}
-                                                </div>
+                                                <span className="font-medium text-[var(--text-primary)]">
+                                                    {theme.name}
+                                                </span>
                                                 {worstStock && (
-                                                    <span className="text-xs text-[var(--text-tertiary)]">
+                                                    <div className="text-xs text-[var(--text-tertiary)]">
                                                         {worstStock.stockName} {worstStock.changeRate.toFixed(1)}%
-                                                    </span>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -534,47 +515,36 @@ export default function ThemesPage() {
     const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
     const [selectedCategory, setSelectedCategory] = useState('all');
 
-    const { data: themes, isLoading: themesLoading } = useQuery({
+    // 테마 데이터 조회 (장 상태에 따라 polling 주기 조절)
+    const { data: themesData, isLoading: themesLoading } = useQuery({
         queryKey: ['themes'],
-        queryFn: fetchThemes,
-        refetchInterval: 5 * 60 * 1000, // 5분마다 새로고침
+        queryFn: fetchThemesWithMeta,
+        refetchInterval: (query) => {
+            // 장중이면 1분, 아니면 5분
+            const isMarketOpen = query.state.data?.marketStatus?.isOpen;
+            return isMarketOpen ? 60 * 1000 : 5 * 60 * 1000;
+        },
     });
 
-    const { priceMap: realtimePriceMap, marketStatus } = useRealtimeStockPrices();
+    const themes = themesData?.themes;
+    const marketStatus = themesData?.marketStatus ?? null;
 
     const handleThemeClick = (themeName: string) => {
         router.push(`/themes/${encodeURIComponent(themeName)}`);
     };
 
-    // 실시간 + 캐시 데이터 병합
-    const mergedThemes: MergedThemeData[] = useMemo(() => {
+    // 캐시 데이터 변환
+    const processedThemes: ThemeData[] = useMemo(() => {
         if (!themes) return [];
 
         return themes.map((theme) => {
-            const realtimeData = realtimePriceMap.get(theme.name);
-            const hasRealtimeData = !!(realtimeData && realtimeData.prices.length > 0);
-
-            // 실시간 데이터가 있으면 실시간 사용, 없으면 캐시 사용
-            let avgChangeRate = 0;
-            let prices: MergedThemeData['prices'] = [];
-
-            if (hasRealtimeData && realtimeData) {
-                avgChangeRate = realtimeData.avgChangeRate;
-                prices = realtimeData.prices.map((p) => ({
-                    stockName: p.stockName,
-                    changeRate: p.changeRate,
-                    tradingValue: p.tradingValue,
-                    currentPrice: p.currentPrice,
-                }));
-            } else if (theme.avgChangeRate !== null && theme.topStocks.length > 0) {
-                avgChangeRate = theme.avgChangeRate;
-                prices = theme.topStocks.map((s) => ({
-                    stockName: s.stockName,
-                    changeRate: s.changeRate,
-                    tradingValue: s.tradingValue,
-                    currentPrice: s.currentPrice,
-                }));
-            }
+            const avgChangeRate = theme.avgChangeRate ?? 0;
+            const prices = theme.topStocks.map((s) => ({
+                stockName: s.stockName,
+                changeRate: s.changeRate,
+                tradingValue: s.tradingValue,
+                currentPrice: s.currentPrice,
+            }));
 
             const category = getThemeCategory(theme.name, theme.keywords);
 
@@ -584,24 +554,23 @@ export default function ThemesPage() {
                 keywords: theme.keywords,
                 avgChangeRate,
                 prices,
-                hasRealtimeData,
                 category,
             };
         });
-    }, [themes, realtimePriceMap]);
+    }, [themes]);
 
     // 카테고리별 테마 수 계산
     const themeCounts = useMemo(() => {
-        const counts: Record<string, number> = { all: mergedThemes.length };
-        for (const theme of mergedThemes) {
+        const counts: Record<string, number> = { all: processedThemes.length };
+        for (const theme of processedThemes) {
             counts[theme.category] = (counts[theme.category] || 0) + 1;
         }
         return counts;
-    }, [mergedThemes]);
+    }, [processedThemes]);
 
     // 필터링 및 정렬
     const filteredThemes = useMemo(() => {
-        let result = mergedThemes;
+        let result = processedThemes;
 
         // 카테고리 필터
         if (selectedCategory !== 'all') {
@@ -620,12 +589,26 @@ export default function ThemesPage() {
 
         // 등락률 기준 정렬
         return result.sort((a, b) => b.avgChangeRate - a.avgChangeRate);
-    }, [mergedThemes, selectedCategory, searchQuery]);
+    }, [processedThemes, selectedCategory, searchQuery]);
 
-    // 히트맵용 priceMap 생성 (실시간 + 캐시 병합)
-    const mergedPriceMap = useMemo(() => {
-        const map = new Map<string, ThemeRealtimePrice>();
-        for (const theme of mergedThemes) {
+    // 히트맵용 priceMap 생성
+    const priceMap = useMemo(() => {
+        const map = new Map<string, {
+            themeName: string;
+            avgChangeRate: number;
+            prices: Array<{
+                stockCode: string;
+                stockName: string;
+                currentPrice: number;
+                changePrice: number;
+                changeRate: number;
+                volume: number;
+                tradingValue: number;
+                tradeTime: string;
+            }>;
+            updatedAt: string;
+        }>();
+        for (const theme of processedThemes) {
             map.set(theme.name, {
                 themeName: theme.name,
                 avgChangeRate: theme.avgChangeRate,
@@ -643,7 +626,7 @@ export default function ThemesPage() {
             });
         }
         return map;
-    }, [mergedThemes]);
+    }, [processedThemes]);
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
@@ -652,10 +635,10 @@ export default function ThemesPage() {
                 <div className="flex items-center gap-5">
                     {/* 로고 */}
                     <Link href="/" className="flex items-center gap-2.5 group">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/25 group-hover:shadow-red-500/40 group-hover:scale-105 transition-all duration-200">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-linear-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/25 group-hover:shadow-red-500/40 group-hover:scale-105 transition-all duration-200">
                             <Flame size={20} className="text-white" fill="currentColor" />
                         </div>
-                        <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                        <span className="text-lg font-bold tracking-tight bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
                             TEBURN
                         </span>
                     </Link>
@@ -673,13 +656,19 @@ export default function ThemesPage() {
                         >
                             뉴스
                         </Link>
+                        <Link
+                            href="/leading"
+                            className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                        >
+                            주도주
+                        </Link>
                     </nav>
 
                     <div className="h-6 w-px bg-[var(--border-color)]" />
 
                     <MarketStatusBadge marketStatus={marketStatus} />
-                    {mergedThemes.length > 0 && (
-                        <span className="text-xs text-[var(--text-tertiary)]">총 {mergedThemes.length}개</span>
+                    {processedThemes.length > 0 && (
+                        <span className="text-xs text-[var(--text-tertiary)]">총 {processedThemes.length}개</span>
                     )}
                 </div>
 
@@ -707,6 +696,17 @@ export default function ThemesPage() {
                             title="히트맵"
                         >
                             <Grid3X3 size={18} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('momentum')}
+                            className={`p-2 rounded-lg transition-all ${
+                                viewMode === 'momentum'
+                                    ? 'bg-[var(--bg-primary)] text-[var(--accent-blue)] shadow-[var(--shadow-sm)]'
+                                    : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                            }`}
+                            title="모멘텀"
+                        >
+                            <Activity size={18} />
                         </button>
                     </div>
 
@@ -783,9 +783,12 @@ export default function ThemesPage() {
                                     topStocks: [],
                                     priceUpdatedAt: null,
                                 }))}
-                                priceMap={mergedPriceMap}
+                                priceMap={priceMap}
                                 onThemeClick={handleThemeClick}
                             />
+                        )}
+                        {viewMode === 'momentum' && (
+                            <MomentumScoreView themes={filteredThemes} onThemeClick={handleThemeClick} />
                         )}
                     </>
                 )}

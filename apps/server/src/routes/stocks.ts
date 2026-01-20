@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getStockPrice, getStockCode, StockPrice } from '../services/kisApi';
 import { getAllThemePrices, calculateThemePrice, getCachedThemePrices, isCacheValid, getLastUpdateTime } from '../services/themePrice';
-import { kisWebSocket } from '../services/kisWebSocket';
 
 const router = Router();
 
@@ -104,54 +103,6 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
         res.status(500).json({
             success: false,
             message: error.message || '테마 가격 조회 중 오류가 발생했습니다.',
-        });
-    }
-});
-
-// 실시간 WebSocket 디버그 정보
-router.get('/debug/realtime', (_req: Request, res: Response) => {
-    try {
-        const allPrices = kisWebSocket.getAllCachedPrices();
-        const priceArray = Array.from(allPrices.values());
-
-        // 하락 종목만 필터
-        const decliningStocks = priceArray.filter(p => p.changeRate < 0);
-        // 상승 종목만 필터
-        const risingStocks = priceArray.filter(p => p.changeRate > 0);
-        // 보합 종목
-        const flatStocks = priceArray.filter(p => p.changeRate === 0);
-
-        res.json({
-            success: true,
-            connected: kisWebSocket.connected,
-            totalStocks: priceArray.length,
-            stats: {
-                rising: risingStocks.length,
-                declining: decliningStocks.length,
-                flat: flatStocks.length,
-            },
-            decliningStocks: decliningStocks.map(p => ({
-                name: p.stockName,
-                code: p.stockCode,
-                rate: p.changeRate,
-            })),
-            risingStocks: risingStocks.slice(0, 10).map(p => ({
-                name: p.stockName,
-                code: p.stockCode,
-                rate: p.changeRate,
-            })),
-            allPrices: priceArray.map(p => ({
-                name: p.stockName,
-                code: p.stockCode,
-                price: p.currentPrice,
-                changeRate: p.changeRate,
-                changePrice: p.changePrice,
-            })),
-        });
-    } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
         });
     }
 });

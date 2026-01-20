@@ -52,11 +52,30 @@ export interface CacheStats {
     cachedStocks: number;
 }
 
+// 장 상태 타입
+export type MarketStatus = 'pre_market' | 'regular' | 'post_market' | 'closed';
+
+export interface MarketStatusInfo {
+    status: MarketStatus;
+    statusText: string;
+    isOpen: boolean;
+    nextOpenTime?: string;
+    closeTime?: string;
+}
+
 // API 응답 타입
 interface ThemeListResponse {
     success: boolean;
     data: ThemeListItem[];
     total: number;
+    marketStatus: MarketStatusInfo;
+    cacheStats: CacheStats;
+}
+
+// 테마 목록 + 메타 정보
+export interface ThemesData {
+    themes: ThemeListItem[];
+    marketStatus: MarketStatusInfo;
     cacheStats: CacheStats;
 }
 
@@ -73,7 +92,17 @@ interface StockThemesResponse {
     };
 }
 
-// 모든 테마 목록 조회
+// 모든 테마 목록 조회 (전체 데이터 반환)
+export const fetchThemesWithMeta = async (): Promise<ThemesData> => {
+    const { data } = await axios.get<ThemeListResponse>(`${API_URL}/themes`);
+    return {
+        themes: data.data,
+        marketStatus: data.marketStatus,
+        cacheStats: data.cacheStats,
+    };
+};
+
+// 모든 테마 목록 조회 (하위 호환성)
 export const fetchThemes = async (): Promise<ThemeListItem[]> => {
     const { data } = await axios.get<ThemeListResponse>(`${API_URL}/themes`);
     return data.data;

@@ -3,6 +3,7 @@ import Theme from '../models/Theme';
 import { getThemeHistory } from '../services/themeHistoryService';
 import { updateAllThemes, migrateFromJson } from '../services/themeCrawler';
 import { themePriceCache } from '../services/themePriceCache';
+import { getMarketStatus } from '../utils/marketStatus';
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.get('/', async (_req: Request, res: Response) => {
             success: true,
             data: themeList,
             total: themeList.length,
+            marketStatus: getMarketStatus(),
             cacheStats: {
                 lastUpdateTime: cacheStats.lastUpdateTime,
                 cachedThemes: cacheStats.themeCount,

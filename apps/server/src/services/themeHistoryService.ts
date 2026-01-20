@@ -1,5 +1,5 @@
 import ThemeHistory from '../models/ThemeHistory';
-import { kisWebSocket } from './kisWebSocket';
+import { themePriceCache } from './themePriceCache';
 import { getMarketStatus } from '../utils/marketStatus';
 
 // 메모리 캐시: 오늘 실시간 히스토리 (1분 간격, 최대 390개 = 6.5시간)
@@ -18,17 +18,17 @@ function saveRealtimeHistory(): void {
     const marketStatus = getMarketStatus();
     if (!marketStatus.isOpen) return;
 
-    const themePrices = kisWebSocket.getThemePrices();
-    if (themePrices.themes.length === 0) return;
+    const themePricesData = themePriceCache.getAllThemePrices();
+    if (themePricesData.themes.length === 0) return;
 
     const timestamp = new Date();
 
-    for (const theme of themePrices.themes) {
+    for (const theme of themePricesData.themes) {
         const item: RealtimeHistoryItem = {
             timestamp,
             avgChangeRate: theme.avgChangeRate,
-            topStock: theme.prices[0]?.stockName || '',
-            topStockRate: theme.prices[0]?.changeRate || 0,
+            topStock: theme.topStocks[0]?.stockName || '',
+            topStockRate: theme.topStocks[0]?.changeRate || 0,
         };
 
         if (!realtimeHistoryCache.has(theme.themeName)) {
@@ -71,19 +71,19 @@ export async function saveThemeSnapshot(): Promise<void> {
         return;
     }
 
-    const themePrices = kisWebSocket.getThemePrices();
+    const themePricesData = themePriceCache.getAllThemePrices();
 
-    if (themePrices.themes.length === 0) {
+    if (themePricesData.themes.length === 0) {
         console.log('⏭️ 테마 히스토리: 캐시된 데이터 없음, 스킵');
         return;
     }
 
     const timestamp = new Date();
-    const documents = themePrices.themes.map(theme => ({
+    const documents = themePricesData.themes.map(theme => ({
         themeName: theme.themeName,
         avgChangeRate: theme.avgChangeRate,
-        topStock: theme.prices[0]?.stockName || '',
-        topStockRate: theme.prices[0]?.changeRate || 0,
+        topStock: theme.topStocks[0]?.stockName || '',
+        topStockRate: theme.topStocks[0]?.changeRate || 0,
         timestamp,
     }));
 

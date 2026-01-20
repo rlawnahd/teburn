@@ -205,7 +205,7 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                             <button
                                 onClick={handleAnalyze}
                                 disabled={isAnalyzing}
-                                className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 rounded-2xl text-white font-bold transition-all disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                                className="w-full flex items-center justify-center gap-2 py-4 bg-linear-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 rounded-2xl text-white font-bold transition-all disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-[1.02]"
                             >
                                 {isAnalyzing ? (
                                     <>

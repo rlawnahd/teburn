@@ -12,16 +12,31 @@ import {
     ExternalLink,
     TrendingUp,
     ChevronDown,
-    Flame,
+    Crown,
+    ArrowUpRight,
+    ArrowDownRight,
+    DollarSign,
+    Tag,
+    Activity,
 } from 'lucide-react';
-import { fetchThemes, fetchThemeDetail, fetchThemeHistory, StockWithPrice } from '@/lib/api/themes';
+import { fetchThemesWithMeta, fetchThemeDetail, fetchThemeHistory, StockWithPrice } from '@/lib/api/themes';
 import { fetchNewsByTheme } from '@/lib/api/news';
-import { useRealtimeStockPrices, RealtimePrice } from '@/hooks/useRealtimeStockPrices';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
-// 캐시된 가격을 RealtimePrice 형식으로 변환
-function convertToRealtimePrice(stock: StockWithPrice): RealtimePrice | null {
+// 종목 가격 정보 타입
+interface StockPrice {
+    stockCode: string;
+    stockName: string;
+    currentPrice: number;
+    changePrice: number;
+    changeRate: number;
+    volume: number;
+    tradingValue: number;
+}
+
+// 캐시된 가격을 StockPrice 형식으로 변환
+function convertToStockPrice(stock: StockWithPrice): StockPrice | null {
     if (stock.currentPrice === null || stock.changeRate === null) return null;
     return {
         stockCode: stock.code,
@@ -31,7 +46,6 @@ function convertToRealtimePrice(stock: StockWithPrice): RealtimePrice | null {
         changeRate: stock.changeRate,
         volume: stock.volume || 0,
         tradingValue: (stock.currentPrice || 0) * (stock.volume || 0),
-        tradeTime: '',
     };
 }
 
@@ -58,8 +72,8 @@ function formatRelativeTime(dateStr: string): string {
 // 거래대금 포맷 함수 (억 단위)
 function formatTradingValue(value: number): string {
     const billion = value / 100000000;
-    if (billion >= 1000) {
-        return `${(billion / 1000).toFixed(1)}조`;
+    if (billion >= 10000) {
+        return `${(billion / 10000).toFixed(1)}조`;
     } else if (billion >= 1) {
         return `${billion.toFixed(0)}억`;
     } else {
@@ -67,46 +81,83 @@ function formatTradingValue(value: number): string {
     }
 }
 
-// 종목 가격 표시 컴포넌트
-function StockPriceTag({ price, rank }: { price: RealtimePrice; rank?: number }) {
-    const isPositive = price.changeRate > 0;
-    const isNegative = price.changeRate < 0;
+// 등락률에 따른 배경
+function getChangeRateBg(rate: number): string {
+    if (rate >= 15) return 'bg-[var(--rise-color)]/15';
+    if (rate >= 10) return 'bg-[var(--rise-color)]/10';
+    if (rate >= 6) return 'bg-[var(--rise-color)]/5';
+    return '';
+}
+
+// 종목 행 컴포넌트
+function StockRow({
+    stock,
+    rank,
+    maxTradingValue,
+}: {
+    stock: StockPrice;
+    rank: number;
+    maxTradingValue: number;
+}) {
+    const progressWidth = maxTradingValue > 0 ? (stock.tradingValue / maxTradingValue) * 100 : 0;
+    const isPositive = stock.changeRate > 0;
+    const isNegative = stock.changeRate < 0;
+    const isLimitUp = stock.changeRate >= 29.9;
 
     return (
-        <div
-            className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-                isPositive
-                    ? 'bg-(--rise-bg) border-(--rise-color)/20'
-                    : isNegative
-                      ? 'bg-(--fall-bg) border-(--fall-color)/20'
-                      : 'bg-(--bg-tertiary) border-(--border-color)'
-            }`}
-        >
-            <div className="flex items-center gap-3">
-                {rank !== undefined && (
-                    <span className={`text-xs font-bold w-5 ${
-                        rank === 1 ? 'text-(--warning-color)' : 'text-(--text-tertiary)'
-                    }`}>
-                        {rank}
-                    </span>
-                )}
-                <span className="text-sm font-medium text-foreground">{price.stockName}</span>
+        <div className={`relative group rounded-lg border border-[var(--border-color)] hover:border-[var(--accent-blue)]/30 transition-all ${getChangeRateBg(stock.changeRate)}`}>
+            {/* 거래대금 프로그레스 바 (배경) */}
+            <div className="absolute inset-0 overflow-hidden rounded-lg">
+                <div
+                    className="absolute left-0 top-0 h-full bg-[var(--accent-blue)]/5 transition-all"
+                    style={{ width: `${progressWidth}%` }}
+                />
             </div>
-            <div className="flex items-center gap-4">
-                <span className="text-xs text-(--text-tertiary)">
-                    {formatTradingValue(price.tradingValue)}
-                </span>
-                <span className="text-sm font-mono text-(--text-secondary)">
-                    {price.currentPrice.toLocaleString()}
-                </span>
-                <span
-                    className={`text-xs font-bold min-w-[52px] text-right ${
-                        isPositive ? 'text-(--rise-color)' : isNegative ? 'text-(--fall-color)' : 'text-(--text-tertiary)'
-                    }`}
-                >
-                    {isPositive ? '+' : ''}
-                    {price.changeRate.toFixed(2)}%
-                </span>
+
+            <div className="relative flex items-center p-3 gap-4">
+                {/* 순위 */}
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                    rank <= 3
+                        ? 'bg-[var(--accent-blue)]/20 text-[var(--accent-blue)]'
+                        : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
+                }`}>
+                    {rank}
+                </div>
+
+                {/* 종목명 */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                        {isLimitUp && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] rounded">
+                                상한가
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
+                        {stock.stockCode}
+                    </div>
+                </div>
+
+                {/* 현재가 */}
+                <div className="text-right">
+                    <span className="text-sm text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}원</span>
+                </div>
+
+                {/* 등락률 */}
+                <div className="w-20 text-right">
+                    <span className={`flex items-center justify-end gap-0.5 font-bold ${
+                        isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
+                    }`}>
+                        {isPositive ? <ArrowUpRight size={14} /> : isNegative ? <ArrowDownRight size={14} /> : null}
+                        {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                    </span>
+                </div>
+
+                {/* 거래대금 */}
+                <div className="w-20 text-right">
+                    <span className="font-medium text-[var(--text-secondary)]">{formatTradingValue(stock.tradingValue)}</span>
+                </div>
             </div>
         </div>
     );
@@ -152,21 +203,23 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
     const yDomain = [-Math.ceil(absMax), Math.ceil(absMax)];
 
     return (
-        <div className="bg-background rounded-2xl border border-(--border-color) p-6">
+        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
             <div className="flex items-center justify-between mb-4">
-                <div className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <BarChart3 size={16} className="text-(--accent-blue)" />
-                    등락률 추이
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-blue)]/10 flex items-center justify-center">
+                        <BarChart3 size={16} className="text-[var(--accent-blue)]" />
+                    </div>
+                    <span className="text-sm font-bold text-[var(--text-primary)]">등락률 추이</span>
                 </div>
-                <div className="flex gap-1 bg-(--bg-tertiary) p-1 rounded-xl">
+                <div className="flex gap-1 bg-[var(--bg-tertiary)] p-1 rounded-lg border border-[var(--border-color)]">
                     {(Object.keys(periodLabels) as Array<keyof typeof periodLabels>).map((p) => (
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
-                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                            className={`px-3 py-1.5 text-xs rounded transition-colors ${
                                 period === p
-                                    ? 'bg-background text-(--accent-blue) font-medium shadow-(--shadow-sm)'
-                                    : 'text-(--text-tertiary) hover:text-(--text-secondary)'
+                                    ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] font-medium shadow-sm'
+                                    : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                             }`}
                         >
                             {periodLabels[p]}
@@ -176,17 +229,17 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
             </div>
 
             {isLoading ? (
-                <div className="h-48 flex items-center justify-center text-(--text-tertiary)">
-                    <RefreshCw size={16} className="animate-spin mr-2 text-(--accent-blue)" />
+                <div className="h-48 flex items-center justify-center text-[var(--text-tertiary)]">
+                    <RefreshCw size={16} className="animate-spin mr-2 text-[var(--accent-blue)]" />
                     차트 로딩 중...
                 </div>
             ) : chartData.length === 0 ? (
-                <div className="h-48 flex items-center justify-center text-(--text-tertiary) text-sm">
+                <div className="h-48 flex items-center justify-center text-[var(--text-tertiary)] text-sm">
                     해당 기간에 데이터가 없습니다
                 </div>
             ) : (
-                <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="min-w-0">
+                    <ResponsiveContainer width="100%" height={192}>
                         <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                             <XAxis
                                 dataKey="time"
@@ -209,13 +262,13 @@ function ThemeHistoryChart({ themeName }: { themeName: string }) {
                                     const rate = data.rate;
                                     const isUp = rate > 0;
                                     return (
-                                        <div className="bg-background border border-(--border-color) rounded-xl shadow-(--shadow-lg) p-3 text-xs">
-                                            <div className="text-(--text-tertiary) mb-1">{data.time}</div>
-                                            <div className={`font-bold ${isUp ? 'text-(--rise-color)' : rate < 0 ? 'text-(--fall-color)' : 'text-(--text-tertiary)'}`}>
+                                        <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-lg p-3 text-xs">
+                                            <div className="text-[var(--text-tertiary)] mb-1">{data.time}</div>
+                                            <div className={`font-bold ${isUp ? 'text-[var(--rise-color)]' : rate < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
                                                 {isUp ? '+' : ''}{rate.toFixed(2)}%
                                             </div>
                                             {data.topStock && (
-                                                <div className="text-(--text-tertiary) mt-1">
+                                                <div className="text-[var(--text-tertiary)] mt-1">
                                                     대장주: {data.topStock} ({data.topStockRate > 0 ? '+' : ''}{data.topStockRate.toFixed(1)}%)
                                                 </div>
                                             )}
@@ -246,59 +299,127 @@ function PriceTabContent({
     theme,
     detail,
     sortedPrices,
-    isRealtime,
 }: {
     themeName: string;
     theme: { keywords: string[] } | undefined;
     detail: { stocks: string[] } | undefined;
-    sortedPrices: RealtimePrice[];
-    isRealtime: boolean;
+    sortedPrices: StockPrice[];
 }) {
+    const maxTradingValue = sortedPrices.length > 0 ? Math.max(...sortedPrices.map((s) => s.tradingValue)) : 1;
+    const topStock = sortedPrices[0];
+    const totalTradingValue = sortedPrices.reduce((sum, s) => sum + s.tradingValue, 0);
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
+            {/* 요약 정보 카드 */}
+            {sortedPrices.length > 0 && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* 대장주 */}
+                    {topStock && (
+                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Crown size={14} className="text-amber-500" />
+                                <span className="text-xs text-[var(--text-tertiary)]">대장주</span>
+                            </div>
+                            <div className="font-bold text-[var(--text-primary)] truncate">{topStock.stockName}</div>
+                            <div className={`text-sm font-medium mt-1 ${
+                                topStock.changeRate > 0 ? 'text-[var(--rise-color)]' : topStock.changeRate < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
+                            }`}>
+                                {topStock.changeRate > 0 ? '+' : ''}{topStock.changeRate.toFixed(2)}%
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 총 거래대금 */}
+                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <DollarSign size={14} className="text-[var(--accent-blue)]" />
+                            <span className="text-xs text-[var(--text-tertiary)]">총 거래대금</span>
+                        </div>
+                        <div className="font-bold text-[var(--text-primary)]">{formatTradingValue(totalTradingValue)}</div>
+                    </div>
+
+                    {/* 종목 수 */}
+                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Activity size={14} className="text-emerald-500" />
+                            <span className="text-xs text-[var(--text-tertiary)]">종목 수</span>
+                        </div>
+                        <div className="font-bold text-[var(--text-primary)]">{sortedPrices.length}개</div>
+                    </div>
+
+                    {/* 키워드 수 */}
+                    {theme && theme.keywords.length > 0 && (
+                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Tag size={14} className="text-violet-500" />
+                                <span className="text-xs text-[var(--text-tertiary)]">키워드</span>
+                            </div>
+                            <div className="font-bold text-[var(--text-primary)]">{theme.keywords.length}개</div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* 등락률 차트 */}
             <ThemeHistoryChart themeName={themeName} />
 
+            {/* 종목 시세 */}
             {sortedPrices.length > 0 && (
-                <div className="bg-background rounded-2xl border border-(--border-color) p-6">
-                    <div className="text-sm font-semibold text-foreground mb-4">
-                        {isRealtime ? '실시간 시세' : '종목 시세'} <span className="text-(--text-tertiary) font-normal">(거래대금 순)</span>
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-color)]">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--rise-bg)] flex items-center justify-center">
+                                <TrendingUp size={16} className="text-[var(--rise-color)]" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-[var(--text-primary)]">종목 시세</h3>
+                                <p className="text-[10px] text-[var(--text-tertiary)]">거래대금 순 정렬</p>
+                            </div>
+                        </div>
+                        <span className="px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-tertiary)] rounded-full">
+                            {sortedPrices.length}개
+                        </span>
                     </div>
-                    <div className="space-y-2">
-                        {sortedPrices.map((price, i) => (
-                            <StockPriceTag key={i} price={price} rank={i + 1} />
+
+                    {/* 테이블 헤더 */}
+                    <div className="flex items-center px-3 py-2 text-[11px] text-[var(--text-tertiary)] border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">
+                        <div className="w-8 mr-4">#</div>
+                        <div className="flex-1">종목명</div>
+                        <div className="w-24 text-right">현재가</div>
+                        <div className="w-20 text-right">등락률</div>
+                        <div className="w-20 text-right">거래대금</div>
+                    </div>
+
+                    <div className="p-2 space-y-1">
+                        {sortedPrices.map((stock, index) => (
+                            <StockRow
+                                key={stock.stockCode}
+                                stock={stock}
+                                rank={index + 1}
+                                maxTradingValue={maxTradingValue}
+                            />
                         ))}
                     </div>
                 </div>
             )}
 
-            {theme && (
-                <div className="bg-background rounded-2xl border border-(--border-color) p-6">
-                    <div className="text-sm font-semibold text-foreground mb-4">키워드</div>
+            {/* 키워드 */}
+            {theme && theme.keywords.length > 0 && (
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                            <Tag size={16} className="text-violet-500" />
+                        </div>
+                        <span className="text-sm font-bold text-[var(--text-primary)]">관련 키워드</span>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                         {theme.keywords.map((keyword, i) => (
                             <span
                                 key={i}
-                                className="text-xs px-3 py-1.5 rounded-full bg-(--accent-blue-light) text-(--accent-blue) font-medium"
+                                className="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] font-medium"
                             >
                                 {keyword}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {detail && (
-                <div className="bg-background rounded-2xl border border-(--border-color) p-6">
-                    <div className="text-sm font-semibold text-foreground mb-4">
-                        관련 종목 <span className="text-(--text-tertiary) font-normal">({detail.stocks.length}개)</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {detail.stocks.map((stock, i) => (
-                            <span
-                                key={i}
-                                className="text-sm px-3 py-1.5 rounded-xl bg-(--bg-tertiary) text-(--text-secondary) hover:bg-(--border-color) transition-colors"
-                            >
-                                {stock}
                             </span>
                         ))}
                     </div>
@@ -326,55 +447,57 @@ function NewsTabContent({ themeName }: { themeName: string }) {
     };
 
     return (
-        <div className="bg-background rounded-2xl border border-(--border-color)">
+        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden">
             {/* 헤더 */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-(--border-color)">
-                <div className="flex items-center gap-2">
-                    <Newspaper size={18} className="text-(--accent-blue)" />
-                    <span className="font-semibold text-foreground">관련 뉴스</span>
-                    {news.length > 0 && (
-                        <span className="text-xs text-(--text-tertiary) bg-(--bg-tertiary) px-2 py-0.5 rounded-full">
-                            {news.length}건
-                        </span>
-                    )}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-color)]">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <Newspaper size={16} className="text-emerald-500" />
+                    </div>
+                    <span className="text-sm font-bold text-[var(--text-primary)]">관련 뉴스</span>
                 </div>
+                {news.length > 0 && (
+                    <span className="px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-tertiary)] rounded-full">
+                        {news.length}건
+                    </span>
+                )}
             </div>
 
             {/* 뉴스 리스트 */}
             {isLoading ? (
-                <div className="flex items-center justify-center py-12 text-(--text-tertiary)">
-                    <RefreshCw size={20} className="animate-spin mr-2 text-(--accent-blue)" />
+                <div className="flex items-center justify-center py-12 text-[var(--text-tertiary)]">
+                    <RefreshCw size={20} className="animate-spin mr-2 text-[var(--accent-blue)]" />
                     뉴스 로딩 중...
                 </div>
             ) : news.length === 0 ? (
-                <div className="py-12 text-center text-(--text-tertiary)">
+                <div className="py-12 text-center text-[var(--text-tertiary)]">
                     관련 뉴스가 없습니다
                 </div>
             ) : (
-                <div className="divide-y divide-(--border-color)">
+                <div className="divide-y divide-[var(--border-color)]">
                     {news.map((item) => (
                         <a
                             key={item.link}
                             href={item.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-start gap-4 px-6 py-4 hover:bg-(--bg-tertiary) transition-colors group"
+                            className="flex items-start gap-4 px-5 py-4 hover:bg-[var(--bg-tertiary)] transition-colors group"
                         >
                             <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-(--accent-blue) transition-colors">
+                                <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent-blue)] transition-colors">
                                     {item.title}
                                 </h3>
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-xs text-(--text-tertiary)">{item.press}</span>
-                                    <span className="text-xs text-(--text-tertiary)">·</span>
-                                    <span className="text-xs text-(--text-tertiary)">
+                                    <span className="text-xs text-[var(--text-tertiary)]">{item.press}</span>
+                                    <span className="text-xs text-[var(--text-tertiary)]">·</span>
+                                    <span className="text-xs text-[var(--text-tertiary)]">
                                         {formatRelativeTime(item.createdAt)}
                                     </span>
                                 </div>
                             </div>
                             <ExternalLink
                                 size={16}
-                                className="text-(--text-tertiary) group-hover:text-(--accent-blue) shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="text-[var(--text-tertiary)] group-hover:text-[var(--accent-blue)] shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             />
                         </a>
                     ))}
@@ -383,11 +506,11 @@ function NewsTabContent({ themeName }: { themeName: string }) {
 
             {/* 더보기 버튼 */}
             {hasMore && !isLoading && (
-                <div className="px-6 py-4 border-t border-(--border-color)">
+                <div className="px-5 py-4 border-t border-[var(--border-color)]">
                     <button
                         onClick={loadMore}
                         disabled={isFetching}
-                        className="w-full py-3 rounded-xl bg-(--bg-tertiary) text-(--text-secondary) hover:bg-(--border-color) transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+                        className="w-full py-3 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)] transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
                     >
                         {isFetching ? (
                             <>
@@ -413,12 +536,12 @@ export default function ThemeDetailPage() {
     const themeName = decodeURIComponent(params.themeName as string);
     const [activeTab, setActiveTab] = useState<TabType>('price');
 
-    const { data: themes } = useQuery({
+    const { data: themesData } = useQuery({
         queryKey: ['themes'],
-        queryFn: fetchThemes,
+        queryFn: fetchThemesWithMeta,
     });
 
-    const theme = themes?.find((t) => t.name === themeName);
+    const theme = themesData?.themes?.find((t) => t.name === themeName);
 
     const { data: detail, isLoading: detailLoading } = useQuery({
         queryKey: ['themeDetail', themeName],
@@ -426,44 +549,35 @@ export default function ThemeDetailPage() {
         enabled: !!themeName,
     });
 
-    const { priceMap } = useRealtimeStockPrices();
-    const realtimePriceInfo = priceMap.get(themeName);
-
-    // 실시간 데이터가 있으면 사용, 없으면 API 캐시 데이터 사용
-    const hasRealtimeData = realtimePriceInfo && realtimePriceInfo.prices.length > 0;
-
-    // 캐시된 가격 데이터를 RealtimePrice 형식으로 변환
-    const cachedPrices: RealtimePrice[] = (detail?.stocksWithPrice || [])
-        .map(convertToRealtimePrice)
-        .filter((p): p is RealtimePrice => p !== null)
+    // 캐시된 가격 데이터를 StockPrice 형식으로 변환
+    const sortedPrices: StockPrice[] = (detail?.stocksWithPrice || [])
+        .map(convertToStockPrice)
+        .filter((p): p is StockPrice => p !== null)
         .sort((a, b) => b.tradingValue - a.tradingValue);
 
-    const avgRate = hasRealtimeData
-        ? realtimePriceInfo.avgChangeRate
-        : (detail?.avgChangeRate ?? 0);
+    const avgRate = detail?.avgChangeRate ?? 0;
     const isPositive = avgRate > 0;
     const isNegative = avgRate < 0;
-    const sortedPrices = hasRealtimeData ? realtimePriceInfo.prices : cachedPrices;
 
     if (!theme && !detailLoading) {
         return (
-            <div className="min-h-screen bg-(--bg-secondary)">
-                <header className="h-16 border-b border-(--border-color) flex items-center justify-between px-6 bg-background sticky top-0 z-10">
-                    <Link href="/" className="flex items-center gap-2.5 group">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/25">
-                            <Flame size={20} className="text-white" fill="currentColor" />
+            <div className="min-h-screen bg-[var(--bg-secondary)]">
+                <header className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-primary)] sticky top-0 z-10">
+                    <Link href="/leading" className="flex items-center gap-2.5 group">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--accent-blue)]/10">
+                            <TrendingUp size={16} className="text-[var(--accent-blue)]" />
                         </div>
-                        <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                            TEBURN
+                        <span className="text-base font-bold text-[var(--text-primary)]">
+                            주도주 탐색기
                         </span>
                     </Link>
                     <ThemeToggle />
                 </header>
-                <main className="flex items-center justify-center h-[calc(100vh-4rem)]">
+                <main className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
                     <div className="text-center">
-                        <p className="text-(--text-tertiary) mb-4">테마를 찾을 수 없습니다</p>
-                        <Link href="/" className="text-(--accent-blue) hover:underline">
-                            홈으로 돌아가기
+                        <p className="text-[var(--text-tertiary)] mb-4">테마를 찾을 수 없습니다</p>
+                        <Link href="/leading" className="text-[var(--accent-blue)] hover:underline">
+                            주도주 탐색기로 돌아가기
                         </Link>
                     </div>
                 </main>
@@ -472,92 +586,82 @@ export default function ThemeDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-(--bg-secondary)">
+        <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 상단 네비게이션 */}
-            <nav className="h-14 border-b border-(--border-color) flex items-center justify-between px-6 bg-background sticky top-0 z-20">
-                <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 shadow-md shadow-orange-500/25">
-                        <Flame size={16} className="text-white" fill="currentColor" />
+            <nav className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-primary)] sticky top-0 z-20">
+                <Link href="/leading" className="flex items-center gap-2.5 group">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--accent-blue)]/10">
+                        <TrendingUp size={16} className="text-[var(--accent-blue)]" />
                     </div>
-                    <span className="text-base font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                        TEBURN
+                    <span className="text-base font-bold text-[var(--text-primary)]">
+                        주도주 탐색기
                     </span>
                 </Link>
                 <ThemeToggle />
             </nav>
 
             {/* 테마 헤더 */}
-            <header className={`border-b border-(--border-color) sticky top-14 z-10 transition-colors duration-200 ${
-                isPositive ? 'bg-(--rise-bg)' : isNegative ? 'bg-(--fall-bg)' : 'bg-background'
+            <header className={`border-b border-[var(--border-color)] sticky top-14 z-10 transition-colors duration-200 ${
+                isPositive ? 'bg-[var(--rise-bg)]' : isNegative ? 'bg-[var(--fall-bg)]' : 'bg-[var(--bg-primary)]'
             }`}>
                 <div className="px-6 py-5">
                     <div className="flex items-center gap-4 mb-3">
                         <button
                             onClick={() => router.back()}
-                            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-background/50 text-(--text-secondary) hover:text-foreground transition-colors"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                         >
                             <ArrowLeft size={20} />
                         </button>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-xl font-bold text-foreground">{themeName}</h1>
-                            {hasRealtimeData ? (
-                                <span className="text-xs text-(--success-color) animate-pulse flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-(--success-color)"></span>
-                                    LIVE
-                                </span>
-                            ) : sortedPrices.length > 0 ? (
-                                <span className="text-xs text-(--text-tertiary) flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-(--text-tertiary)"></span>
-                                    캐시
-                                </span>
-                            ) : null}
+                            <h1 className="text-xl font-bold text-[var(--text-primary)]">{themeName}</h1>
                         </div>
                     </div>
 
                     {sortedPrices.length > 0 && (
-                        <div className="ml-13">
-                            <span className={`text-3xl font-bold ${
-                                isPositive ? 'text-(--rise-color)' : isNegative ? 'text-(--fall-color)' : 'text-(--text-tertiary)'
+                        <div className="ml-13 flex items-baseline gap-3">
+                            <span className={`text-3xl font-bold flex items-center gap-1 ${
+                                isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
                             }`}>
+                                {isPositive ? <ArrowUpRight size={24} /> : isNegative ? <ArrowDownRight size={24} /> : null}
                                 {isPositive ? '+' : ''}{avgRate.toFixed(2)}%
                             </span>
-                            <span className="text-sm text-(--text-secondary) ml-2">평균 등락률</span>
+                            <span className="text-sm text-[var(--text-tertiary)]">평균 등락률</span>
                         </div>
                     )}
                 </div>
 
                 {/* 탭 */}
-                <div className="px-6 flex gap-1">
-                        <button
-                            onClick={() => setActiveTab('price')}
-                            className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                                activeTab === 'price'
-                                    ? 'text-(--accent-blue) border-(--accent-blue)'
-                                    : 'text-(--text-tertiary) border-transparent hover:text-(--text-secondary)'
-                            }`}
-                        >
-                            <TrendingUp size={16} className="inline mr-2" />
-                            시세
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('news')}
-                            className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                                activeTab === 'news'
-                                    ? 'text-(--accent-blue) border-(--accent-blue)'
-                                    : 'text-(--text-tertiary) border-transparent hover:text-(--text-secondary)'
-                            }`}
-                        >
-                            <Newspaper size={16} className="inline mr-2" />
-                            뉴스
-                        </button>
-                    </div>
-                </header>
+                <div className="px-6 flex gap-1 bg-[var(--bg-primary)]/50">
+                    <button
+                        onClick={() => setActiveTab('price')}
+                        className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'price'
+                                ? 'text-[var(--accent-blue)] border-[var(--accent-blue)]'
+                                : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+                        }`}
+                    >
+                        <TrendingUp size={16} className="inline mr-2" />
+                        시세
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('news')}
+                        className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'news'
+                                ? 'text-[var(--accent-blue)] border-[var(--accent-blue)]'
+                                : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+                        }`}
+                    >
+                        <Newspaper size={16} className="inline mr-2" />
+                        뉴스
+                    </button>
+                </div>
+            </header>
 
             {/* 컨텐츠 */}
-            <main className="p-6">
+            <main className="p-4">
                 {detailLoading ? (
-                    <div className="flex items-center justify-center py-12 text-(--text-tertiary)">
-                        <RefreshCw size={20} className="animate-spin mr-2 text-(--accent-blue)" />
+                    <div className="flex items-center justify-center py-12 text-[var(--text-tertiary)]">
+                        <RefreshCw size={20} className="animate-spin mr-2 text-[var(--accent-blue)]" />
                         로딩 중...
                     </div>
                 ) : (
@@ -568,7 +672,6 @@ export default function ThemeDetailPage() {
                                 theme={theme}
                                 detail={detail}
                                 sortedPrices={sortedPrices}
-                                isRealtime={!!hasRealtimeData}
                             />
                         )}
                         {activeTab === 'news' && (

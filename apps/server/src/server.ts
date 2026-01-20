@@ -1,31 +1,23 @@
 import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import newsRoutes from './routes/news';
 import themesRoutes from './routes/themes';
 import stocksRoutes from './routes/stocks';
+import leadingRoutes from './routes/leading';
 import { crawlNaverFinanceNews } from './services/crawler';
-import { kisWebSocket, RealtimePrice } from './services/kisWebSocket';
 import { startHistoryCollection } from './services/themeHistoryService';
 import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
+import { saveDailyLeadingThemes } from './services/leadingStockService';
 import News from './models/News';
 
 // 1. 환경 변수 로드
 dotenv.config();
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-        methods: ['GET', 'POST'],
-    },
-});
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || '';
@@ -97,39 +89,17 @@ const backgroundCrawl = async () => {
     }
 };
 
-// 5. WebSocket 연결 처리 (실시간 주가 전용)
-io.on('connection', (socket) => {
-    console.log(`🔌 클라이언트 연결: ${socket.id}`);
-
-    // 실시간 주가 구독 요청
-    socket.on('subscribeStockPrices', () => {
-        console.log(`📈 클라이언트 ${socket.id} 실시간 주가 구독`);
-        socket.join('stockPrices');
-
-        // 현재 캐시된 테마 가격 즉시 전송
-        const themePrices = kisWebSocket.getThemePrices();
-        socket.emit('themePricesUpdate', themePrices);
-    });
-
-    socket.on('unsubscribeStockPrices', () => {
-        socket.leave('stockPrices');
-    });
-
-    socket.on('disconnect', () => {
-        console.log(`❌ 클라이언트 연결 해제: ${socket.id}`);
-    });
-});
-
-// 6. API 라우트
+// 5. API 라우트
 app.use('/api/news', newsRoutes);
 app.use('/api/themes', themesRoutes);
 app.use('/api/stocks', stocksRoutes);
+app.use('/api/leading', leadingRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
 });
 
-// 7. 서버 실행
+// 6. 서버 실행
 connectDB().then(async () => {
     // 레거시 테마(JSON 마이그레이션) 삭제 - 네이버 크롤링 테마만 사용
     const deleted = await Theme.deleteMany({ isCustom: true });
@@ -137,9 +107,8 @@ connectDB().then(async () => {
         console.log(`🗑️ 레거시 테마 ${deleted.deletedCount}개 삭제됨`);
     }
 
-    httpServer.listen(PORT, () => {
+    app.listen(PORT, () => {
         console.log(`🚀 Server is running at http://localhost:${PORT}`);
-        console.log(`🔌 WebSocket 활성화됨`);
 
         // 테마 자동 업데이트 스케줄러 시작 (1일 1회)
         startThemeUpdateScheduler();
@@ -151,29 +120,20 @@ connectDB().then(async () => {
         setInterval(backgroundCrawl, CRAWL_INTERVAL);
         console.log(`⏰ 백그라운드 크롤링: ${CRAWL_INTERVAL / 1000}초마다 실행`);
 
-        // KIS 실시간 WebSocket 연결
-        kisWebSocket.connect().then(() => {
-            console.log('📊 KIS 실시간 주가 WebSocket 연결됨');
-
-            // 실시간 가격 업데이트 시 클라이언트에 푸시 (1초마다 배치)
-            let lastPush = Date.now();
-            kisWebSocket.onPriceUpdate((price: RealtimePrice) => {
-                const now = Date.now();
-                // 1초마다 테마 가격 업데이트 푸시
-                if (now - lastPush >= 1000) {
-                    const themePrices = kisWebSocket.getThemePrices();
-                    io.to('stockPrices').emit('themePricesUpdate', themePrices);
-                    lastPush = now;
-                }
-            });
-
-            // 테마 히스토리 수집 시작 (5분 간격)
-            startHistoryCollection();
-        }).catch((err) => {
-            console.error('❌ KIS WebSocket 연결 실패:', err.message);
-        });
+        // 테마 히스토리 수집 시작 (5분 간격)
+        startHistoryCollection();
 
         // 모든 테마 주가 배치 캐싱 스케줄러 시작 (5분 간격)
         themePriceCache.startScheduler();
+
+        // 일별 주도테마 저장 (30분마다 업데이트)
+        setInterval(async () => {
+            try {
+                await saveDailyLeadingThemes();
+            } catch (error) {
+                console.error('❌ 일별 주도테마 저장 실패:', error);
+            }
+        }, 30 * 60 * 1000);
+        console.log('📅 일별 주도테마 저장: 30분마다 실행');
     });
 });

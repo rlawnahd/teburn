@@ -1,4 +1,19 @@
-import { ThemeRealtimePrice } from '@/hooks/useRealtimeStockPrices';
+// 테마 가격 데이터 타입
+interface ThemePriceData {
+  themeName: string;
+  avgChangeRate: number;
+  prices: Array<{
+    stockCode: string;
+    stockName: string;
+    currentPrice: number;
+    changePrice: number;
+    changeRate: number;
+    volume: number;
+    tradingValue: number;
+    tradeTime: string;
+  }>;
+  updatedAt: string;
+}
 
 // Recharts Treemap에 사용할 데이터 구조
 export interface TreemapDataItem {
@@ -12,9 +27,9 @@ export interface TreemapDataItem {
   topStockRate?: number;
 }
 
-// ThemeRealtimePrice[] -> TreemapDataItem[] 변환
+// ThemePriceData[] -> TreemapDataItem[] 변환
 export function transformToTreemapData(
-  priceMap: Map<string, ThemeRealtimePrice>,
+  priceMap: Map<string, ThemePriceData>,
   themeNames: string[]
 ): TreemapDataItem[] {
   const items: TreemapDataItem[] = [];
@@ -52,38 +67,36 @@ export function transformToTreemapData(
   return items.sort((a, b) => b.size - a.size);
 }
 
-// 등락률에 따른 색상 반환 (Finviz 스타일)
+// 등락률에 따른 색상 반환 (Finviz 스타일 - 더 선명하게)
 export function getColorByChangeRate(rate: number): string {
-  // 등락률 범위: -5% ~ +5% 기준 정규화
-  const maxRange = 5;
+  // 등락률 범위: -3% ~ +3% 기준으로 축소 (더 민감하게)
+  const maxRange = 3;
   const normalized = Math.max(-maxRange, Math.min(maxRange, rate)) / maxRange;
 
   if (rate > 0) {
-    // 상승: 빨간색 계열
+    // 상승: 빨간색 계열 (더 진하게)
     const intensity = normalized;
-    if (intensity > 0.8) return '#dc2626'; // red-600
-    if (intensity > 0.6) return '#ef4444'; // red-500
-    if (intensity > 0.4) return '#f87171'; // red-400
-    if (intensity > 0.2) return '#fca5a5'; // red-300
-    return '#fecaca'; // red-200
+    if (intensity > 0.8) return '#b91c1c'; // red-700
+    if (intensity > 0.6) return '#dc2626'; // red-600
+    if (intensity > 0.4) return '#ef4444'; // red-500
+    if (intensity > 0.2) return '#f87171'; // red-400
+    return '#fca5a5'; // red-300
   } else if (rate < 0) {
-    // 하락: 파란색 계열
+    // 하락: 파란색 계열 (더 진하게)
     const intensity = Math.abs(normalized);
-    if (intensity > 0.8) return '#2563eb'; // blue-600
-    if (intensity > 0.6) return '#3b82f6'; // blue-500
-    if (intensity > 0.4) return '#60a5fa'; // blue-400
-    if (intensity > 0.2) return '#93c5fd'; // blue-300
-    return '#bfdbfe'; // blue-200
+    if (intensity > 0.8) return '#1d4ed8'; // blue-700
+    if (intensity > 0.6) return '#2563eb'; // blue-600
+    if (intensity > 0.4) return '#3b82f6'; // blue-500
+    if (intensity > 0.2) return '#60a5fa'; // blue-400
+    return '#93c5fd'; // blue-300
   }
-  return '#e2e8f0'; // slate-200 (보합)
+  return '#64748b'; // slate-500 (보합 - 더 진하게)
 }
 
-// 색상에 따른 텍스트 색상 반환
+// 색상에 따른 텍스트 색상 반환 (항상 흰색 + 그림자로 가독성 확보)
 export function getTextColorByChangeRate(rate: number): string {
-  const absRate = Math.abs(rate);
-  if (absRate > 2) return '#ffffff'; // 진한 배경에는 흰색
-  if (absRate > 1) return rate > 0 ? '#7f1d1d' : '#1e3a5f'; // 중간 배경에는 어두운 색
-  return rate > 0 ? '#991b1b' : '#1e40af'; // 연한 배경에는 진한 색
+  // 모든 배경에서 흰색 텍스트 사용 (그림자로 가독성 확보)
+  return '#ffffff';
 }
 
 // 거래대금 포맷 (억 단위)

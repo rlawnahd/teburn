@@ -77,10 +77,10 @@ export default function NewsPage() {
                 <div className="flex items-center gap-5">
                     {/* 로고 */}
                     <Link href="/" className="flex items-center gap-2.5 group">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/25 group-hover:shadow-red-500/40 group-hover:scale-105 transition-all duration-200">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-linear-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/25 group-hover:shadow-red-500/40 group-hover:scale-105 transition-all duration-200">
                             <Flame size={20} className="text-white" fill="currentColor" />
                         </div>
-                        <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                        <span className="text-lg font-bold tracking-tight bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
                             TEBURN
                         </span>
                     </Link>
@@ -98,6 +98,12 @@ export default function NewsPage() {
                         <div className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--accent-blue)] bg-[var(--accent-blue)]/10">
                             뉴스
                         </div>
+                        <Link
+                            href="/leading"
+                            className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                        >
+                            주도주
+                        </Link>
                     </nav>
                 </div>
 

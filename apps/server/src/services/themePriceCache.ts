@@ -248,15 +248,13 @@ class ThemePriceCacheService {
     startScheduler(): void {
         console.log(`⏰ 테마 주가 캐시 스케줄러 시작 (${this.UPDATE_INTERVAL / 60000}분 주기)`);
 
-        // 서버 시작 1분 후 첫 업데이트 (KIS WebSocket 초기화 후)
-        setTimeout(async () => {
-            await this.updateAllPrices();
-
+        // 즉시 첫 업데이트 실행
+        this.updateAllPrices().then(() => {
             // 이후 주기적 업데이트
             this.updateTimer = setInterval(async () => {
                 await this.updateAllPrices();
             }, this.UPDATE_INTERVAL);
-        }, 60 * 1000);
+        });
     }
 
     /**

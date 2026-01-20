@@ -21,3 +21,6 @@ out
 .DS_Store
 .idea
 .vscode
+
+# Cache
+.cache

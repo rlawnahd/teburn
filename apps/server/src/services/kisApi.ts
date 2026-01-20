@@ -1,4 +1,6 @@
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 import stockCodesData from '../data/stockCodes.json';
 
 // KIS API 설정
@@ -15,17 +17,76 @@ const BASE_URL = KIS_IS_MOCK
 // 종목코드 매핑 (JSON 파일에서 로드)
 const STOCK_CODE_MAP: Record<string, string> = stockCodesData as Record<string, string>;
 
-// 토큰 캐시
+// 토큰 캐시 파일 경로 (.cache 폴더, gitignore 대상)
+const CACHE_DIR = path.join(__dirname, '../../.cache');
+const TOKEN_CACHE_FILE = path.join(CACHE_DIR, 'kis-token.json');
+
+// 메모리 토큰 캐시
 let accessToken: string | null = null;
 let tokenExpireTime: number = 0;
 
+// 토큰 캐시 파일 구조
+interface TokenCache {
+    accessToken: string;
+    expireTime: number;
+    createdAt: string;
+}
+
+// 파일에서 토큰 로드
+function loadTokenFromFile(): boolean {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) {
+            return false;
+        }
+        const data = JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, 'utf-8')) as TokenCache;
+
+        // 유효한 토큰인지 확인 (만료 1분 전까지 유효)
+        if (data.accessToken && Date.now() < data.expireTime - 60000) {
+            accessToken = data.accessToken;
+            tokenExpireTime = data.expireTime;
+            console.log('✅ 캐시 파일에서 KIS 토큰 로드 완료');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.log('⚠️ 토큰 캐시 파일 로드 실패, 새로 발급합니다');
+        return false;
+    }
+}
+
+// 파일에 토큰 저장
+function saveTokenToFile(): void {
+    try {
+        // 캐시 디렉토리 생성
+        if (!fs.existsSync(CACHE_DIR)) {
+            fs.mkdirSync(CACHE_DIR, { recursive: true });
+        }
+
+        const cache: TokenCache = {
+            accessToken: accessToken!,
+            expireTime: tokenExpireTime,
+            createdAt: new Date().toISOString(),
+        };
+        fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2));
+        console.log('💾 KIS 토큰 캐시 파일 저장 완료');
+    } catch (error) {
+        console.error('⚠️ 토큰 캐시 파일 저장 실패:', error);
+    }
+}
+
 // OAuth 토큰 발급
 export async function getAccessToken(): Promise<string> {
-    // 캐시된 토큰이 유효하면 재사용
+    // 1. 메모리 캐시 확인
     if (accessToken && Date.now() < tokenExpireTime - 60000) {
         return accessToken;
     }
 
+    // 2. 파일 캐시 확인 (서버 재시작 후에도 토큰 유지)
+    if (loadTokenFromFile()) {
+        return accessToken!;
+    }
+
+    // 3. 새 토큰 발급
     try {
         const response = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
             grant_type: 'client_credentials',
@@ -36,6 +97,9 @@ export async function getAccessToken(): Promise<string> {
         accessToken = response.data.access_token;
         // 토큰 만료시간 설정 (보통 24시간, 여유를 두고 23시간으로)
         tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000;
+
+        // 파일에 저장 (재시작 대비)
+        saveTokenToFile();
 
         console.log('✅ KIS API 토큰 발급 완료');
         return accessToken!;
