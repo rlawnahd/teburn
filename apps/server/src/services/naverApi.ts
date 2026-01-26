@@ -83,6 +83,7 @@ export const getStockNewsCountFromApi = async (stockName: string): Promise<numbe
     const clientSecret = process.env.NAVER_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
+        console.warn(`⚠️ 네이버 API 키 없음 - ${stockName} 뉴스 검색 스킵`);
         return 0;
     }
 
@@ -114,7 +115,8 @@ export const getStockNewsCountFromApi = async (stockName: string): Promise<numbe
         stockNewsCountCache.set(stockName, { count, timestamp: Date.now() });
 
         return count;
-    } catch (error) {
+    } catch (error: any) {
+        console.error(`❌ 네이버 API 에러 (${stockName}):`, error.message || error);
         return 0;
     }
 };
@@ -127,7 +129,14 @@ export const getBatchStockNewsCountFromApi = async (
     const result = new Map<string, number>();
     const targetStocks = stockNames.slice(0, limit);
 
-    console.log(`📰 네이버 API로 뉴스 검색: ${targetStocks.length}개 종목`);
+    console.log(`📰 네이버 API로 뉴스 검색: ${targetStocks.length}개 종목 (${targetStocks.slice(0, 3).join(', ')}...)`);
+
+    // 첫 번째 종목 상세 로그
+    if (targetStocks.length > 0) {
+        const firstStock = targetStocks[0];
+        const testCount = await getStockNewsCountFromApi(firstStock);
+        console.log(`📰 [테스트] ${firstStock}: ${testCount}건`);
+    }
 
     // 병렬 처리 (5개씩 배치)
     const batchSize = 5;
