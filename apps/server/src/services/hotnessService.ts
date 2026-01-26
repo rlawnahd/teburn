@@ -180,17 +180,20 @@ export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[
 
     // 종목별 테마 매핑 + 가격 정보 저장
     const stockThemesMap = new Map<string, Set<string>>();
-    const stockDataMap = new Map<string, { code: string; name: string; changeRate: number }>();
+    const stockDataMap = new Map<string, { code: string; name: string; changeRate: number; tradingValue: number }>();
 
     for (const theme of allPrices.themes) {
         for (const stock of theme.topStocks) {
             // 기존 데이터보다 등락률이 높은 경우만 업데이트 (중복 종목 처리)
             const existing = stockDataMap.get(stock.stockCode);
             if (!existing || stock.changeRate > existing.changeRate) {
+                // 거래대금 정보 가져오기
+                const priceData = themePriceCache.getStockPrice(stock.stockCode);
                 stockDataMap.set(stock.stockCode, {
                     code: stock.stockCode,
                     name: stock.stockName,
                     changeRate: stock.changeRate,
+                    tradingValue: priceData?.tradingValue || 0,
                 });
             }
             if (!stockThemesMap.has(stock.stockCode)) {
@@ -200,8 +203,8 @@ export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[
         }
     }
 
-    // 상승 종목만 필터 (4% 이상)
-    const candidates: Array<{ stockCode: string; stockName: string; themes: string[] }> = [];
+    // 상승 종목만 필터 (4% 이상) + 거래대금 순 정렬
+    const candidates: Array<{ stockCode: string; stockName: string; themes: string[]; tradingValue: number }> = [];
 
     for (const [stockCode, data] of stockDataMap) {
         if (data.changeRate >= 4) {
@@ -209,11 +212,16 @@ export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[
                 stockCode,
                 stockName: data.name,
                 themes: Array.from(stockThemesMap.get(stockCode) || []).slice(0, 3),
+                tradingValue: data.tradingValue,
             });
         }
     }
 
+    // 거래대금 순으로 정렬 (뉴스 검색 시 상위 30개만 검색하므로)
+    candidates.sort((a, b) => b.tradingValue - a.tradingValue);
+
     console.log(`📊 4% 이상 상승 종목: ${candidates.length}개 (전체 ${stockDataMap.size}개 중)`);
+    console.log(`📊 거래대금 TOP 5: ${candidates.slice(0, 5).map(c => c.stockName).join(', ')}`);
 
     // 핫함 점수 계산
     const scored = await calculateBatchHotness(candidates);
