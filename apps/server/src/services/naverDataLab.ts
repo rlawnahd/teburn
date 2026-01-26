@@ -95,20 +95,20 @@ export async function getSearchSurgeRate(keyword: string): Promise<number | null
     }
 
     const data = trend.results[0].data;
-    if (data.length < 2) {
+    if (data.length < 3) {
         return null;
     }
 
-    // 최근 1일 vs 나머지 평균
-    const latestRatio = data[data.length - 1].ratio;
+    // 오늘 데이터 제외, 어제 vs 그 전 평균 비교
+    const yesterdayRatio = data[data.length - 2].ratio; // 어제
     const previousAvg =
-        data.slice(0, -1).reduce((sum, d) => sum + d.ratio, 0) / (data.length - 1);
+        data.slice(0, -2).reduce((sum, d) => sum + d.ratio, 0) / (data.length - 2); // 그 전 평균
 
     if (previousAvg === 0) {
-        return latestRatio > 0 ? 100 : 0;
+        return yesterdayRatio > 0 ? 100 : 0;
     }
 
-    const surgeRate = ((latestRatio - previousAvg) / previousAvg) * 100;
+    const surgeRate = ((yesterdayRatio - previousAvg) / previousAvg) * 100;
 
     // 캐시 저장
     searchTrendCache.set(keyword, { data: surgeRate, timestamp: Date.now() });
@@ -137,16 +137,17 @@ export async function getBatchSearchSurgeRates(
 
         for (const item of trend.results) {
             const data = item.data;
-            if (data.length < 2) continue;
+            if (data.length < 3) continue; // 최소 3일 데이터 필요
 
-            const latestRatio = data[data.length - 1].ratio;
+            // 오늘 데이터 제외, 어제 vs 그 전 평균 비교
+            const yesterdayRatio = data[data.length - 2].ratio; // 어제
             const previousAvg =
-                data.slice(0, -1).reduce((sum, d) => sum + d.ratio, 0) / (data.length - 1);
+                data.slice(0, -2).reduce((sum, d) => sum + d.ratio, 0) / (data.length - 2); // 그 전 평균
 
             let surgeRate = 0;
             if (previousAvg > 0) {
-                surgeRate = ((latestRatio - previousAvg) / previousAvg) * 100;
-            } else if (latestRatio > 0) {
+                surgeRate = ((yesterdayRatio - previousAvg) / previousAvg) * 100;
+            } else if (yesterdayRatio > 0) {
                 surgeRate = 100;
             }
 
