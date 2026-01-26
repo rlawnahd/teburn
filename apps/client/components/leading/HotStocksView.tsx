@@ -158,7 +158,7 @@ function StockCard({
                         maxScore={20}
                         icon={<Search size={10} />}
                         detail={
-                            stock.searchSurgeRate
+                            stock.searchSurgeRate !== null
                                 ? `${stock.searchSurgeRate > 0 ? '+' : ''}${stock.searchSurgeRate.toFixed(0)}%`
                                 : '-'
                         }

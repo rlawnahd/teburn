@@ -137,11 +137,21 @@ export async function getBatchSearchSurgeRates(
 
         for (const item of trend.results) {
             const data = item.data;
-            if (data.length < 2) continue;
+            if (data.length < 3) continue;
 
-            // 오늘 데이터 제외, 어제의 ratio 값 사용 (0~100)
+            // 오늘 데이터 제외, 어제 vs 그 전 평균 비교 (급증률)
             const yesterdayRatio = data[data.length - 2].ratio;
-            result.set(item.title, Math.round(yesterdayRatio));
+            const previousAvg =
+                data.slice(0, -2).reduce((sum, d) => sum + d.ratio, 0) / (data.length - 2);
+
+            let surgeRate = 0;
+            if (previousAvg > 0) {
+                surgeRate = ((yesterdayRatio - previousAvg) / previousAvg) * 100;
+            } else if (yesterdayRatio > 0) {
+                surgeRate = 100;
+            }
+
+            result.set(item.title, Math.round(surgeRate));
         }
 
         // API rate limit 방지 (1초 대기)
