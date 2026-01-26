@@ -101,6 +101,28 @@ app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
 });
 
+// Health check API
+app.get('/health', async (req, res) => {
+    const healthCheck = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        mongodb: {
+            status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+            host: mongoose.connection.host || null,
+            db: mongoose.connection.name || null,
+        },
+        memory: {
+            heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+            heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB',
+            rss: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
+        },
+    };
+
+    const httpStatus = mongoose.connection.readyState === 1 ? 200 : 503;
+    res.status(httpStatus).json(healthCheck);
+});
+
 // 6. 서버 실행
 connectDB().then(async () => {
     // 레거시 테마(JSON 마이그레이션) 삭제 - 네이버 크롤링 테마만 사용
