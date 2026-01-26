@@ -79,15 +79,14 @@ function calculateVolumeSurgeScore(surgeRate: number | null): number {
     return 0;
 }
 
-// 검색량 점수 (0~20)
-function calculateSearchScore(surgeRate: number | null): number {
-    if (surgeRate === null) return 0;
-    if (surgeRate >= 100) return 20;   // 100% 이상 급증
-    if (surgeRate >= 50) return 16;
-    if (surgeRate >= 30) return 12;
-    if (surgeRate >= 10) return 8;
-    if (surgeRate >= 0) return 4;
-    return 0;
+// 검색량 점수 (0~20) - ratio 값 기준 (0~100)
+function calculateSearchScore(ratio: number | null): number {
+    if (ratio === null) return 0;
+    if (ratio >= 80) return 20;   // 검색량 많음
+    if (ratio >= 60) return 16;
+    if (ratio >= 40) return 12;
+    if (ratio >= 20) return 8;
+    return 4;                      // 검색량 적어도 최소 점수
 }
 
 // 뉴스 점수 (0~15)

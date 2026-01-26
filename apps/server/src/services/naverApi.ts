@@ -138,22 +138,13 @@ export const getBatchStockNewsCountFromApi = async (
         console.log(`📰 [테스트] ${firstStock}: ${testCount}건`);
     }
 
-    // 병렬 처리 (5개씩 배치)
-    const batchSize = 5;
-    for (let i = 0; i < targetStocks.length; i += batchSize) {
-        const batch = targetStocks.slice(i, i + batchSize);
-        const counts = await Promise.all(
-            batch.map(async (name) => {
-                const count = await getStockNewsCountFromApi(name);
-                return { name, count };
-            })
-        );
-        counts.forEach(({ name, count }) => result.set(name, count));
+    // 순차 처리 (API 제한 방지)
+    for (const name of targetStocks) {
+        const count = await getStockNewsCountFromApi(name);
+        result.set(name, count);
 
-        // API 호출 제한 방지 (배치 사이 100ms 대기)
-        if (i + batchSize < targetStocks.length) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-        }
+        // API 호출 제한 방지 (200ms 대기)
+        await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     // 검색 안 한 종목은 0으로 설정
