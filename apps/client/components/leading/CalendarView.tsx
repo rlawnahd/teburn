@@ -6,6 +6,14 @@ import { ChevronLeft, ChevronRight, RefreshCw, Calendar } from 'lucide-react';
 import { fetchCalendarData, CalendarDay } from '@/lib/api/leading';
 import CalendarDetailModal from './CalendarDetailModal';
 
+// 로컬 시간 기준 날짜 포맷 (YYYY-MM-DD)
+function formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // 날짜 셀 컴포넌트
 function DateCell({
     date,
@@ -153,7 +161,7 @@ export default function CalendarView() {
     };
 
     const handleDateClick = (date: Date) => {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatLocalDate(date);
         setSelectedDate(dateStr);
     };
 
@@ -232,7 +240,7 @@ export default function CalendarView() {
                 ) : (
                     <div className="grid grid-cols-7">
                         {calendarDates.map((date, i) => {
-                            const dateStr = date.toISOString().split('T')[0];
+                            const dateStr = formatLocalDate(date);
                             const isToday =
                                 date.getDate() === today.getDate() &&
                                 date.getMonth() === today.getMonth() &&

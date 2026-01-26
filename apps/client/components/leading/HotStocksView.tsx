@@ -6,12 +6,12 @@ import {
     RefreshCw,
     Newspaper,
     Search,
-    Users,
     BarChart3,
     Activity,
     ArrowUpRight,
     ArrowDownRight,
-    Zap,
+    DollarSign,
+    TrendingUp,
 } from 'lucide-react';
 import { fetchHotStocks, HotStock } from '@/lib/api/leading';
 
@@ -27,30 +27,19 @@ function formatTradingValue(value: number): string {
     }
 }
 
-// 수급 금액 포맷
-function formatSupplyAmount(amount: number | null): string {
-    if (amount === null) return '-';
-    const billion = amount / 100000000;
-    const prefix = billion >= 0 ? '+' : '';
-    if (Math.abs(billion) >= 1000) {
-        return `${prefix}${(billion / 1000).toFixed(1)}조`;
-    }
-    return `${prefix}${Math.round(billion)}억`;
-}
-
-// 등급별 스타일
-function getGradeStyle(grade: HotStock['grade']): { bg: string; text: string } {
+// 등급별 스타일 및 한글 라벨
+function getGradeStyle(grade: HotStock['grade']): { bg: string; text: string; label: string } {
     switch (grade) {
         case 'HOT':
-            return { bg: 'bg-[var(--rise-color)]', text: 'text-white' };
+            return { bg: 'bg-[var(--rise-color)]', text: 'text-white', label: '핫함' };
         case 'WARM':
-            return { bg: 'bg-orange-500', text: 'text-white' };
+            return { bg: 'bg-orange-500', text: 'text-white', label: '관심' };
         case 'NORMAL':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]' };
+            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]', label: '보통' };
         case 'COOL':
-            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]' };
+            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]', label: '저조' };
         case 'COLD':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]' };
+            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]', label: '냉각' };
     }
 }
 
@@ -108,14 +97,14 @@ function StockCard({
     const isPositive = stock.changeRate > 0;
 
     return (
-        <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] transition-all">
+        <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
             {/* 순위 & 등급 */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
                 <span className={`text-lg font-bold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                     #{rank}
                 </span>
                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${gradeStyle.bg} ${gradeStyle.text}`}>
-                    {stock.grade}
+                    {gradeStyle.label}
                 </span>
             </div>
 
@@ -156,17 +145,17 @@ function StockCard({
                 {/* 점수 상세 */}
                 <div className="space-y-1.5 mb-4">
                     <ScoreGauge
-                        label="거래량"
-                        score={stock.volumeScore}
-                        maxScore={25}
-                        icon={<BarChart3 size={10} />}
-                        detail={stock.volumeSurgeRate ? `${stock.volumeSurgeRate.toFixed(1)}배` : '-'}
-                        color="bg-violet-500"
+                        label="거래대금"
+                        score={stock.tradingValueScore}
+                        maxScore={20}
+                        icon={<DollarSign size={10} />}
+                        detail={formatTradingValue(stock.tradingValue)}
+                        color="bg-amber-500"
                     />
                     <ScoreGauge
                         label="검색량"
                         score={stock.searchScore}
-                        maxScore={25}
+                        maxScore={20}
                         icon={<Search size={10} />}
                         detail={
                             stock.searchSurgeRate
@@ -176,31 +165,28 @@ function StockCard({
                         color="bg-[var(--accent-blue)]"
                     />
                     <ScoreGauge
+                        label="등락률"
+                        score={stock.momentumScore}
+                        maxScore={15}
+                        icon={<TrendingUp size={10} />}
+                        detail={`${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%`}
+                        color="bg-[var(--rise-color)]"
+                    />
+                    <ScoreGauge
+                        label="거래량"
+                        score={stock.volumeScore}
+                        maxScore={15}
+                        icon={<BarChart3 size={10} />}
+                        detail={stock.volumeSurgeRate ? `${stock.volumeSurgeRate.toFixed(1)}배` : '-'}
+                        color="bg-violet-500"
+                    />
+                    <ScoreGauge
                         label="뉴스"
                         score={stock.newsScore}
-                        maxScore={20}
+                        maxScore={15}
                         icon={<Newspaper size={10} />}
                         detail={`${stock.newsCount}건`}
                         color="bg-emerald-500"
-                    />
-                    <ScoreGauge
-                        label="수급"
-                        score={stock.supplyScore}
-                        maxScore={20}
-                        icon={<Users size={10} />}
-                        detail={formatSupplyAmount(
-                            stock.foreignNet !== null && stock.instNet !== null
-                                ? stock.foreignNet + stock.instNet
-                                : null
-                        )}
-                        color="bg-orange-500"
-                    />
-                    <ScoreGauge
-                        label="모멘텀"
-                        score={stock.momentumScore}
-                        maxScore={10}
-                        icon={<Zap size={10} />}
-                        color="bg-[var(--rise-color)]"
                     />
                 </div>
 
@@ -283,30 +269,48 @@ export default function HotStocksView() {
     const warmStocks = stocks.filter((s) => s.grade === 'WARM');
     const otherStocks = stocks.filter((s) => !['HOT', 'WARM'].includes(s.grade));
 
+    // 날짜 포맷
+    const formatDataDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return `${date.toLocaleDateString('ko-KR', {
+            month: 'long',
+            day: 'numeric',
+        })} ${date.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+        })}`;
+    };
+
     return (
         <div className="space-y-8">
-            {/* 설명 */}
-            <div className="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
-                <div className="flex items-start gap-3">
+            {/* 헤더 + 기준 시점 */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[var(--accent-blue)]/10 flex items-center justify-center flex-shrink-0">
                         <Activity size={20} className="text-[var(--accent-blue)]" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">주도주 분석이란?</h3>
-                        <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
-                            거래량 급증, 검색량, 뉴스 노출, 외국인/기관 수급, 등락률을 종합 분석하여
-                            시장에서 <span className="text-[var(--accent-blue)]">돈과 관심이 집중</span>되는 종목을 찾습니다.
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">주도주 분석</h3>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                            돈과 관심이 집중되는 종목
                         </p>
                     </div>
                 </div>
+                {data?.lastUpdateTime && (
+                    <div className="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                        <span className="text-xs text-[var(--text-tertiary)]">
+                            📅 {formatDataDate(data.lastUpdateTime)} 기준
+                        </span>
+                    </div>
+                )}
             </div>
 
-            {/* HOT 종목 */}
+            {/* 핫함 종목 */}
             {hotStocks.length > 0 && (
                 <section>
                     <SectionHeader
-                        title="HOT"
-                        description="70점 이상 · 강력한 주도주"
+                        title="🔥 핫함"
+                        description="60점 이상 · 강력한 주도주"
                         count={hotStocks.length}
                         color="bg-[var(--rise-color)]"
                     />
@@ -323,12 +327,12 @@ export default function HotStocksView() {
                 </section>
             )}
 
-            {/* WARM 종목 */}
+            {/* 관심 종목 */}
             {warmStocks.length > 0 && (
                 <section>
                     <SectionHeader
-                        title="WARM"
-                        description="50~69점 · 관심 종목"
+                        title="👀 관심"
+                        description="45~59점 · 관심 종목"
                         count={warmStocks.length}
                         color="bg-orange-500"
                     />
@@ -350,7 +354,7 @@ export default function HotStocksView() {
                 <section>
                     <SectionHeader
                         title="기타"
-                        description="50점 미만"
+                        description="45점 미만"
                         count={otherStocks.length}
                         color="bg-[var(--text-tertiary)]"
                     />
@@ -369,18 +373,22 @@ export default function HotStocksView() {
 
             {stocks.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-64 text-[var(--text-tertiary)]">
-                    <Activity size={48} className="mb-4 opacity-30" />
-                    <p className="text-lg font-medium">분석할 종목이 없습니다</p>
-                    <p className="text-sm mt-1">장중에 다시 확인해보세요</p>
+                    {!data?.lastUpdateTime ? (
+                        <>
+                            <RefreshCw size={48} className="mb-4 opacity-50 animate-spin" />
+                            <p className="text-lg font-medium">데이터 준비 중...</p>
+                            <p className="text-sm mt-1">서버 캐시를 불러오는 중입니다 (약 1분 소요)</p>
+                        </>
+                    ) : (
+                        <>
+                            <Activity size={48} className="mb-4 opacity-30" />
+                            <p className="text-lg font-medium">분석할 종목이 없습니다</p>
+                            <p className="text-sm mt-1">4% 이상 상승한 종목이 없습니다</p>
+                        </>
+                    )}
                 </div>
             )}
 
-            {/* 마지막 업데이트 */}
-            {data?.lastUpdateTime && (
-                <div className="text-center text-xs text-[var(--text-tertiary)]">
-                    마지막 업데이트: {new Date(data.lastUpdateTime).toLocaleTimeString('ko-KR')}
-                </div>
-            )}
         </div>
     );
 }

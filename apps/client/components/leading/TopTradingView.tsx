@@ -131,6 +131,18 @@ export default function TopTradingView() {
         router.push(`/themes/${encodeURIComponent(theme)}`);
     };
 
+    // 날짜 포맷
+    const formatDataDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return `${date.toLocaleDateString('ko-KR', {
+            month: 'long',
+            day: 'numeric',
+        })} ${date.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+        })}`;
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -152,6 +164,14 @@ export default function TopTradingView() {
 
     return (
         <div className="space-y-4">
+            {/* 설명 */}
+            <div className="p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
+                    <span className="text-[var(--text-secondary)] font-medium">테마주</span> 중 거래대금이 높은 종목입니다.
+                    삼성전자 같은 대형주는 매일 상위권이라 제외하고, <span className="text-[var(--rise-color)]">오늘 돈이 몰리는 테마</span>에 집중합니다.
+                </p>
+            </div>
+
             {/* 헤더 */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -160,29 +180,40 @@ export default function TopTradingView() {
                     </div>
                     <div>
                         <h2 className="text-base font-bold text-[var(--text-primary)]">
-                            거래대금 상위
+                            테마주 거래대금
                         </h2>
                         <p className="text-xs text-[var(--text-tertiary)]">
-                            {minRate > 0 ? `${minRate}% 이상 상승 · ` : ''}{stocks.length}개 종목
+                            {stocks.length}개 종목 {minRate > 0 ? `· ${minRate}% 이상 상승` : ''}
                         </p>
                     </div>
                 </div>
 
-                {/* 필터 */}
-                <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
-                    {[0, 4, 6, 10].map((rate) => (
-                        <button
-                            key={rate}
-                            onClick={() => setMinRate(rate)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${
-                                minRate === rate
-                                    ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm'
-                                    : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
-                            }`}
-                        >
-                            {rate === 0 ? '전체' : `${rate}%↑`}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-2">
+                    {/* 기준 시점 */}
+                    {data?.lastUpdateTime && (
+                        <div className="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                            <span className="text-xs text-[var(--text-tertiary)]">
+                                📅 {formatDataDate(data.lastUpdateTime)} 기준
+                            </span>
+                        </div>
+                    )}
+
+                    {/* 필터 */}
+                    <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                        {[0, 4, 6, 10].map((rate) => (
+                            <button
+                                key={rate}
+                                onClick={() => setMinRate(rate)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${
+                                    minRate === rate
+                                        ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm'
+                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                }`}
+                            >
+                                {rate === 0 ? '전체' : `${rate}%↑`}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -216,12 +247,6 @@ export default function TopTradingView() {
                 </div>
             )}
 
-            {/* 마지막 업데이트 */}
-            {data?.lastUpdateTime && (
-                <div className="text-center text-xs text-[var(--text-tertiary)] pt-4">
-                    마지막 업데이트: {new Date(data.lastUpdateTime).toLocaleTimeString('ko-KR')}
-                </div>
-            )}
         </div>
     );
 }

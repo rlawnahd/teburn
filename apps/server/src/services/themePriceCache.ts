@@ -1,6 +1,7 @@
 // apps/server/src/services/themePriceCache.ts
 import { getStockPrice, StockPrice } from './kisApi';
 import Theme from '../models/Theme';
+import PriceCache from '../models/PriceCache';
 import { getMarketStatus, MarketStatusInfo } from '../utils/marketStatus';
 import stockCodesData from '../data/stockCodes.json';
 
@@ -186,10 +187,94 @@ class ThemePriceCacheService {
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             console.log(`✅ 테마 주가 배치 업데이트 완료: ${themes.length}개 테마, ${elapsed}초 소요`);
 
+            // DB에 캐시 저장 (비동기)
+            this.saveCacheToDb().catch(err => {
+                console.error('❌ 캐시 DB 저장 실패:', err);
+            });
+
         } catch (error) {
             console.error('❌ 테마 주가 배치 업데이트 실패:', error);
         } finally {
             this.isUpdating = false;
+        }
+    }
+
+    /**
+     * 캐시를 DB에 저장
+     */
+    async saveCacheToDb(): Promise<void> {
+        try {
+            const stockPrices = Array.from(this.stockPriceCache.values());
+            const themePrices = Array.from(this.themePriceCache.values());
+
+            await PriceCache.findOneAndUpdate(
+                { key: 'main' },
+                {
+                    key: 'main',
+                    stockPrices,
+                    themePrices,
+                    lastUpdateTime: this.lastUpdateTime,
+                    savedAt: new Date(),
+                },
+                { upsert: true }
+            );
+
+            console.log(`💾 캐시 DB 저장 완료: ${stockPrices.length}개 종목, ${themePrices.length}개 테마`);
+        } catch (error) {
+            console.error('❌ 캐시 DB 저장 실패:', error);
+        }
+    }
+
+    /**
+     * DB에서 캐시 복원
+     */
+    async restoreCacheFromDb(): Promise<boolean> {
+        try {
+            const cached = await PriceCache.findOne({ key: 'main' }).lean();
+
+            if (!cached || !cached.stockPrices || cached.stockPrices.length === 0) {
+                console.log('📭 저장된 캐시 없음');
+                return false;
+            }
+
+            // 캐시가 너무 오래됐으면 (24시간 이상) 사용하지 않음
+            const cacheAge = Date.now() - new Date(cached.savedAt).getTime();
+            const maxAge = 24 * 60 * 60 * 1000; // 24시간
+
+            if (cacheAge > maxAge) {
+                console.log('📭 캐시가 너무 오래됨 (24시간 초과), 새로 로드 필요');
+                return false;
+            }
+
+            // 종목 캐시 복원
+            for (const stock of cached.stockPrices) {
+                this.stockPriceCache.set(stock.stockCode, {
+                    ...stock,
+                    updatedAt: new Date(stock.updatedAt),
+                });
+            }
+
+            // 테마 캐시 복원
+            for (const theme of cached.themePrices) {
+                this.themePriceCache.set(theme.themeName, {
+                    ...theme,
+                    topStocks: theme.topStocks.map(s => ({
+                        ...s,
+                        updatedAt: new Date(s.updatedAt),
+                    })),
+                    updatedAt: new Date(theme.updatedAt),
+                });
+            }
+
+            this.lastUpdateTime = new Date(cached.lastUpdateTime);
+
+            const ageMinutes = Math.round(cacheAge / 60000);
+            console.log(`✅ 캐시 DB에서 복원: ${cached.stockPrices.length}개 종목, ${cached.themePrices.length}개 테마 (${ageMinutes}분 전 데이터)`);
+
+            return true;
+        } catch (error) {
+            console.error('❌ 캐시 DB 복원 실패:', error);
+            return false;
         }
     }
 
@@ -245,16 +330,27 @@ class ThemePriceCacheService {
     /**
      * 배치 업데이트 스케줄러 시작
      */
-    startScheduler(): void {
+    async startScheduler(): Promise<void> {
         console.log(`⏰ 테마 주가 캐시 스케줄러 시작 (${this.UPDATE_INTERVAL / 60000}분 주기)`);
 
-        // 즉시 첫 업데이트 실행
-        this.updateAllPrices().then(() => {
-            // 이후 주기적 업데이트
-            this.updateTimer = setInterval(async () => {
-                await this.updateAllPrices();
-            }, this.UPDATE_INTERVAL);
-        });
+        // 1. 먼저 DB에서 캐시 복원 시도
+        const restored = await this.restoreCacheFromDb();
+
+        if (restored) {
+            // 캐시 복원 성공 → 백그라운드에서 새로 업데이트
+            console.log('🔄 백그라운드에서 최신 데이터 갱신 시작...');
+            this.updateAllPrices().catch(err => {
+                console.error('❌ 백그라운드 업데이트 실패:', err);
+            });
+        } else {
+            // 캐시 없음 → 즉시 업데이트
+            await this.updateAllPrices();
+        }
+
+        // 이후 주기적 업데이트
+        this.updateTimer = setInterval(async () => {
+            await this.updateAllPrices();
+        }, this.UPDATE_INTERVAL);
     }
 
     /**

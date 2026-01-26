@@ -157,39 +157,93 @@ export async function getCalendarData(year: number, month: number): Promise<Cale
         date: { $gte: startDate, $lte: endDate },
     }).sort({ date: 1 }).lean();
 
-    return dailyData.map(d => ({
-        date: d.date.toISOString().split('T')[0],
-        topThemes: d.topThemes.slice(0, 3).map(t => ({
-            rank: t.rank,
-            themeName: t.themeName,
-            avgChangeRate: t.avgChangeRate,
-            totalTradingValue: t.totalTradingValue,
-        })),
-    }));
+    return dailyData.map(d => {
+        // 한국 시간 기준으로 날짜 포맷 (UTC+9)
+        const localDate = new Date(d.date.getTime() + 9 * 60 * 60 * 1000);
+        const dateStr = localDate.toISOString().split('T')[0];
+
+        return {
+            date: dateStr,
+            topThemes: d.topThemes.slice(0, 3).map(t => ({
+                rank: t.rank,
+                themeName: t.themeName,
+                avgChangeRate: t.avgChangeRate,
+                totalTradingValue: t.totalTradingValue,
+            })),
+        };
+    });
+}
+
+/**
+ * 한국 시간 기준 오늘 날짜 (YYYY-MM-DD)
+ */
+function getKoreanToday(): string {
+    const now = new Date();
+    const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    return koreaTime.toISOString().split('T')[0];
+}
+
+/**
+ * 한국 시간 기준 날짜를 UTC Date 객체로 변환 (DB 저장용)
+ */
+function koreanDateToUTC(dateStr: string): Date {
+    // dateStr: "2026-01-21"
+    // 한국 시간 00:00은 UTC 전날 15:00
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0) - 9 * 60 * 60 * 1000);
 }
 
 /**
  * 특정 날짜 상세 조회
  */
 export async function getDayDetail(dateStr: string): Promise<ITopTheme[] | null> {
-    const date = new Date(dateStr);
-    date.setHours(0, 0, 0, 0);
+    // dateStr은 한국 날짜 기준 (YYYY-MM-DD)
+    const targetDate = koreanDateToUTC(dateStr);
 
-    const daily = await DailyLeadingTheme.findOne({ date }).lean();
-    if (!daily) return null;
+    // 해당 날짜 범위로 검색 (하루 범위)
+    const nextDay = new Date(targetDate.getTime() + 24 * 60 * 60 * 1000);
 
-    return daily.topThemes;
+    const daily = await DailyLeadingTheme.findOne({
+        date: { $gte: targetDate, $lt: nextDay },
+    }).lean();
+
+    if (daily) {
+        return daily.topThemes;
+    }
+
+    // 오늘 날짜인 경우 실시간 데이터로 생성
+    const todayStr = getKoreanToday();
+
+    if (dateStr === todayStr) {
+        const sectors = getLeadingSectors(10);
+        if (sectors.length === 0) return null;
+
+        return sectors.map((sector, index) => ({
+            rank: index + 1,
+            themeName: sector.themeName,
+            avgChangeRate: sector.avgChangeRate,
+            totalTradingValue: sector.totalTradingValue,
+            topStock: sector.topStock?.name || '',
+            topStockRate: sector.topStock?.changeRate || 0,
+        }));
+    }
+
+    return null;
 }
 
 /**
  * 오늘의 주도테마 저장 (장 마감 후 호출)
  */
 export async function saveDailyLeadingThemes(): Promise<void> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 한국 시간 기준 오늘 날짜로 저장
+    const todayStr = getKoreanToday();
+    const todayDate = koreanDateToUTC(todayStr);
+    const nextDay = new Date(todayDate.getTime() + 24 * 60 * 60 * 1000);
 
     // 이미 오늘 데이터가 있으면 업데이트
-    const existing = await DailyLeadingTheme.findOne({ date: today });
+    const existing = await DailyLeadingTheme.findOne({
+        date: { $gte: todayDate, $lt: nextDay },
+    });
 
     // 현재 주도섹터 데이터로 TOP 10 저장
     const sectors = getLeadingSectors(10);
@@ -205,16 +259,16 @@ export async function saveDailyLeadingThemes(): Promise<void> {
 
     if (existing) {
         await DailyLeadingTheme.updateOne(
-            { date: today },
+            { _id: existing._id },
             { $set: { topThemes } }
         );
-        console.log(`📅 오늘의 주도테마 업데이트 완료: ${topThemes.length}개`);
+        console.log(`📅 오늘(${todayStr}) 주도테마 업데이트 완료: ${topThemes.length}개`);
     } else {
         await DailyLeadingTheme.create({
-            date: today,
+            date: todayDate,
             topThemes,
         });
-        console.log(`📅 오늘의 주도테마 저장 완료: ${topThemes.length}개`);
+        console.log(`📅 오늘(${todayStr}) 주도테마 저장 완료: ${topThemes.length}개`);
     }
 }
 

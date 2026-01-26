@@ -563,7 +563,7 @@ export default function ThemeDetailPage() {
         return (
             <div className="min-h-screen bg-[var(--bg-secondary)]">
                 <header className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-primary)] sticky top-0 z-10">
-                    <Link href="/leading" className="flex items-center gap-2.5 group">
+                    <Link href="/" className="flex items-center gap-2.5 group">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--accent-blue)]/10">
                             <TrendingUp size={16} className="text-[var(--accent-blue)]" />
                         </div>
@@ -576,8 +576,8 @@ export default function ThemeDetailPage() {
                 <main className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
                     <div className="text-center">
                         <p className="text-[var(--text-tertiary)] mb-4">테마를 찾을 수 없습니다</p>
-                        <Link href="/leading" className="text-[var(--accent-blue)] hover:underline">
-                            주도주 탐색기로 돌아가기
+                        <Link href="/" className="text-[var(--accent-blue)] hover:underline">
+                            홈으로 돌아가기
                         </Link>
                     </div>
                 </main>
@@ -589,7 +589,7 @@ export default function ThemeDetailPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 상단 네비게이션 */}
             <nav className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-primary)] sticky top-0 z-20">
-                <Link href="/leading" className="flex items-center gap-2.5 group">
+                <Link href="/" className="flex items-center gap-2.5 group">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--accent-blue)]/10">
                         <TrendingUp size={16} className="text-[var(--accent-blue)]" />
                     </div>

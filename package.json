@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "concurrently \"pnpm --filter client dev\" \"pnpm --filter server dev\"",
     "dev:client": "pnpm --filter client dev",
-    "dev:server": "pnpm --filter server dev"
+    "dev:server": "pnpm --filter server dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "mobile:ios": "pnpm --filter mobile ios",
+    "mobile:android": "pnpm --filter mobile android"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

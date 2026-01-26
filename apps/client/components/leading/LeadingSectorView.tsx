@@ -19,11 +19,11 @@ function formatTradingValue(value: number): string {
 
 // 주도섹터 점수에 따른 등급
 function getScoreGrade(score: number): { label: string; color: string; bg: string } {
-    if (score >= 80) return { label: 'HOT', color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]' };
-    if (score >= 60) return { label: 'WARM', color: 'text-orange-500', bg: 'bg-orange-500' };
+    if (score >= 80) return { label: '급등', color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]' };
+    if (score >= 60) return { label: '상승', color: 'text-orange-500', bg: 'bg-orange-500' };
     if (score >= 40) return { label: '보통', color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]' };
-    if (score >= 20) return { label: 'COOL', color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]' };
-    return { label: 'COLD', color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]' };
+    if (score >= 20) return { label: '하락', color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]' };
+    return { label: '급락', color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]' };
 }
 
 // 섹터 카드 컴포넌트
@@ -136,6 +136,18 @@ export default function LeadingSectorView() {
         router.push(`/themes/${encodeURIComponent(themeName)}`);
     };
 
+    // 날짜 포맷
+    const formatDataDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return `${date.toLocaleDateString('ko-KR', {
+            month: 'long',
+            day: 'numeric',
+        })} ${date.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+        })}`;
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -157,17 +169,33 @@ export default function LeadingSectorView() {
 
     return (
         <div className="space-y-8">
+            {/* 헤더 + 기준 시점 */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--rise-bg)] flex items-center justify-center">
+                        <TrendingUp size={20} className="text-[var(--rise-color)]" />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-bold text-[var(--text-primary)]">주도섹터</h2>
+                        <p className="text-xs text-[var(--text-tertiary)]">거래대금 + 상승률 기반</p>
+                    </div>
+                </div>
+                {data?.lastUpdateTime && (
+                    <div className="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                        <span className="text-xs text-[var(--text-tertiary)]">
+                            📅 {formatDataDate(data.lastUpdateTime)} 기준
+                        </span>
+                    </div>
+                )}
+            </div>
+
             {/* 상승 섹터 */}
             {risingSectors.length > 0 && (
                 <section>
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--rise-bg)] flex items-center justify-center">
-                            <TrendingUp size={20} className="text-[var(--rise-color)]" />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-bold text-[var(--text-primary)]">상승 주도섹터</h2>
-                            <p className="text-xs text-[var(--text-tertiary)]">{risingSectors.length}개 섹터 · 주도점수 순</p>
-                        </div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-6 rounded-full bg-[var(--rise-color)]" />
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">상승 섹터</h3>
+                        <span className="text-xs text-[var(--text-tertiary)]">{risingSectors.length}개</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -186,14 +214,10 @@ export default function LeadingSectorView() {
             {/* 하락 섹터 */}
             {fallingSectors.length > 0 && (
                 <section>
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--fall-bg)] flex items-center justify-center">
-                            <TrendingDown size={20} className="text-[var(--fall-color)]" />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-bold text-[var(--text-primary)]">하락 섹터</h2>
-                            <p className="text-xs text-[var(--text-tertiary)]">{fallingSectors.length}개 섹터</p>
-                        </div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-6 rounded-full bg-[var(--fall-color)]" />
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">하락 섹터</h3>
+                        <span className="text-xs text-[var(--text-tertiary)]">{fallingSectors.length}개</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -209,12 +233,6 @@ export default function LeadingSectorView() {
                 </section>
             )}
 
-            {/* 마지막 업데이트 */}
-            {data?.lastUpdateTime && (
-                <div className="text-center text-xs text-[var(--text-tertiary)] pt-4">
-                    마지막 업데이트: {new Date(data.lastUpdateTime).toLocaleTimeString('ko-KR')}
-                </div>
-            )}
         </div>
     );
 }

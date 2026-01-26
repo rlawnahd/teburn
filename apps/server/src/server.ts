@@ -6,12 +6,13 @@ import newsRoutes from './routes/news';
 import themesRoutes from './routes/themes';
 import stocksRoutes from './routes/stocks';
 import leadingRoutes from './routes/leading';
+import adminRoutes from './routes/admin';
 import { crawlNaverFinanceNews } from './services/crawler';
-import { startHistoryCollection } from './services/themeHistoryService';
 import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
 import { saveDailyLeadingThemes } from './services/leadingStockService';
+import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -94,6 +95,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/themes', themesRoutes);
 app.use('/api/stocks', stocksRoutes);
 app.use('/api/leading', leadingRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
@@ -120,11 +122,11 @@ connectDB().then(async () => {
         setInterval(backgroundCrawl, CRAWL_INTERVAL);
         console.log(`⏰ 백그라운드 크롤링: ${CRAWL_INTERVAL / 1000}초마다 실행`);
 
-        // 테마 히스토리 수집 시작 (5분 간격)
-        startHistoryCollection();
-
         // 모든 테마 주가 배치 캐싱 스케줄러 시작 (5분 간격)
-        themePriceCache.startScheduler();
+        // DB에서 캐시 복원 후 백그라운드 갱신
+        themePriceCache.startScheduler().catch(err => {
+            console.error('❌ 주가 캐시 스케줄러 시작 실패:', err);
+        });
 
         // 일별 주도테마 저장 (30분마다 업데이트)
         setInterval(async () => {
@@ -135,5 +137,51 @@ connectDB().then(async () => {
             }
         }, 30 * 60 * 1000);
         console.log('📅 일별 주도테마 저장: 30분마다 실행');
+
+        // 장 마감 후 거래량 히스토리 수집 스케줄러 (15:35에 실행)
+        let lastVolumeCollectDate = '';
+
+        const checkMarketCloseSchedule = async () => {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const dayOfWeek = now.getDay(); // 0=일, 6=토
+
+            // 평일 15:35~15:40 사이에 실행 (장 마감 직후)
+            if (dayOfWeek >= 1 && dayOfWeek <= 5 && hour === 15 && minute >= 35 && minute <= 40) {
+                // 거래량 히스토리 저장 (하루 1회)
+                if (lastVolumeCollectDate !== today) {
+                    console.log('📊 장 마감 후 거래량 히스토리 저장 시작...');
+                    try {
+                        await saveTodayVolumeHistory();
+                        lastVolumeCollectDate = today;
+                        console.log('✅ 거래량 히스토리 저장 완료');
+                    } catch (error) {
+                        console.error('❌ 거래량 히스토리 저장 실패:', error);
+                    }
+                }
+            }
+        };
+
+        // 1분마다 스케줄 체크
+        setInterval(checkMarketCloseSchedule, 60 * 1000);
+        console.log('⏰ 장 마감 거래량 수집: 평일 15:35에 자동 실행');
+
+        // 서버 시작 시 오늘 데이터가 없으면 즉시 수집 시도 (장 마감 후인 경우)
+        const now = new Date();
+        const hour = now.getHours();
+        const dayOfWeek = now.getDay();
+        if (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 16) {
+            console.log('🔄 서버 시작: 오늘 거래량 데이터 수집 시도...');
+            setTimeout(async () => {
+                try {
+                    await saveTodayVolumeHistory();
+                    console.log('✅ 거래량 데이터 수집 완료');
+                } catch (error) {
+                    console.error('❌ 거래량 데이터 수집 실패:', error);
+                }
+            }, 10000); // 캐시 로딩 후 10초 대기
+        }
     });
 });

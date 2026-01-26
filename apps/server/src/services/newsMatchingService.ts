@@ -7,7 +7,7 @@ interface NewsMatch {
     title: string;
     link: string;
     press: string;
-    publishedAt: Date;
+    publishedAt: Date | string;
 }
 
 interface StockNewsCount {
@@ -30,7 +30,7 @@ const themeNewsCache = new Map<string, { data: ThemeNewsCount; timestamp: number
 const CACHE_TTL = 10 * 60 * 1000; // 10분
 
 /**
- * 오늘 뉴스에서 특정 종목 언급 횟수 조회
+ * 최근 24시간 뉴스에서 특정 종목 언급 횟수 조회
  */
 export async function getStockNewsCount(stockName: string): Promise<StockNewsCount> {
     // 캐시 확인
@@ -39,13 +39,13 @@ export async function getStockNewsCount(stockName: string): Promise<StockNewsCou
         return cached.data;
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 최근 24시간
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 종목명이 포함된 뉴스 검색 (정규식 사용)
     const news = await News.find({
         title: { $regex: stockName, $options: 'i' },
-        crawledAt: { $gte: today },
+        crawledAt: { $gte: since },
     })
         .sort({ crawledAt: -1 })
         .limit(10)
@@ -71,7 +71,7 @@ export async function getStockNewsCount(stockName: string): Promise<StockNewsCou
 }
 
 /**
- * 오늘 뉴스에서 테마 관련 언급 횟수 조회
+ * 최근 24시간 뉴스에서 테마 관련 언급 횟수 조회
  * (테마명 + 키워드로 검색)
  */
 export async function getThemeNewsCount(themeName: string): Promise<ThemeNewsCount> {
@@ -81,8 +81,8 @@ export async function getThemeNewsCount(themeName: string): Promise<ThemeNewsCou
         return cached.data;
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 최근 24시간
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 테마 정보 조회 (키워드 포함)
     const theme = await Theme.findOne({ name: themeName }).lean();
@@ -95,7 +95,7 @@ export async function getThemeNewsCount(themeName: string): Promise<ThemeNewsCou
     const regexPattern = searchTerms.map((term) => `(${term})`).join('|');
     const news = await News.find({
         title: { $regex: regexPattern, $options: 'i' },
-        crawledAt: { $gte: today },
+        crawledAt: { $gte: since },
     })
         .sort({ crawledAt: -1 })
         .limit(10)
@@ -120,22 +120,22 @@ export async function getThemeNewsCount(themeName: string): Promise<ThemeNewsCou
 }
 
 /**
- * 여러 종목의 뉴스 카운트 일괄 조회
+ * 여러 종목의 뉴스 카운트 일괄 조회 (최근 24시간)
  */
 export async function getBatchStockNewsCount(
     stockNames: string[]
 ): Promise<Map<string, number>> {
     const result = new Map<string, number>();
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 최근 24시간
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 모든 종목명으로 OR 검색
     const regexPattern = stockNames.map((name) => `(${name})`).join('|');
 
     const news = await News.find({
         title: { $regex: regexPattern, $options: 'i' },
-        crawledAt: { $gte: today },
+        crawledAt: { $gte: since },
     }).lean();
 
     // 각 종목별로 카운트
@@ -150,15 +150,15 @@ export async function getBatchStockNewsCount(
 }
 
 /**
- * 여러 테마의 뉴스 카운트 일괄 조회
+ * 여러 테마의 뉴스 카운트 일괄 조회 (최근 24시간)
  */
 export async function getBatchThemeNewsCount(
     themeNames: string[]
 ): Promise<Map<string, number>> {
     const result = new Map<string, number>();
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 최근 24시간
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 테마별 키워드 조회
     const themes = await Theme.find({ name: { $in: themeNames } }).lean();
@@ -167,9 +167,9 @@ export async function getBatchThemeNewsCount(
         themeKeywordsMap.set(theme.name, [theme.name, ...(theme.keywords || [])]);
     }
 
-    // 오늘 모든 뉴스 조회
+    // 최근 24시간 뉴스 조회
     const news = await News.find({
-        crawledAt: { $gte: today },
+        crawledAt: { $gte: since },
     }).lean();
 
     // 각 테마별로 카운트

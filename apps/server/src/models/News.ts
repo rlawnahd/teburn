@@ -8,6 +8,7 @@ export interface INews extends Document {
     press: string;
     summary: string;
     publishedAt: string;
+    crawledAt: Date;  // 크롤링 시간
 
     // AI 분석 결과
     sentiment: 'positive' | 'negative' | 'neutral';
@@ -31,6 +32,7 @@ const NewsSchema: Schema = new Schema(
         press: { type: String, default: '' },
         summary: { type: String, default: '' },
         publishedAt: { type: String, default: '' },
+        crawledAt: { type: Date, default: Date.now },
 
         // AI 분석 결과
         sentiment: {

@@ -140,7 +140,7 @@ export const fetchDayDetail = async (date: string): Promise<DayDetailTheme[]> =>
     return data.data.topThemes;
 };
 
-// 핫함 점수 종목
+// 핫함 점수 종목 (총 85점 만점)
 export interface HotStock {
     stockCode: string;
     stockName: string;
@@ -149,18 +149,16 @@ export interface HotStock {
     tradingValue: number;
     themes: string[];
 
-    totalScore: number;
-    volumeScore: number;
-    searchScore: number;
-    newsScore: number;
-    supplyScore: number;
-    momentumScore: number;
+    totalScore: number;         // 총점 (0~85)
+    tradingValueScore: number;  // 거래대금 점수 (0~20)
+    searchScore: number;        // 검색량 점수 (0~20)
+    momentumScore: number;      // 등락률 점수 (0~15)
+    volumeScore: number;        // 거래량 급증 점수 (0~15)
+    newsScore: number;          // 뉴스 점수 (0~15)
 
     volumeSurgeRate: number | null;
     searchSurgeRate: number | null;
     newsCount: number;
-    foreignNet: number | null;
-    instNet: number | null;
 
     grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
 }
