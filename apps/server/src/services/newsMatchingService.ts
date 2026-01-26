@@ -131,8 +131,14 @@ export async function getBatchStockNewsCount(
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 디버그: 전체 뉴스 개수 확인
-    const totalNews = await News.countDocuments({ crawledAt: { $gte: since } });
-    console.log(`📰 최근 24시간 뉴스: ${totalNews}개, 검색할 종목: ${stockNames.length}개`);
+    const allRecentNews = await News.find({ crawledAt: { $gte: since } }).limit(10).lean();
+    console.log(`📰 최근 24시간 뉴스: ${allRecentNews.length}개+, 검색할 종목: ${stockNames.length}개`);
+
+    // 디버그: 뉴스 제목 샘플
+    console.log(`📰 뉴스 제목 샘플: ${allRecentNews.slice(0, 3).map(n => n.title).join(' | ')}`);
+
+    // 디버그: 종목명 샘플
+    console.log(`📰 종목명 샘플: ${stockNames.slice(0, 10).join(', ')}`);
 
     if (stockNames.length === 0) {
         return result;
