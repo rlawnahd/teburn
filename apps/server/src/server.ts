@@ -28,7 +28,14 @@ const CRAWL_INTERVAL = 10 * 1000;
 
 // 2. 미들웨어 설정
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: [
+        'https://teburn.com',
+        'https://teburn-client.vercel.app',
+        'http://localhost:3000', // 로컬 개발용
+    ],
+    credentials: true,
+}));
 
 // 3. MongoDB 연결 함수
 const connectDB = async () => {
