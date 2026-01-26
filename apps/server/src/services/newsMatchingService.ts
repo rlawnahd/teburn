@@ -130,6 +130,14 @@ export async function getBatchStockNewsCount(
     // 최근 24시간
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+    // 디버그: 전체 뉴스 개수 확인
+    const totalNews = await News.countDocuments({ crawledAt: { $gte: since } });
+    console.log(`📰 최근 24시간 뉴스: ${totalNews}개, 검색할 종목: ${stockNames.length}개`);
+
+    if (stockNames.length === 0) {
+        return result;
+    }
+
     // 모든 종목명으로 OR 검색
     const regexPattern = stockNames.map((name) => `(${name})`).join('|');
 
@@ -138,12 +146,20 @@ export async function getBatchStockNewsCount(
         crawledAt: { $gte: since },
     }).lean();
 
+    console.log(`📰 종목명 매칭된 뉴스: ${news.length}개`);
+
     // 각 종목별로 카운트
     for (const stockName of stockNames) {
         const count = news.filter((n) =>
             n.title.toLowerCase().includes(stockName.toLowerCase())
         ).length;
         result.set(stockName, count);
+    }
+
+    // 디버그: 1건 이상 매칭된 종목 출력
+    const matched = Array.from(result.entries()).filter(([, count]) => count > 0);
+    if (matched.length > 0) {
+        console.log(`📰 뉴스 매칭 종목: ${matched.map(([name, count]) => `${name}(${count})`).join(', ')}`);
     }
 
     return result;
