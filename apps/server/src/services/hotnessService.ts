@@ -4,7 +4,7 @@
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
 import { getBatchSearchSurgeRates } from './naverDataLab';
-import { getBatchStockNewsCount } from './newsMatchingService';
+import { getBatchStockNewsCountFromApi } from './naverApi';
 
 export interface HotnessScore {
     stockCode: string;
@@ -112,7 +112,7 @@ export async function calculateBatchHotness(
     const [volumeSurges, searchSurges, newsCounts] = await Promise.all([
         getBatchVolumeSurgeRates(stockCodes),
         getBatchSearchSurgeRates(stockNames),
-        getBatchStockNewsCount(stockNames),
+        getBatchStockNewsCountFromApi(stockNames, 30), // 상위 30개만 API 검색
     ]);
 
     const results: HotnessScore[] = [];
