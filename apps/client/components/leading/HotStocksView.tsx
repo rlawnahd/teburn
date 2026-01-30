@@ -87,17 +87,19 @@ function ScoreGauge({
 function StockCard({
     stock,
     rank,
-    onThemeClick,
+    onStockClick,
 }: {
     stock: HotStock;
     rank: number;
-    onThemeClick: (theme: string) => void;
+    onStockClick: (stockCode: string) => void;
 }) {
     const gradeStyle = getGradeStyle(stock.grade);
     const isPositive = stock.changeRate > 0;
 
     return (
-        <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
+        <div
+            onClick={() => onStockClick(stock.stockCode)}
+            className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors">
             {/* 순위 & 등급 */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
                 <span className={`text-lg font-bold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -131,13 +133,12 @@ function StockCard({
                 {stock.themes.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
                         {stock.themes.map((theme) => (
-                            <button
+                            <span
                                 key={theme}
-                                onClick={() => onThemeClick(theme)}
-                                className="px-2 py-0.5 text-[11px] rounded bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/20 transition-colors"
+                                className="px-2 py-0.5 text-[11px] rounded bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]"
                             >
                                 {theme}
-                            </button>
+                            </span>
                         ))}
                     </div>
                 )}
@@ -241,8 +242,8 @@ export default function HotStocksView() {
 
     const stocks = data?.stocks || [];
 
-    const handleThemeClick = (theme: string) => {
-        router.push(`/themes/${encodeURIComponent(theme)}`);
+    const handleStockClick = (stockCode: string) => {
+        router.push(`/stocks/${encodeURIComponent(stockCode)}`);
     };
 
     if (isLoading) {
@@ -320,7 +321,7 @@ export default function HotStocksView() {
                                 key={stock.stockCode}
                                 stock={stock}
                                 rank={i + 1}
-                                onThemeClick={handleThemeClick}
+                                onStockClick={handleStockClick}
                             />
                         ))}
                     </div>
@@ -342,7 +343,7 @@ export default function HotStocksView() {
                                 key={stock.stockCode}
                                 stock={stock}
                                 rank={hotStocks.length + i + 1}
-                                onThemeClick={handleThemeClick}
+                                onStockClick={handleStockClick}
                             />
                         ))}
                     </div>
@@ -364,7 +365,7 @@ export default function HotStocksView() {
                                 key={stock.stockCode}
                                 stock={stock}
                                 rank={hotStocks.length + warmStocks.length + i + 1}
-                                onThemeClick={handleThemeClick}
+                                onStockClick={handleStockClick}
                             />
                         ))}
                     </div>

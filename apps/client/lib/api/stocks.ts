@@ -76,3 +76,36 @@ export const fetchThemePrice = async (themeName: string): Promise<ThemePriceInfo
     );
     return data.data;
 };
+
+// 종목 상세 정보
+export interface StockDetail {
+    stockCode: string;
+    stockName: string;
+    currentPrice: number;
+    changePrice: number;
+    changeRate: number;
+    volume: number;
+    tradingValue: number;
+    updatedAt: string;
+    themes: string[];
+    news: {
+        title: string;
+        link: string;
+        press: string;
+        summary: string;
+        createdAt: string;
+    }[];
+}
+
+interface StockDetailResponse {
+    success: boolean;
+    data: StockDetail;
+}
+
+// 종목 상세 조회 (종목코드로)
+export const fetchStockDetail = async (stockCode: string): Promise<StockDetail> => {
+    const { data } = await axios.get<StockDetailResponse>(
+        `${API_URL}/stocks/${encodeURIComponent(stockCode)}`
+    );
+    return data.data;
+};

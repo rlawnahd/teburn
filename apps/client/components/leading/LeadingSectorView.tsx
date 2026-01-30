@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { RefreshCw, Crown, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { fetchLeadingSectors, LeadingSector } from '@/lib/api/leading';
 
@@ -30,20 +29,15 @@ function getScoreGrade(score: number): { label: string; color: string; bg: strin
 function SectorCard({
     sector,
     rank,
-    onClick,
 }: {
     sector: LeadingSector;
     rank: number;
-    onClick: () => void;
 }) {
     const isPositive = sector.avgChangeRate > 0;
     const grade = getScoreGrade(sector.leadingScore);
 
     return (
-        <div
-            onClick={onClick}
-            className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer transition-all"
-        >
+        <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] transition-all">
             {/* 배경 그라데이션 (상승 시) */}
             {isPositive && (
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--rise-color)]/5 to-transparent pointer-events-none" />
@@ -120,8 +114,6 @@ function SectorCard({
 }
 
 export default function LeadingSectorView() {
-    const router = useRouter();
-
     const { data, isLoading, error } = useQuery({
         queryKey: ['leadingSectors'],
         queryFn: () => fetchLeadingSectors(20),
@@ -132,9 +124,7 @@ export default function LeadingSectorView() {
     const risingSectors = sectors.filter((s) => s.avgChangeRate > 0);
     const fallingSectors = sectors.filter((s) => s.avgChangeRate <= 0);
 
-    const handleSectorClick = (themeName: string) => {
-        router.push(`/themes/${encodeURIComponent(themeName)}`);
-    };
+    // 테마 페이지 제거로 클릭 기능 비활성화
 
     // 날짜 포맷
     const formatDataDate = (dateStr: string) => {
@@ -204,7 +194,6 @@ export default function LeadingSectorView() {
                                 key={sector.themeName}
                                 sector={sector}
                                 rank={index + 1}
-                                onClick={() => handleSectorClick(sector.themeName)}
                             />
                         ))}
                     </div>
@@ -226,7 +215,6 @@ export default function LeadingSectorView() {
                                 key={sector.themeName}
                                 sector={sector}
                                 rank={risingSectors.length + index + 1}
-                                onClick={() => handleSectorClick(sector.themeName)}
                             />
                         ))}
                     </div>

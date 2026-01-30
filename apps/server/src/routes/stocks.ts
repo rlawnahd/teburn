@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { getStockPrice, getStockCode, StockPrice } from '../services/kisApi';
 import { getAllThemePrices, calculateThemePrice, getCachedThemePrices, isCacheValid, getLastUpdateTime } from '../services/themePrice';
+import { themePriceCache } from '../services/themePriceCache';
+import Theme from '../models/Theme';
+import News from '../models/News';
 
 const router = Router();
 
@@ -103,6 +106,74 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
         res.status(500).json({
             success: false,
             message: error.message || '테마 가격 조회 중 오류가 발생했습니다.',
+        });
+    }
+});
+
+// 종목 상세 조회 (종목코드로)
+router.get('/:stockCode', async (req: Request, res: Response) => {
+    try {
+        const { stockCode } = req.params;
+
+        // 1. 캐시에서 종목 정보 조회
+        const cachedPrice = themePriceCache.getStockPrice(stockCode);
+
+        if (!cachedPrice) {
+            res.status(404).json({
+                success: false,
+                message: `종목코드 '${stockCode}'를 찾을 수 없습니다.`,
+            });
+            return;
+        }
+
+        // 2. 해당 종목이 속한 테마 조회
+        const themes = await Theme.find({
+            isActive: true,
+            'stocks.code': stockCode,
+        }).select('name').lean();
+
+        const themeNames = themes.map(t => t.name);
+
+        // 3. 관련 뉴스 조회 (종목명으로 검색)
+        const stockName = cachedPrice.stockName;
+        const relatedNews = await News.find({
+            $or: [
+                { title: { $regex: stockName, $options: 'i' } },
+                { summary: { $regex: stockName, $options: 'i' } },
+            ],
+        })
+            .sort({ crawledAt: -1 })
+            .limit(10)
+            .lean();
+
+        const formattedNews = relatedNews.map(news => ({
+            title: news.title,
+            link: news.link,
+            press: news.press,
+            summary: news.summary,
+            createdAt: news.publishedAt || news.crawledAt,
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                stockCode: cachedPrice.stockCode,
+                stockName: cachedPrice.stockName,
+                currentPrice: cachedPrice.currentPrice,
+                changePrice: cachedPrice.changePrice,
+                changeRate: cachedPrice.changeRate,
+                volume: cachedPrice.volume,
+                tradingValue: cachedPrice.tradingValue,
+                updatedAt: cachedPrice.updatedAt,
+                themes: themeNames,
+                news: formattedNews,
+            },
+        });
+    } catch (error: any) {
+        console.error('종목 상세 조회 에러:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || '종목 상세 조회 중 오류가 발생했습니다.',
         });
     }
 });
