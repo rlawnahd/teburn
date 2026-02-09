@@ -2,16 +2,18 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { TrendingUp, BarChart3, Calendar, Activity, Settings } from 'lucide-react';
+import { TrendingUp, BarChart3, Calendar, Activity, Settings, Globe } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import HotStocksView from '@/components/leading/HotStocksView';
 import TopTradingView from '@/components/leading/TopTradingView';
 import LeadingSectorView from '@/components/leading/LeadingSectorView';
 import CalendarView from '@/components/leading/CalendarView';
+import FuturesView from '@/components/leading/FuturesView';
+import FuturesWidget from '@/components/home/FuturesWidget';
 
-type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar';
+type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'futures';
 
-const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar'];
+const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'futures'];
 
 export default function HomeContent() {
     const searchParams = useSearchParams();
@@ -26,6 +28,7 @@ export default function HomeContent() {
         { key: 'stocks', label: '테마주 거래대금', icon: <TrendingUp size={16} /> },
         { key: 'sectors', label: '주도섹터', icon: <BarChart3 size={16} /> },
         { key: 'calendar', label: '일별 기록', icon: <Calendar size={16} /> },
+        { key: 'futures', label: '선물지수', icon: <Globe size={16} /> },
     ];
 
     const handleTabChange = (tab: TabType) => {
@@ -69,10 +72,13 @@ export default function HomeContent() {
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
                 <div className="px-5 pt-5 pb-0">
                     {/* 타이틀 */}
-                    <div className="flex items-center gap-2 mb-5">
+                    <div className="flex items-center gap-2 mb-4">
                         <h1 className="text-xl font-bold text-[var(--text-primary)]">주도주 탐색기</h1>
                         <span className="px-2 py-0.5 text-[10px] font-medium text-cyan-500 bg-cyan-500/10 rounded">BETA</span>
                     </div>
+
+                    {/* 선물지수 미니 위젯 */}
+                    <FuturesWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
 
                     {/* 탭 */}
                     <div className="flex gap-1">
@@ -103,6 +109,7 @@ export default function HomeContent() {
                 {activeTab === 'stocks' && <TopTradingView />}
                 {activeTab === 'sectors' && <LeadingSectorView />}
                 {activeTab === 'calendar' && <CalendarView />}
+                {activeTab === 'futures' && <FuturesView />}
             </main>
         </div>
     );

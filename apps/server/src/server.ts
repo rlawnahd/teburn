@@ -7,6 +7,7 @@ import themesRoutes from './routes/themes';
 import stocksRoutes from './routes/stocks';
 import leadingRoutes from './routes/leading';
 import adminRoutes from './routes/admin';
+import futuresRoutes from './routes/futures';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
@@ -103,6 +104,7 @@ app.use('/api/themes', themesRoutes);
 app.use('/api/stocks', stocksRoutes);
 app.use('/api/leading', leadingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/futures', futuresRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
