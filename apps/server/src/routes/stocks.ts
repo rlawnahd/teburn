@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getStockPrice, getStockCode, StockPrice } from '../services/kisApi';
 import { getAllThemePrices, calculateThemePrice, getCachedThemePrices, isCacheValid, getLastUpdateTime } from '../services/themePrice';
 import { themePriceCache } from '../services/themePriceCache';
+import { calculateBatchHotness } from '../services/hotnessService';
 import Theme from '../models/Theme';
 import News from '../models/News';
 
@@ -154,6 +155,15 @@ router.get('/:stockCode', async (req: Request, res: Response) => {
             createdAt: news.publishedAt || news.crawledAt,
         }));
 
+        // 4. 핫함 점수 계산
+        const hotnessScores = await calculateBatchHotness([{
+            stockCode,
+            stockName,
+            themes: themeNames.slice(0, 3),
+        }]);
+
+        const hotness = hotnessScores[0] || null;
+
         res.json({
             success: true,
             data: {
@@ -167,6 +177,19 @@ router.get('/:stockCode', async (req: Request, res: Response) => {
                 updatedAt: cachedPrice.updatedAt,
                 themes: themeNames,
                 news: formattedNews,
+                // 핫함 점수
+                hotness: hotness ? {
+                    totalScore: hotness.totalScore,
+                    grade: hotness.grade,
+                    tradingValueScore: hotness.tradingValueScore,
+                    searchScore: hotness.searchScore,
+                    momentumScore: hotness.momentumScore,
+                    volumeScore: hotness.volumeScore,
+                    newsScore: hotness.newsScore,
+                    volumeSurgeRate: hotness.volumeSurgeRate,
+                    searchSurgeRate: hotness.searchSurgeRate,
+                    newsCount: hotness.newsCount,
+                } : null,
             },
         });
     } catch (error: any) {

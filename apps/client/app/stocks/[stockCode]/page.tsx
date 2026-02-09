@@ -14,6 +14,9 @@ import {
     Tag,
     Newspaper,
     ExternalLink,
+    Search,
+    Activity,
+    Flame,
 } from 'lucide-react';
 import { fetchStockDetail } from '@/lib/api/stocks';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -57,6 +60,74 @@ function formatRelativeTime(dateStr: string): string {
     if (diffHours < 24) return `${diffHours}시간 전`;
     if (diffDays < 7) return `${diffDays}일 전`;
     return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+// 핫함 등급별 스타일
+function getGradeStyle(grade: string): { color: string; bg: string; label: string } {
+    switch (grade) {
+        case 'HOT':
+            return { color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]', label: '🔥 HOT' };
+        case 'WARM':
+            return { color: 'text-orange-500', bg: 'bg-orange-500', label: '🌡️ WARM' };
+        case 'NORMAL':
+            return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: '➖ NORMAL' };
+        case 'COOL':
+            return { color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]', label: '❄️ COOL' };
+        case 'COLD':
+            return { color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]', label: '🥶 COLD' };
+        default:
+            return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: grade };
+    }
+}
+
+// 점수 게이지 컴포넌트
+function ScoreGauge({
+    label,
+    score,
+    maxScore,
+    icon,
+    subText,
+}: {
+    label: string;
+    score: number;
+    maxScore: number;
+    icon: React.ReactNode;
+    subText?: string;
+}) {
+    const percentage = Math.min((score / maxScore) * 100, 100);
+    const getBarColor = () => {
+        if (percentage >= 80) return 'bg-[var(--rise-color)]';
+        if (percentage >= 60) return 'bg-orange-500';
+        if (percentage >= 40) return 'bg-amber-500';
+        if (percentage >= 20) return 'bg-[var(--accent-blue)]';
+        return 'bg-[var(--text-tertiary)]';
+    };
+
+    return (
+        <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0">
+                {icon}
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-[var(--text-secondary)]">{label}</span>
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{score.toFixed(0)}</span>
+                        <span className="text-[10px] text-[var(--text-tertiary)]">/{maxScore}</span>
+                    </div>
+                </div>
+                <div className="relative h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                    <div
+                        className={`absolute left-0 top-0 h-full ${getBarColor()} rounded-full transition-all duration-500`}
+                        style={{ width: `${percentage}%` }}
+                    />
+                </div>
+                {subText && (
+                    <span className="text-[10px] text-[var(--text-tertiary)] mt-0.5 block">{subText}</span>
+                )}
+            </div>
+        </div>
+    );
 }
 
 // 요약 카드 컴포넌트
@@ -235,6 +306,68 @@ export default function StockDetailPage() {
                         value={`${stock.news.length}건`}
                     />
                 </div>
+
+                {/* 핫함 점수 */}
+                {stock.hotness && (
+                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                                    <Flame size={20} className="text-orange-500" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold text-[var(--text-primary)]">핫함 점수</h2>
+                                    <p className="text-xs text-[var(--text-tertiary)]">종목 관심도 분석</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className={`text-2xl font-bold ${getGradeStyle(stock.hotness.grade).color}`}>
+                                    {stock.hotness.totalScore.toFixed(0)}
+                                </span>
+                                <span className={`text-xs font-bold px-2 py-1 rounded text-white ${getGradeStyle(stock.hotness.grade).bg}`}>
+                                    {getGradeStyle(stock.hotness.grade).label}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* 점수 상세 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <ScoreGauge
+                                label="거래대금"
+                                score={stock.hotness.tradingValueScore}
+                                maxScore={25}
+                                icon={<DollarSign size={14} className="text-amber-500" />}
+                            />
+                            <ScoreGauge
+                                label="검색량"
+                                score={stock.hotness.searchScore}
+                                maxScore={20}
+                                icon={<Search size={14} className="text-[var(--accent-blue)]" />}
+                                subText={stock.hotness.searchSurgeRate ? `급증률 ${stock.hotness.searchSurgeRate.toFixed(0)}%` : undefined}
+                            />
+                            <ScoreGauge
+                                label="등락률"
+                                score={stock.hotness.momentumScore}
+                                maxScore={20}
+                                icon={<Activity size={14} className="text-[var(--rise-color)]" />}
+                            />
+                            <ScoreGauge
+                                label="거래량"
+                                score={stock.hotness.volumeScore}
+                                maxScore={20}
+                                icon={<BarChart3 size={14} className="text-violet-500" />}
+                                subText={stock.hotness.volumeSurgeRate ? `급증률 ${stock.hotness.volumeSurgeRate.toFixed(0)}%` : undefined}
+                            />
+                            <ScoreGauge
+                                label="뉴스"
+                                score={stock.hotness.newsScore}
+                                maxScore={15}
+                                icon={<Newspaper size={14} className="text-emerald-500" />}
+                                subText={`${stock.hotness.newsCount}건`}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* 관련 테마 */}
                 {stock.themes.length > 0 && (

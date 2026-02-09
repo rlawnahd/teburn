@@ -77,6 +77,20 @@ export const fetchThemePrice = async (themeName: string): Promise<ThemePriceInfo
     return data.data;
 };
 
+// 핫함 점수 정보
+export interface HotnessInfo {
+    totalScore: number;
+    grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
+    tradingValueScore: number;
+    searchScore: number;
+    momentumScore: number;
+    volumeScore: number;
+    newsScore: number;
+    volumeSurgeRate: number | null;
+    searchSurgeRate: number | null;
+    newsCount: number;
+}
+
 // 종목 상세 정보
 export interface StockDetail {
     stockCode: string;
@@ -95,6 +109,7 @@ export interface StockDetail {
         summary: string;
         createdAt: string;
     }[];
+    hotness: HotnessInfo | null;
 }
 
 interface StockDetailResponse {

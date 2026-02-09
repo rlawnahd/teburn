@@ -37,7 +37,7 @@ function SectorCard({
     const grade = getScoreGrade(sector.leadingScore);
 
     return (
-        <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] transition-all">
+        <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
             {/* 배경 그라데이션 (상승 시) */}
             {isPositive && (
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--rise-color)]/5 to-transparent pointer-events-none" />

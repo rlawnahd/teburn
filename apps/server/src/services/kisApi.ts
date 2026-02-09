@@ -25,6 +25,11 @@ const TOKEN_CACHE_FILE = path.join(CACHE_DIR, 'kis-token.json');
 let accessToken: string | null = null;
 let tokenExpireTime: number = 0;
 
+// 토큰 발급 중복 방지 및 실패 cooldown
+let tokenRequestInProgress: Promise<string> | null = null;
+let lastTokenFailTime: number = 0;
+const TOKEN_FAIL_COOLDOWN = 30000; // 토큰 발급 실패 후 30초 대기
+
 // 토큰 캐시 파일 구조
 interface TokenCache {
     accessToken: string;
@@ -86,27 +91,46 @@ export async function getAccessToken(): Promise<string> {
         return accessToken!;
     }
 
-    // 3. 새 토큰 발급
-    try {
-        const response = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
-            grant_type: 'client_credentials',
-            appkey: KIS_APP_KEY,
-            appsecret: KIS_APP_SECRET,
-        });
-
-        accessToken = response.data.access_token;
-        // 토큰 만료시간 설정 (보통 24시간, 여유를 두고 23시간으로)
-        tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000;
-
-        // 파일에 저장 (재시작 대비)
-        saveTokenToFile();
-
-        console.log('✅ KIS API 토큰 발급 완료');
-        return accessToken!;
-    } catch (error: any) {
-        console.error('❌ KIS API 토큰 발급 실패:', error.response?.data || error.message);
-        throw new Error('KIS API 토큰 발급 실패');
+    // 3. 이미 진행 중인 토큰 요청이 있으면 대기
+    if (tokenRequestInProgress) {
+        return tokenRequestInProgress;
     }
+
+    // 4. 최근 토큰 발급 실패 시 cooldown
+    const timeSinceLastFail = Date.now() - lastTokenFailTime;
+    if (lastTokenFailTime > 0 && timeSinceLastFail < TOKEN_FAIL_COOLDOWN) {
+        throw new Error(`KIS API 토큰 발급 실패 (cooldown ${Math.ceil((TOKEN_FAIL_COOLDOWN - timeSinceLastFail) / 1000)}초 남음)`);
+    }
+
+    // 5. 새 토큰 발급 (중복 요청 방지)
+    tokenRequestInProgress = (async () => {
+        try {
+            const response = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
+                grant_type: 'client_credentials',
+                appkey: KIS_APP_KEY,
+                appsecret: KIS_APP_SECRET,
+            });
+
+            accessToken = response.data.access_token;
+            // 토큰 만료시간 설정 (보통 24시간, 여유를 두고 23시간으로)
+            tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000;
+            lastTokenFailTime = 0;
+
+            // 파일에 저장 (재시작 대비)
+            saveTokenToFile();
+
+            console.log('✅ KIS API 토큰 발급 완료');
+            return accessToken!;
+        } catch (error: any) {
+            lastTokenFailTime = Date.now();
+            console.error('❌ KIS API 토큰 발급 실패:', error.response?.data || error.message);
+            throw new Error('KIS API 토큰 발급 실패');
+        } finally {
+            tokenRequestInProgress = null;
+        }
+    })();
+
+    return tokenRequestInProgress;
 }
 
 // 종목명으로 종목코드 조회
