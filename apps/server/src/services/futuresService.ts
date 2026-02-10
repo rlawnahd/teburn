@@ -81,7 +81,14 @@ async function getKospiFuturesPrice(): Promise<FuturesData | null> {
     }
 
     try {
-        const token = await getAccessToken();
+        let token: string;
+        try {
+            token = await getAccessToken();
+        } catch {
+            // cooldown 중이면 잠시 대기 후 재시도
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            token = await getAccessToken();
+        }
         const futuresCode = getKospiFuturesCode();
 
         const response = await axios.get(
@@ -102,27 +109,49 @@ async function getKospiFuturesPrice(): Promise<FuturesData | null> {
             }
         );
 
-        const data = response.data.output;
-
-        if (!data || response.data.rt_cd !== '0') {
+        if (response.data.rt_cd !== '0') {
             console.error(`KOSPI 야간선물 조회 실패 (${futuresCode}):`, response.data);
             return null;
         }
 
-        const currentPrice = parseFloat(data.stck_prpr) || 0;
-        const previousClose = parseFloat(data.stck_sdpr) || 0;
-        const change = parseFloat(data.prdy_vrss) || 0;
-        const changePercent = parseFloat(data.prdy_ctrt) || 0;
+        // KIS 선물 API: output1=개별종목, output3=KOSPI200 지수
+        const output1 = response.data.output1;
+        const output3 = response.data.output3;
+
+        // output1에 선물 데이터가 있으면 사용, 없으면 output3(KOSPI200 지수) 사용
+        const hasOutput1 = output1 && Object.keys(output1).length > 0 && output1.stck_prpr;
+
+        let currentPrice: number, previousClose: number, change: number, changePercent: number;
+        let high = 0, low = 0;
+
+        if (hasOutput1) {
+            currentPrice = parseFloat(output1.stck_prpr) || 0;
+            previousClose = parseFloat(output1.stck_sdpr) || 0;
+            change = parseFloat(output1.prdy_vrss) || 0;
+            changePercent = parseFloat(output1.prdy_ctrt) || 0;
+            high = parseFloat(output1.stck_hgpr) || 0;
+            low = parseFloat(output1.stck_lwpr) || 0;
+        } else if (output3 && output3.bstp_nmix_prpr) {
+            // KOSPI200 지수 데이터로 대체
+            currentPrice = parseFloat(output3.bstp_nmix_prpr) || 0;
+            const sign = output3.prdy_vrss_sign === '2' ? 1 : output3.prdy_vrss_sign === '5' ? -1 : 0;
+            change = sign * (parseFloat(output3.bstp_nmix_prdy_vrss) || 0);
+            changePercent = sign * (parseFloat(output3.bstp_nmix_prdy_ctrt) || 0);
+            previousClose = currentPrice - change;
+        } else {
+            console.error(`KOSPI 야간선물 데이터 없음 (${futuresCode})`);
+            return null;
+        }
 
         const result: FuturesData = {
             symbol: futuresCode,
-            name: 'KOSPI 200 야간선물',
+            name: hasOutput1 ? 'KOSPI 200 야간선물' : 'KOSPI 200',
             currentPrice,
             previousClose,
-            change,
-            changePercent,
-            high: parseFloat(data.stck_hgpr) || 0,
-            low: parseFloat(data.stck_lwpr) || 0,
+            change: Math.round(change * 100) / 100,
+            changePercent: Math.round(changePercent * 100) / 100,
+            high,
+            low,
             chartData: [],
             marketOpen: currentPrice > 0,
         };

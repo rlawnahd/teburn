@@ -1,5 +1,8 @@
-import { Suspense } from 'react';
+'use client';
+
+import { Suspense, useState, useEffect } from 'react';
 import HomeContent from '@/components/home/HomeContent';
+import LandingPage from '@/components/home/LandingPage';
 
 function HomeLoading() {
     return (
@@ -10,9 +13,33 @@ function HomeLoading() {
 }
 
 export default function HomePage() {
+    const [showLanding, setShowLanding] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        // 세션 중 재방문 시엔 바로 대시보드
+        const visited = sessionStorage.getItem('teburn-visited');
+        if (!visited) {
+            setShowLanding(true);
+        }
+    }, []);
+
+    const handleEnter = () => {
+        sessionStorage.setItem('teburn-visited', '1');
+        setShowLanding(false);
+    };
+
+    if (!mounted) {
+        return <HomeLoading />;
+    }
+
     return (
-        <Suspense fallback={<HomeLoading />}>
-            <HomeContent />
-        </Suspense>
+        <>
+            {showLanding && <LandingPage onEnter={handleEnter} />}
+            <Suspense fallback={<HomeLoading />}>
+                <HomeContent />
+            </Suspense>
+        </>
     );
 }

@@ -1,13 +1,17 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 import stockCodesData from '../data/stockCodes.json';
+
+dotenv.config();
 
 // KIS API 설정
 const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
 const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
 const KIS_ACCOUNT_NO = process.env.KIS_ACCOUNT_NO || '';
 const KIS_IS_MOCK = process.env.KIS_IS_MOCK === 'true';
+
 
 // API Base URL (모의투자 vs 실투자)
 const BASE_URL = KIS_IS_MOCK
@@ -28,7 +32,8 @@ let tokenExpireTime: number = 0;
 // 토큰 발급 중복 방지 및 실패 cooldown
 let tokenRequestInProgress: Promise<string> | null = null;
 let lastTokenFailTime: number = 0;
-const TOKEN_FAIL_COOLDOWN = 30000; // 토큰 발급 실패 후 30초 대기
+const TOKEN_FAIL_COOLDOWN = 10000; // 토큰 발급 실패 후 10초 대기
+const TOKEN_MAX_RETRIES = 3; // 토큰 발급 최대 재시도 횟수
 
 // 토큰 캐시 파일 구조
 interface TokenCache {
@@ -102,33 +107,43 @@ export async function getAccessToken(): Promise<string> {
         throw new Error(`KIS API 토큰 발급 실패 (cooldown ${Math.ceil((TOKEN_FAIL_COOLDOWN - timeSinceLastFail) / 1000)}초 남음)`);
     }
 
-    // 5. 새 토큰 발급 (중복 요청 방지)
+    // 5. 새 토큰 발급 (중복 요청 방지 + 자동 재시도)
     tokenRequestInProgress = (async () => {
-        try {
-            const response = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
-                grant_type: 'client_credentials',
-                appkey: KIS_APP_KEY,
-                appsecret: KIS_APP_SECRET,
-            });
+        for (let attempt = 1; attempt <= TOKEN_MAX_RETRIES; attempt++) {
+            try {
+                const response = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
+                    grant_type: 'client_credentials',
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                }, { timeout: 10000 });
 
-            accessToken = response.data.access_token;
-            // 토큰 만료시간 설정 (보통 24시간, 여유를 두고 23시간으로)
-            tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000;
-            lastTokenFailTime = 0;
+                accessToken = response.data.access_token;
+                // 토큰 만료시간 설정 (보통 24시간, 여유를 두고 23시간으로)
+                tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000;
+                lastTokenFailTime = 0;
 
-            // 파일에 저장 (재시작 대비)
-            saveTokenToFile();
+                // 파일에 저장 (재시작 대비)
+                saveTokenToFile();
 
-            console.log('✅ KIS API 토큰 발급 완료');
-            return accessToken!;
-        } catch (error: any) {
-            lastTokenFailTime = Date.now();
-            console.error('❌ KIS API 토큰 발급 실패:', error.response?.data || error.message);
-            throw new Error('KIS API 토큰 발급 실패');
-        } finally {
-            tokenRequestInProgress = null;
+                console.log('✅ KIS API 토큰 발급 완료');
+                return accessToken!;
+            } catch (error: any) {
+                const errData = error.response?.data || error.message;
+                console.error(`❌ KIS API 토큰 발급 실패 (시도 ${attempt}/${TOKEN_MAX_RETRIES}):`, errData);
+
+                if (attempt < TOKEN_MAX_RETRIES) {
+                    // 재시도 전 대기 (2초, 4초)
+                    await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+                } else {
+                    lastTokenFailTime = Date.now();
+                    throw new Error('KIS API 토큰 발급 실패');
+                }
+            }
         }
-    })();
+        throw new Error('KIS API 토큰 발급 실패');
+    })().finally(() => {
+        tokenRequestInProgress = null;
+    });
 
     return tokenRequestInProgress;
 }

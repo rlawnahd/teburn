@@ -2,7 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { TrendingUp, BarChart3, Calendar, Activity, Settings, Globe } from 'lucide-react';
+import Image from 'next/image';
+import { BarChart3, Calendar, Activity, Settings, Globe, TrendingUp } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import HotStocksView from '@/components/leading/HotStocksView';
 import TopTradingView from '@/components/leading/TopTradingView';
@@ -43,12 +44,13 @@ export default function HomeContent() {
                 <div className="flex items-center gap-5">
                     {/* 로고 */}
                     <Link href="/" className="flex items-center gap-2 group">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
-                            <TrendingUp size={18} className="text-white" />
-                        </div>
-                        <span className="text-base font-bold text-[var(--text-primary)]">
-                            TEBURN
-                        </span>
+                        <Image
+                            src="/teburn-text-logo.svg"
+                            alt="TEBURN"
+                            width={120}
+                            height={32}
+                            priority
+                        />
                     </Link>
                 </div>
 
