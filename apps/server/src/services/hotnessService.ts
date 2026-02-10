@@ -40,9 +40,10 @@ function getGrade(score: number): HotnessScore['grade'] {
     return 'COLD';
 }
 
-// 핫함 점수 캐시 (5분 유지)
+// 핫함 점수 캐시 (5분 유지, stale-while-revalidate)
 let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
+let refreshPromise: Promise<void> | null = null;
 
 // 거래대금 점수 (0~20)
 function calculateTradingValueScore(tradingValue: number): number {
@@ -164,73 +165,103 @@ export async function calculateBatchHotness(
 }
 
 /**
- * 전체 종목 중 핫함 TOP N 조회 (캐시 적용)
+ * 핫함 점수 재계산 (내부용)
+ * refreshPromise를 공유하여 동시 요청 시 같은 계산을 기다림
+ */
+async function doRefresh(): Promise<void> {
+    try {
+        console.log('주도주 점수 계산 시작...');
+        const startTime = Date.now();
+
+        const allPrices = themePriceCache.getAllThemePrices();
+
+        const stockThemesMap = new Map<string, Set<string>>();
+        const stockDataMap = new Map<string, { code: string; name: string; changeRate: number; tradingValue: number }>();
+
+        for (const theme of allPrices.themes) {
+            for (const stock of theme.topStocks) {
+                const existing = stockDataMap.get(stock.stockCode);
+                if (!existing || stock.changeRate > existing.changeRate) {
+                    const priceData = themePriceCache.getStockPrice(stock.stockCode);
+                    stockDataMap.set(stock.stockCode, {
+                        code: stock.stockCode,
+                        name: stock.stockName,
+                        changeRate: stock.changeRate,
+                        tradingValue: priceData?.tradingValue || 0,
+                    });
+                }
+                if (!stockThemesMap.has(stock.stockCode)) {
+                    stockThemesMap.set(stock.stockCode, new Set());
+                }
+                stockThemesMap.get(stock.stockCode)!.add(theme.themeName);
+            }
+        }
+
+        const candidates: Array<{ stockCode: string; stockName: string; themes: string[]; tradingValue: number }> = [];
+
+        for (const [stockCode, data] of stockDataMap) {
+            if (data.changeRate >= 4) {
+                candidates.push({
+                    stockCode,
+                    stockName: data.name,
+                    themes: Array.from(stockThemesMap.get(stockCode) || []).slice(0, 3),
+                    tradingValue: data.tradingValue,
+                });
+            }
+        }
+
+        candidates.sort((a, b) => b.tradingValue - a.tradingValue);
+
+        console.log(`📊 4% 이상 상승 종목: ${candidates.length}개 (전체 ${stockDataMap.size}개 중)`);
+        console.log(`📊 거래대금 TOP 5: ${candidates.slice(0, 5).map(c => c.stockName).join(', ')}`);
+
+        const scored = await calculateBatchHotness(candidates);
+
+        hotStocksCache = { data: scored, timestamp: Date.now() };
+        console.log(`주도주 점수 계산 완료: ${scored.length}개 (${((Date.now() - startTime) / 1000).toFixed(1)}초)`);
+    } catch (error) {
+        console.error('주도주 점수 계산 실패:', error);
+    } finally {
+        refreshPromise = null;
+    }
+}
+
+function refreshHotStocks(): Promise<void> {
+    if (!refreshPromise) {
+        refreshPromise = doRefresh();
+    }
+    return refreshPromise;
+}
+
+/**
+ * 전체 종목 중 핫함 TOP N 조회 (stale-while-revalidate)
  */
 export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[]> {
-    // 캐시 확인
+    // 캐시 유효 → 즉시 반환
     if (hotStocksCache && Date.now() - hotStocksCache.timestamp < HOT_STOCKS_CACHE_TTL) {
         console.log('주도주 점수 캐시 사용');
         return hotStocksCache.data.slice(0, limit);
     }
 
-    console.log('주도주 점수 계산 시작...');
-    const startTime = Date.now();
-
-    const allPrices = themePriceCache.getAllThemePrices();
-
-    // 종목별 테마 매핑 + 가격 정보 저장
-    const stockThemesMap = new Map<string, Set<string>>();
-    const stockDataMap = new Map<string, { code: string; name: string; changeRate: number; tradingValue: number }>();
-
-    for (const theme of allPrices.themes) {
-        for (const stock of theme.topStocks) {
-            // 기존 데이터보다 등락률이 높은 경우만 업데이트 (중복 종목 처리)
-            const existing = stockDataMap.get(stock.stockCode);
-            if (!existing || stock.changeRate > existing.changeRate) {
-                // 거래대금 정보 가져오기
-                const priceData = themePriceCache.getStockPrice(stock.stockCode);
-                stockDataMap.set(stock.stockCode, {
-                    code: stock.stockCode,
-                    name: stock.stockName,
-                    changeRate: stock.changeRate,
-                    tradingValue: priceData?.tradingValue || 0,
-                });
-            }
-            if (!stockThemesMap.has(stock.stockCode)) {
-                stockThemesMap.set(stock.stockCode, new Set());
-            }
-            stockThemesMap.get(stock.stockCode)!.add(theme.themeName);
-        }
+    // 캐시 만료됐지만 데이터 있음 → 이전 데이터 즉시 반환 + 백그라운드 갱신
+    if (hotStocksCache) {
+        console.log('주도주 점수 stale 캐시 반환 + 백그라운드 갱신');
+        refreshHotStocks();
+        return hotStocksCache.data.slice(0, limit);
     }
 
-    // 상승 종목만 필터 (4% 이상) + 거래대금 순 정렬
-    const candidates: Array<{ stockCode: string; stockName: string; themes: string[]; tradingValue: number }> = [];
+    // 캐시 아예 없음 (첫 요청) → 계산 후 반환
+    await refreshHotStocks();
+    return hotStocksCache ? hotStocksCache.data.slice(0, limit) : [];
+}
 
-    for (const [stockCode, data] of stockDataMap) {
-        if (data.changeRate >= 4) {
-            candidates.push({
-                stockCode,
-                stockName: data.name,
-                themes: Array.from(stockThemesMap.get(stockCode) || []).slice(0, 3),
-                tradingValue: data.tradingValue,
-            });
-        }
-    }
-
-    // 거래대금 순으로 정렬 (뉴스 검색 시 상위 30개만 검색하므로)
-    candidates.sort((a, b) => b.tradingValue - a.tradingValue);
-
-    console.log(`📊 4% 이상 상승 종목: ${candidates.length}개 (전체 ${stockDataMap.size}개 중)`);
-    console.log(`📊 거래대금 TOP 5: ${candidates.slice(0, 5).map(c => c.stockName).join(', ')}`);
-
-    // 핫함 점수 계산
-    const scored = await calculateBatchHotness(candidates);
-
-    // 캐시 저장
-    hotStocksCache = { data: scored, timestamp: Date.now() };
-    console.log(`주도주 점수 계산 완료: ${scored.length}개 (${((Date.now() - startTime) / 1000).toFixed(1)}초)`);
-
-    return scored.slice(0, limit);
+/**
+ * 서버 시작 시 핫함 점수 사전 계산 (warmup)
+ */
+export async function warmupHotStocks(): Promise<void> {
+    console.log('🔥 주도주 점수 사전 계산 시작...');
+    await refreshHotStocks();
+    console.log('🔥 주도주 점수 사전 계산 완료');
 }
 
 /**

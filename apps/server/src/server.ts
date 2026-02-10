@@ -13,6 +13,7 @@ import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
 import { saveDailyLeadingThemes } from './services/leadingStockService';
+import { warmupHotStocks } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import News from './models/News';
 
@@ -154,10 +155,12 @@ connectDB().then(async () => {
         console.log(`⏰ 백그라운드 크롤링: ${CRAWL_INTERVAL / 1000}초마다 실행`);
 
         // 모든 테마 주가 배치 캐싱 스케줄러 시작 (5분 간격)
-        // DB에서 캐시 복원 후 백그라운드 갱신
-        themePriceCache.startScheduler().catch(err => {
-            console.error('❌ 주가 캐시 스케줄러 시작 실패:', err);
-        });
+        // DB에서 캐시 복원 후 백그라운드 갱신 → 완료 후 주도주 점수 사전 계산
+        themePriceCache.startScheduler()
+            .then(() => warmupHotStocks())
+            .catch(err => {
+                console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
+            });
 
         // 일별 주도테마 저장 (30분마다 업데이트)
         setInterval(async () => {
