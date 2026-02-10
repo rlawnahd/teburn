@@ -40,22 +40,22 @@ export default function HomeContent() {
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 헤더 */}
-            <header className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-5 bg-[var(--bg-primary)] sticky top-0 z-50">
-                <div className="flex items-center gap-5">
-                    {/* 로고 */}
+            <header className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-3 md:px-5 bg-[var(--bg-primary)] sticky top-0 z-50">
+                <div className="flex items-center gap-3 md:gap-5">
                     <Link href="/" className="flex items-center gap-2 group">
                         <Image
                             src="/teburn-text-logo.svg"
                             alt="TEBURN"
-                            width={120}
-                            height={32}
+                            width={100}
+                            height={28}
                             priority
+                            className="md:w-[120px]"
                         />
                     </Link>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         실시간
                     </div>
@@ -72,41 +72,43 @@ export default function HomeContent() {
 
             {/* 페이지 타이틀 + 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                <div className="px-5 pt-5 pb-0">
+                <div className="px-3 md:px-5 pt-4 md:pt-5 pb-0">
                     {/* 타이틀 */}
-                    <div className="flex items-center gap-2 mb-4">
-                        <h1 className="text-xl font-bold text-[var(--text-primary)]">주도주 탐색기</h1>
+                    <div className="flex items-center gap-2 mb-3 md:mb-4">
+                        <h1 className="text-lg md:text-xl font-bold text-[var(--text-primary)]">주도주 탐색기</h1>
                         <span className="px-2 py-0.5 text-[10px] font-medium text-cyan-500 bg-cyan-500/10 rounded">BETA</span>
                     </div>
 
                     {/* 지수 미니 위젯 */}
                     <IndexWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
 
-                    {/* 탭 */}
-                    <div className="flex gap-1">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.key}
-                                onClick={() => handleTabChange(tab.key)}
-                                className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all ${
-                                    activeTab === tab.key
-                                        ? 'text-[var(--text-primary)] bg-[var(--bg-tertiary)]'
-                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]/50'
-                                }`}
-                            >
-                                <span className={activeTab === tab.key ? 'text-cyan-500' : ''}>{tab.icon}</span>
-                                <span>{tab.label}</span>
-                                {activeTab === tab.key && (
-                                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" />
-                                )}
-                            </button>
-                        ))}
+                    {/* 탭 — 모바일 가로 스크롤 */}
+                    <div className="overflow-x-auto -mx-3 md:-mx-5 px-3 md:px-5 scrollbar-hide">
+                        <div className="flex gap-0.5 md:gap-1 min-w-max">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => handleTabChange(tab.key)}
+                                    className={`relative flex items-center gap-1 md:gap-1.5 px-2.5 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium rounded-t-lg transition-all whitespace-nowrap ${
+                                        activeTab === tab.key
+                                            ? 'text-[var(--text-primary)] bg-[var(--bg-tertiary)]'
+                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]/50'
+                                    }`}
+                                >
+                                    <span className={activeTab === tab.key ? 'text-cyan-500' : ''}>{tab.icon}</span>
+                                    <span>{tab.label}</span>
+                                    {activeTab === tab.key && (
+                                        <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* 컨텐츠 */}
-            <main className="p-5">
+            <main className="p-3 md:p-5">
                 {activeTab === 'hot' && <HotStocksView />}
                 {activeTab === 'stocks' && <TopTradingView />}
                 {activeTab === 'sectors' && <LeadingSectorView />}

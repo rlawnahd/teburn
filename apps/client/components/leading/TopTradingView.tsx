@@ -51,9 +51,9 @@ function StockRow({
                 />
             </div>
 
-            <div className="relative flex items-center p-3 gap-4">
+            <div className="relative flex items-center p-2.5 md:p-3 gap-2 md:gap-4">
                 {/* 순위 */}
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                <div className={`w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg flex items-center justify-center text-xs md:text-sm font-bold flex-shrink-0 ${
                     rank <= 3
                         ? 'bg-[var(--accent-blue)]/20 text-[var(--accent-blue)]'
                         : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
@@ -63,16 +63,16 @@ function StockRow({
 
                 {/* 종목명 + 테마 */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                        <span className="font-bold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-sm md:text-base font-bold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                         {isLimitUp && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] rounded">
+                            <span className="px-1 md:px-1.5 py-0.5 text-[9px] md:text-[10px] font-bold text-white bg-[var(--rise-color)] rounded flex-shrink-0">
                                 상한가
                             </span>
                         )}
                     </div>
                     {stock.themes.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-1 mt-0.5">
                             {stock.themes.slice(0, 2).map((theme) => (
                                 <button
                                     key={theme}
@@ -80,7 +80,7 @@ function StockRow({
                                         e.stopPropagation();
                                         onThemeClick(theme);
                                     }}
-                                    className="text-[10px] text-[var(--accent-blue)] hover:underline transition-colors"
+                                    className="text-[10px] text-[var(--accent-blue)] hover:underline transition-colors truncate max-w-[80px]"
                                 >
                                     #{theme}
                                 </button>
@@ -92,22 +92,22 @@ function StockRow({
                     )}
                 </div>
 
-                {/* 현재가 */}
-                <div className="text-right">
+                {/* 현재가 — 모바일 숨김 */}
+                <div className="text-right hidden sm:block">
                     <span className="text-sm text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}원</span>
                 </div>
 
                 {/* 등락률 */}
-                <div className="w-20 text-right">
-                    <span className="flex items-center justify-end gap-0.5 font-bold text-[var(--rise-color)]">
-                        <ArrowUpRight size={14} />
-                        +{stock.changeRate.toFixed(2)}%
+                <div className="w-16 md:w-20 text-right flex-shrink-0">
+                    <span className="flex items-center justify-end gap-0.5 text-sm md:text-base font-bold text-[var(--rise-color)]">
+                        <ArrowUpRight size={12} className="md:w-3.5 md:h-3.5" />
+                        +{stock.changeRate.toFixed(1)}%
                     </span>
                 </div>
 
                 {/* 거래대금 */}
-                <div className="w-20 text-right">
-                    <span className="font-medium text-[var(--text-secondary)]">{formatTradingValue(stock.tradingValue)}</span>
+                <div className="w-14 md:w-20 text-right flex-shrink-0">
+                    <span className="text-xs md:text-sm font-medium text-[var(--text-secondary)]">{formatTradingValue(stock.tradingValue)}</span>
                 </div>
             </div>
         </div>
@@ -173,57 +173,57 @@ export default function TopTradingView() {
             </div>
 
             {/* 헤더 */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--rise-bg)] flex items-center justify-center">
-                        <TrendingUp size={20} className="text-[var(--rise-color)]" />
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[var(--rise-bg)] flex items-center justify-center flex-shrink-0">
+                            <TrendingUp size={16} className="md:w-5 md:h-5 text-[var(--rise-color)]" />
+                        </div>
+                        <div>
+                            <h2 className="text-sm md:text-base font-bold text-[var(--text-primary)]">
+                                테마주 거래대금
+                            </h2>
+                            <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">
+                                {stocks.length}개 종목 {minRate > 0 ? `· ${minRate}% 이상 상승` : ''}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-base font-bold text-[var(--text-primary)]">
-                            테마주 거래대금
-                        </h2>
-                        <p className="text-xs text-[var(--text-tertiary)]">
-                            {stocks.length}개 종목 {minRate > 0 ? `· ${minRate}% 이상 상승` : ''}
-                        </p>
-                    </div>
-                </div>
 
-                <div className="flex items-center gap-2">
                     {/* 기준 시점 */}
                     {data?.lastUpdateTime && (
-                        <div className="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                        <div className="hidden sm:block px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
                             <span className="text-xs text-[var(--text-tertiary)]">
-                                📅 {formatDataDate(data.lastUpdateTime)} 기준
+                                {formatDataDate(data.lastUpdateTime)} 기준
                             </span>
                         </div>
                     )}
+                </div>
 
-                    {/* 필터 */}
-                    <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
-                        {[0, 4, 6, 10].map((rate) => (
-                            <button
-                                key={rate}
-                                onClick={() => setMinRate(rate)}
-                                className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${
-                                    minRate === rate
-                                        ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm'
-                                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
-                                }`}
-                            >
-                                {rate === 0 ? '전체' : `${rate}%↑`}
-                            </button>
-                        ))}
-                    </div>
+                {/* 필터 */}
+                <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)] w-fit">
+                    {[0, 4, 6, 10].map((rate) => (
+                        <button
+                            key={rate}
+                            onClick={() => setMinRate(rate)}
+                            className={`px-2.5 md:px-3 py-1 md:py-1.5 text-[11px] md:text-xs font-medium rounded transition-all ${
+                                minRate === rate
+                                    ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm'
+                                    : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                            }`}
+                        >
+                            {rate === 0 ? '전체' : `${rate}%↑`}
+                        </button>
+                    ))}
                 </div>
             </div>
 
             {/* 테이블 헤더 */}
-            <div className="flex items-center px-3 py-2 text-[11px] text-[var(--text-tertiary)] border-b border-[var(--border-color)]">
-                <div className="w-8 mr-4">#</div>
+            <div className="flex items-center px-2.5 md:px-3 py-2 text-[10px] md:text-[11px] text-[var(--text-tertiary)] border-b border-[var(--border-color)]">
+                <div className="w-6 md:w-8 mr-2 md:mr-4">#</div>
                 <div className="flex-1">종목명</div>
-                <div className="w-24 text-right">현재가</div>
-                <div className="w-20 text-right">등락률</div>
-                <div className="w-20 text-right">거래대금</div>
+                <div className="w-24 text-right hidden sm:block">현재가</div>
+                <div className="w-16 md:w-20 text-right">등락률</div>
+                <div className="w-14 md:w-20 text-right">거래대금</div>
             </div>
 
             {/* 종목 리스트 */}

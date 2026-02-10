@@ -47,9 +47,9 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
             {/* 모달 */}
-            <div className="relative w-full max-w-lg mx-4 bg-[var(--bg-primary)] rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
+            <div className="relative w-full max-w-lg mx-3 md:mx-4 bg-[var(--bg-primary)] rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
                 {/* 헤더 */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-color)]">
+                <div className="flex items-center justify-between px-3 md:px-5 py-3 md:py-4 border-b border-[var(--border-color)]">
                     <div>
                         <h2 className="text-base font-bold text-[var(--text-primary)]">{dateLabel}</h2>
                         <span className="text-xs text-[var(--text-tertiary)]">{dayName}요일 주도테마</span>
@@ -63,7 +63,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                 </div>
 
                 {/* 컨텐츠 */}
-                <div className="p-4 max-h-[60vh] overflow-y-auto">
+                <div className="p-3 md:p-4 max-h-[60vh] overflow-y-auto">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="flex items-center gap-3 text-[var(--text-tertiary)]">

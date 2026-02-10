@@ -106,17 +106,17 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
     return (
         <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] overflow-hidden">
             {/* 헤더 */}
-            <div className="p-4 border-b border-[var(--border-color)]">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-base font-bold text-[var(--text-primary)]">{data.name}</h3>
-                        <span className="text-xs text-[var(--text-tertiary)]">{data.symbol}</span>
+            <div className="p-3 md:p-4 border-b border-[var(--border-color)]">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                        <h3 className="text-sm md:text-base font-bold text-[var(--text-primary)] truncate">{data.name}</h3>
+                        <span className="text-[10px] md:text-xs text-[var(--text-tertiary)]">{data.symbol}</span>
                     </div>
-                    <div className="text-right">
-                        <div className="text-xl font-bold text-[var(--text-primary)]">
+                    <div className="text-right flex-shrink-0">
+                        <div className="text-lg md:text-xl font-bold text-[var(--text-primary)]">
                             {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </div>
-                        <div className={`text-sm font-medium ${changeColor}`}>
+                        <div className={`text-xs md:text-sm font-medium ${changeColor}`}>
                             {isPositive ? '+' : ''}{data.change.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                             {' '}({isPositive ? '+' : ''}{data.changePercent.toFixed(2)}%)
                         </div>
@@ -135,13 +135,13 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
             </div>
 
             {/* 차트 */}
-            <div className="p-4">
+            <div className="p-3 md:p-4">
                 <IndexChart data={data} color={color} />
             </div>
 
             {/* 상세 정보 */}
-            <div className="px-4 pb-4">
-                <div className="grid grid-cols-3 gap-3">
+            <div className="px-3 md:px-4 pb-3 md:pb-4">
+                <div className="grid grid-cols-3 gap-2 md:gap-3">
                     <div className="text-center p-2 rounded-lg bg-[var(--bg-secondary)]">
                         <div className="text-[10px] text-[var(--text-tertiary)] mb-0.5">전일종가</div>
                         <div className="text-xs font-medium text-[var(--text-primary)]">

@@ -43,34 +43,34 @@ function SectorCard({
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--rise-color)]/5 to-transparent pointer-events-none" />
             )}
 
-            <div className="relative p-4">
+            <div className="relative p-3 md:p-4">
                 {/* 헤더: 테마명 + 등급 */}
-                <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <span className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-white ${
+                <div className="flex items-start justify-between mb-2 md:mb-3">
+                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+                        <span className={`w-5 h-5 md:w-6 md:h-6 rounded-md flex items-center justify-center text-[10px] md:text-xs font-bold text-white flex-shrink-0 ${
                             rank === 1 ? 'bg-amber-500' : rank === 2 ? 'bg-zinc-400' : rank === 3 ? 'bg-amber-700' : 'bg-[var(--text-tertiary)]'
                         }`}>
                             {rank}
                         </span>
-                        <h3 className="text-base font-bold text-[var(--text-primary)]">
+                        <h3 className="text-sm md:text-base font-bold text-[var(--text-primary)] truncate">
                             {sector.themeName}
                         </h3>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-white ${grade.bg}`}>
+                    <span className={`text-[9px] md:text-[10px] font-bold px-1.5 md:px-2 py-0.5 rounded text-white flex-shrink-0 ${grade.bg}`}>
                         {grade.label}
                     </span>
                 </div>
 
                 {/* 평균 등락률 */}
-                <div className="flex items-baseline gap-2 mb-3">
-                    <span className={`text-2xl font-bold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                <div className="flex items-baseline gap-1.5 md:gap-2 mb-2 md:mb-3">
+                    <span className={`text-xl md:text-2xl font-bold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                         {isPositive ? '+' : ''}{sector.avgChangeRate.toFixed(2)}%
                     </span>
-                    <span className="text-xs text-[var(--text-tertiary)]">평균</span>
+                    <span className="text-[10px] md:text-xs text-[var(--text-tertiary)]">평균</span>
                 </div>
 
                 {/* 정보 그리드 */}
-                <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-2 md:mb-3 text-[11px] md:text-xs">
                     <div className="flex items-center justify-between p-2 rounded bg-[var(--bg-tertiary)]">
                         <span className="text-[var(--text-tertiary)]">종목수</span>
                         <span className="font-medium text-[var(--text-secondary)]">{sector.stockCount}개</span>
@@ -158,22 +158,22 @@ export default function LeadingSectorView() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
             {/* 헤더 + 기준 시점 */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--rise-bg)] flex items-center justify-center">
-                        <TrendingUp size={20} className="text-[var(--rise-color)]" />
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[var(--rise-bg)] flex items-center justify-center flex-shrink-0">
+                        <TrendingUp size={16} className="md:w-5 md:h-5 text-[var(--rise-color)]" />
                     </div>
                     <div>
-                        <h2 className="text-base font-bold text-[var(--text-primary)]">주도섹터</h2>
-                        <p className="text-xs text-[var(--text-tertiary)]">거래대금 + 상승률 기반</p>
+                        <h2 className="text-sm md:text-base font-bold text-[var(--text-primary)]">주도섹터</h2>
+                        <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">거래대금 + 상승률 기반</p>
                     </div>
                 </div>
                 {data?.lastUpdateTime && (
-                    <div className="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                    <div className="hidden sm:block px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
                         <span className="text-xs text-[var(--text-tertiary)]">
-                            📅 {formatDataDate(data.lastUpdateTime)} 기준
+                            {formatDataDate(data.lastUpdateTime)} 기준
                         </span>
                     </div>
                 )}

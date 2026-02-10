@@ -62,8 +62,8 @@ function ScoreGauge({
     const percentage = (score / maxScore) * 100;
 
     return (
-        <div className="flex items-center gap-2">
-            <div className="w-14 flex items-center gap-1 text-[11px] text-[var(--text-tertiary)]">
+        <div className="flex items-center gap-1.5 md:gap-2">
+            <div className="w-12 md:w-14 flex items-center gap-0.5 md:gap-1 text-[10px] md:text-[11px] text-[var(--text-tertiary)]">
                 {icon}
                 <span>{label}</span>
             </div>
@@ -73,11 +73,11 @@ function ScoreGauge({
                     style={{ width: `${percentage}%` }}
                 />
             </div>
-            <div className="w-6 text-right text-[11px] font-medium text-[var(--text-secondary)]">
+            <div className="w-5 md:w-6 text-right text-[10px] md:text-[11px] font-medium text-[var(--text-secondary)]">
                 {score}
             </div>
             {detail && (
-                <div className="w-14 text-right text-[10px] text-[var(--text-tertiary)]">{detail}</div>
+                <div className="w-12 md:w-14 text-right text-[9px] md:text-[10px] text-[var(--text-tertiary)]">{detail}</div>
             )}
         </div>
     );
@@ -101,29 +101,29 @@ function StockCard({
             onClick={() => onStockClick(stock.stockCode)}
             className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors">
             {/* 순위 & 등급 */}
-            <div className="absolute top-3 left-3 flex items-center gap-2">
-                <span className={`text-lg font-bold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+            <div className="absolute top-2.5 left-2.5 md:top-3 md:left-3 flex items-center gap-1.5 md:gap-2">
+                <span className={`text-base md:text-lg font-bold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                     #{rank}
                 </span>
-                <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${gradeStyle.bg} ${gradeStyle.text}`}>
+                <span className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] font-bold rounded ${gradeStyle.bg} ${gradeStyle.text}`}>
                     {gradeStyle.label}
                 </span>
             </div>
 
             {/* 총점 */}
-            <div className="absolute top-3 right-3 text-right">
-                <div className="text-2xl font-bold text-[var(--text-primary)]">{stock.totalScore}</div>
-                <div className="text-[10px] text-[var(--text-tertiary)]">점</div>
+            <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 text-right">
+                <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">{stock.totalScore}</div>
+                <div className="text-[9px] md:text-[10px] text-[var(--text-tertiary)]">점</div>
             </div>
 
-            <div className="pt-12 p-4">
+            <div className="pt-10 md:pt-12 p-3 md:p-4">
                 {/* 종목 정보 */}
-                <div className="mb-3">
-                    <h3 className="text-base font-bold text-[var(--text-primary)] mb-1">{stock.stockName}</h3>
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}원</span>
-                        <span className={`flex items-center gap-0.5 text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                            {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                <div className="mb-2 md:mb-3">
+                    <h3 className="text-sm md:text-base font-bold text-[var(--text-primary)] mb-0.5 md:mb-1 truncate">{stock.stockName}</h3>
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <span className="text-xs md:text-sm text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}원</span>
+                        <span className={`flex items-center gap-0.5 text-xs md:text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                            {isPositive ? <ArrowUpRight size={12} className="md:w-3.5 md:h-3.5" /> : <ArrowDownRight size={12} className="md:w-3.5 md:h-3.5" />}
                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
                         </span>
                     </div>
@@ -131,11 +131,11 @@ function StockCard({
 
                 {/* 테마 태그 */}
                 {stock.themes.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-4">
+                    <div className="flex flex-wrap gap-1 mb-3 md:mb-4">
                         {stock.themes.map((theme) => (
                             <span
                                 key={theme}
-                                className="px-2 py-0.5 text-[11px] rounded bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]"
+                                className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-[11px] rounded bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] truncate max-w-[100px]"
                             >
                                 {theme}
                             </span>
@@ -144,7 +144,7 @@ function StockCard({
                 )}
 
                 {/* 점수 상세 */}
-                <div className="space-y-1.5 mb-4">
+                <div className="space-y-1 md:space-y-1.5 mb-3 md:mb-4">
                     <ScoreGauge
                         label="거래대금"
                         score={stock.tradingValueScore}
@@ -216,15 +216,15 @@ function SectionHeader({
     color: string;
 }) {
     return (
-        <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-                <div className={`w-1 h-8 rounded-full ${color}`} />
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="flex items-center gap-2 md:gap-3">
+                <div className={`w-1 h-6 md:h-8 rounded-full ${color}`} />
                 <div>
-                    <h2 className="text-lg font-bold text-[var(--text-primary)]">{title}</h2>
-                    <p className="text-xs text-[var(--text-tertiary)]">{description}</p>
+                    <h2 className="text-base md:text-lg font-bold text-[var(--text-primary)]">{title}</h2>
+                    <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">{description}</p>
                 </div>
             </div>
-            <span className="px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-tertiary)] rounded-full">
+            <span className="px-2 md:px-2.5 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-tertiary)] rounded-full">
                 {count}개
             </span>
         </div>
@@ -283,24 +283,24 @@ export default function HotStocksView() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
             {/* 헤더 + 기준 시점 */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[var(--accent-blue)]/10 flex items-center justify-center flex-shrink-0">
-                        <Activity size={20} className="text-[var(--accent-blue)]" />
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-[var(--accent-blue)]/10 flex items-center justify-center flex-shrink-0">
+                        <Activity size={16} className="md:w-5 md:h-5 text-[var(--accent-blue)]" />
                     </div>
                     <div>
                         <h3 className="text-sm font-bold text-[var(--text-primary)]">주도주 분석</h3>
-                        <p className="text-xs text-[var(--text-tertiary)]">
+                        <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">
                             돈과 관심이 집중되는 종목
                         </p>
                     </div>
                 </div>
                 {data?.lastUpdateTime && (
-                    <div className="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                    <div className="hidden sm:block px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
                         <span className="text-xs text-[var(--text-tertiary)]">
-                            📅 {formatDataDate(data.lastUpdateTime)} 기준
+                            {formatDataDate(data.lastUpdateTime)} 기준
                         </span>
                     </div>
                 )}
@@ -315,7 +315,7 @@ export default function HotStocksView() {
                         count={hotStocks.length}
                         color="bg-[var(--rise-color)]"
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                         {hotStocks.map((stock, i) => (
                             <StockCard
                                 key={stock.stockCode}
@@ -337,7 +337,7 @@ export default function HotStocksView() {
                         count={warmStocks.length}
                         color="bg-orange-500"
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                         {warmStocks.map((stock, i) => (
                             <StockCard
                                 key={stock.stockCode}
@@ -359,7 +359,7 @@ export default function HotStocksView() {
                         count={otherStocks.length}
                         color="bg-[var(--text-tertiary)]"
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                         {otherStocks.map((stock, i) => (
                             <StockCard
                                 key={stock.stockCode}

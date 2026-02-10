@@ -37,7 +37,7 @@ function DateCell({
     return (
         <div
             onClick={hasData ? onClick : undefined}
-            className={`relative min-h-[90px] p-2 border-r border-b border-[var(--border-color)] transition-all ${
+            className={`relative min-h-[60px] md:min-h-[90px] p-1 md:p-2 border-r border-b border-[var(--border-color)] transition-all ${
                 isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-tertiary)]/50'
             } ${hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''}`}
         >
@@ -66,7 +66,7 @@ function DateCell({
                         return (
                             <div
                                 key={theme.themeName}
-                                className={`text-[9px] px-1 py-0.5 rounded truncate ${
+                                className={`text-[7px] md:text-[9px] px-0.5 md:px-1 py-0.5 rounded truncate ${
                                     isPositive
                                         ? 'bg-[var(--rise-bg)] text-[var(--rise-color)]'
                                         : 'bg-[var(--fall-bg)] text-[var(--fall-color)]'
@@ -74,7 +74,7 @@ function DateCell({
                             >
                                 <span className="font-bold mr-0.5 opacity-50">{i + 1}</span>
                                 {theme.themeName}
-                                <span className="ml-0.5 opacity-60">
+                                <span className="ml-0.5 opacity-60 hidden sm:inline">
                                     {isPositive ? '+' : ''}
                                     {theme.avgChangeRate.toFixed(1)}%
                                 </span>
@@ -171,39 +171,39 @@ export default function CalendarView() {
         <div className="space-y-4">
             {/* 헤더 */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--accent-blue)]/10 flex items-center justify-center">
-                        <Calendar size={20} className="text-[var(--accent-blue)]" />
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[var(--accent-blue)]/10 flex items-center justify-center flex-shrink-0">
+                        <Calendar size={16} className="md:w-5 md:h-5 text-[var(--accent-blue)]" />
                     </div>
                     <div>
-                        <h2 className="text-base font-bold text-[var(--text-primary)]">주도테마 캘린더</h2>
-                        <p className="text-xs text-[var(--text-tertiary)]">날짜별 주도 테마 TOP 3</p>
+                        <h2 className="text-sm md:text-base font-bold text-[var(--text-primary)]">주도테마 캘린더</h2>
+                        <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">날짜별 주도 테마 TOP 3</p>
                     </div>
                 </div>
 
                 {/* 월 네비게이션 */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                     <button
                         onClick={handleToday}
-                        className="px-3 py-1.5 text-xs rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)] transition-all"
+                        className="px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)] transition-all"
                     >
                         오늘
                     </button>
-                    <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
+                    <div className="flex items-center gap-0.5 md:gap-1 p-0.5 md:p-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
                         <button
                             onClick={handlePrevMonth}
-                            className="w-7 h-7 rounded flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-primary)] transition-all"
+                            className="w-6 h-6 md:w-7 md:h-7 rounded flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-primary)] transition-all"
                         >
-                            <ChevronLeft size={16} />
+                            <ChevronLeft size={14} className="md:w-4 md:h-4" />
                         </button>
-                        <span className="px-3 text-sm font-bold text-[var(--text-primary)]">
-                            {currentYear}년 {currentMonth}월
+                        <span className="px-1.5 md:px-3 text-xs md:text-sm font-bold text-[var(--text-primary)] whitespace-nowrap">
+                            {currentYear}.{currentMonth}
                         </span>
                         <button
                             onClick={handleNextMonth}
-                            className="w-7 h-7 rounded flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-primary)] transition-all"
+                            className="w-6 h-6 md:w-7 md:h-7 rounded flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-primary)] transition-all"
                         >
-                            <ChevronRight size={16} />
+                            <ChevronRight size={14} className="md:w-4 md:h-4" />
                         </button>
                     </div>
                 </div>
