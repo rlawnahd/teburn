@@ -169,6 +169,8 @@ export default function IndexView() {
         queryFn: fetchIndexData,
         refetchInterval: 60 * 1000,
         staleTime: 30 * 1000,
+        retry: 3,
+        retryDelay: (attempt) => Math.min(attempt * 3000, 10000),
     });
 
     const updatedTime = dataUpdatedAt

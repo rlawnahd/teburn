@@ -98,7 +98,13 @@ export default function HotStocksView() {
     const { data, isLoading, error } = useQuery({
         queryKey: ['hotStocks'],
         queryFn: () => fetchHotStocks(30),
-        refetchInterval: 60 * 1000,
+        refetchInterval: (query) => {
+            // 데이터가 비어있으면 5초마다 재시도, 있으면 60초
+            const stocks = query.state.data?.stocks;
+            return (!stocks || stocks.length === 0) ? 5000 : 60 * 1000;
+        },
+        retry: 3,
+        retryDelay: (attempt) => Math.min(attempt * 3000, 10000),
     });
 
     const stocks = data?.stocks || [];

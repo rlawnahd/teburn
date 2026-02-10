@@ -254,19 +254,187 @@ async function getYahooFinanceData(
     }
 }
 
-// KOSPI 지수 조회 (Yahoo Finance)
+// KIS API 업종 지수 공통 함수
+async function getKisIndexData(
+    indexCode: string,
+    cacheKey: string,
+    name: string,
+    tradingHours: string,
+): Promise<IndexData | null> {
+    const cached = indexCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+    }
+
+    try {
+        let token: string;
+        try {
+            token = await getAccessToken();
+        } catch {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            token = await getAccessToken();
+        }
+
+        const response = await axios.get(
+            `${BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-index-price`,
+            {
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHPUP02100000',
+                },
+                params: {
+                    FID_COND_MRKT_DIV_CODE: 'U',
+                    FID_INPUT_ISCD: indexCode,
+                },
+                timeout: 5000,
+            }
+        );
+
+        if (response.data.rt_cd !== '0') {
+            console.error(`${name} 지수 조회 실패:`, response.data);
+            return null;
+        }
+
+        const output = response.data.output;
+        const currentPrice = parseFloat(output.bstp_nmix_prpr) || 0;
+        const priceChange = parseFloat(output.bstp_nmix_prdy_vrss) || 0;
+        const sign = output.prdy_vrss_sign;
+        // 부호: 2=상승, 5=하락
+        const signedChange = (sign === '5' || sign === '4') ? -Math.abs(priceChange) : priceChange;
+        const pctChange = parseFloat(output.bstp_nmix_prdy_ctrt) || 0;
+        const signedPct = (sign === '5' || sign === '4') ? -Math.abs(pctChange) : pctChange;
+        const previousClose = currentPrice - signedChange;
+        const high = parseFloat(output.bstp_nmix_hgpr) || 0;
+        const low = parseFloat(output.bstp_nmix_lwpr) || 0;
+
+        const result: IndexData = {
+            symbol: indexCode,
+            name,
+            category: 'index',
+            currentPrice,
+            previousClose,
+            change: Math.round(signedChange * 100) / 100,
+            changePercent: Math.round(signedPct * 100) / 100,
+            high,
+            low,
+            chartData: [],
+            marketOpen: currentPrice > 0,
+            tradingHours,
+        };
+
+        indexCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        return result;
+    } catch (error: any) {
+        console.error(`${name} 지수 조회 에러:`, error.response?.data || error.message);
+        const stale = indexCache.get(cacheKey);
+        return stale ? stale.data : null;
+    }
+}
+
+// KOSPI 지수 조회 (KIS API)
 async function getKospiIndexData(): Promise<IndexData | null> {
-    return getYahooFinanceData('^KS11', 'kospi-index', '코스피', 'index', '09:00 ~ 15:30');
+    return getKisIndexData('0001', 'kospi-index', '코스피', '09:00 ~ 15:30');
 }
 
-// KOSDAQ 지수 조회 (Yahoo Finance)
+// KOSDAQ 지수 조회 (KIS API)
 async function getKosdaqIndexData(): Promise<IndexData | null> {
-    return getYahooFinanceData('^KQ11', 'kosdaq-index', '코스닥', 'index', '09:00 ~ 15:30');
+    return getKisIndexData('1001', 'kosdaq-index', '코스닥', '09:00 ~ 15:30');
 }
 
-// NASDAQ 100 선물 데이터 조회 (Yahoo Finance)
+// NASDAQ 100 선물 데이터 조회 (Yahoo Finance → KIS 해외지수)
 async function getNasdaqIndexData(): Promise<IndexData | null> {
-    return getYahooFinanceData('NQ=F', 'nasdaq', 'NASDAQ 100 선물', 'futures', '07:00 ~ 익일 06:00');
+    const cached = indexCache.get('nasdaq');
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+    }
+
+    try {
+        let token: string;
+        try {
+            token = await getAccessToken();
+        } catch {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            token = await getAccessToken();
+        }
+
+        const response = await axios.get(
+            `${BASE_URL}/uapi/overseas-price/v1/quotations/inquire-daily-chartprice`,
+            {
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHKST03030100',
+                },
+                params: {
+                    FID_COND_MRKT_DIV_CODE: 'N',
+                    FID_INPUT_ISCD: 'NAS',
+                    FID_INPUT_DATE_1: getDateStr(-7),
+                    FID_INPUT_DATE_2: getDateStr(0),
+                    FID_PERIOD_DIV_CODE: 'D',
+                },
+                timeout: 5000,
+            }
+        );
+
+        if (response.data.rt_cd !== '0') {
+            console.error('NASDAQ 조회 실패:', response.data);
+            // Yahoo Finance 폴백
+            return getYahooFinanceData('NQ=F', 'nasdaq', 'NASDAQ 100 선물', 'futures', '07:00 ~ 익일 06:00');
+        }
+
+        const output2 = response.data.output2;
+        if (!output2 || output2.length === 0) {
+            return getYahooFinanceData('NQ=F', 'nasdaq', 'NASDAQ 100 선물', 'futures', '07:00 ~ 익일 06:00');
+        }
+
+        // output2[0]이 최신 데이터
+        const latest = output2[0];
+        const currentPrice = parseFloat(latest.ovrs_nmix_prpr) || 0;
+        const previousClose = parseFloat(latest.ovrs_nmix_prdy_clpr) || 0;
+        const change = currentPrice - previousClose;
+        const changePercent = previousClose ? (change / previousClose) * 100 : 0;
+        const high = parseFloat(latest.ovrs_nmix_hgpr) || 0;
+        const low = parseFloat(latest.ovrs_nmix_lwpr) || 0;
+
+        const result: IndexData = {
+            symbol: 'NASDAQ',
+            name: 'NASDAQ',
+            category: 'futures',
+            currentPrice,
+            previousClose,
+            change: Math.round(change * 100) / 100,
+            changePercent: Math.round(changePercent * 100) / 100,
+            high,
+            low,
+            chartData: [],
+            marketOpen: currentPrice > 0,
+            tradingHours: '23:30 ~ 익일 06:00',
+        };
+
+        indexCache.set('nasdaq', { data: result, timestamp: Date.now() });
+        return result;
+    } catch (error: any) {
+        console.error('NASDAQ KIS 조회 에러:', error.response?.data || error.message);
+        // Yahoo Finance 폴백
+        try {
+            return await getYahooFinanceData('NQ=F', 'nasdaq', 'NASDAQ 100 선물', 'futures', '07:00 ~ 익일 06:00');
+        } catch {
+            const stale = indexCache.get('nasdaq');
+            return stale ? stale.data : null;
+        }
+    }
+}
+
+// 날짜 문자열 헬퍼 (YYYYMMDD)
+function getDateStr(offsetDays: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
 // 전체 지수 병렬 조회
