@@ -125,10 +125,23 @@ export async function getBatchSearchSurgeRates(
 ): Promise<Map<string, number>> {
     const result = new Map<string, number>();
 
+    // 캐시에 있는 종목은 바로 반환, 없는 종목만 API 호출
+    const uncachedKeywords: string[] = [];
+    for (const keyword of keywords) {
+        const cached = searchTrendCache.get(keyword);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            result.set(keyword, cached.data);
+        } else {
+            uncachedKeywords.push(keyword);
+        }
+    }
+
+    if (uncachedKeywords.length === 0) return result;
+
     // 5개씩 나눠서 요청
     const chunks: string[][] = [];
-    for (let i = 0; i < keywords.length; i += 5) {
-        chunks.push(keywords.slice(i, i + 5));
+    for (let i = 0; i < uncachedKeywords.length; i += 5) {
+        chunks.push(uncachedKeywords.slice(i, i + 5));
     }
 
     for (const chunk of chunks) {
@@ -139,7 +152,6 @@ export async function getBatchSearchSurgeRates(
             const data = item.data;
             if (data.length < 3) continue;
 
-            // 오늘 데이터 제외, 어제 vs 그 전 평균 비교 (급증률)
             const yesterdayRatio = data[data.length - 2].ratio;
             const previousAvg =
                 data.slice(0, -2).reduce((sum, d) => sum + d.ratio, 0) / (data.length - 2);
@@ -151,7 +163,10 @@ export async function getBatchSearchSurgeRates(
                 surgeRate = 100;
             }
 
-            result.set(item.title, Math.round(surgeRate));
+            const rounded = Math.round(surgeRate);
+            result.set(item.title, rounded);
+            // 캐시 저장
+            searchTrendCache.set(item.title, { data: rounded, timestamp: Date.now() });
         }
 
         // API rate limit 방지 (1초 대기)

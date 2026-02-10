@@ -82,12 +82,10 @@ export interface HotnessInfo {
     totalScore: number;
     grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
     tradingValueScore: number;
-    searchScore: number;
     momentumScore: number;
     volumeScore: number;
     newsScore: number;
     volumeSurgeRate: number | null;
-    searchSurgeRate: number | null;
     newsCount: number;
 }
 

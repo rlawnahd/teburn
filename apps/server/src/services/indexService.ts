@@ -28,6 +28,36 @@ export interface IndexData {
 const indexCache = new Map<string, { data: IndexData; timestamp: number }>();
 const CACHE_TTL = 60 * 1000;
 
+// 차트 데이터 수집기 (매 조회마다 가격 기록, 당일분만 유지)
+const chartHistory = new Map<string, IndexChartPoint[]>();
+let chartDate = ''; // 현재 저장 중인 날짜 (YYYY-MM-DD)
+
+function addChartPoint(cacheKey: string, price: number): IndexChartPoint[] {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    // 날짜가 바뀌면 초기화
+    if (chartDate !== today) {
+        chartDate = today;
+        chartHistory.clear();
+    }
+
+    if (!chartHistory.has(cacheKey)) {
+        chartHistory.set(cacheKey, []);
+    }
+
+    const history = chartHistory.get(cacheKey)!;
+    const point: IndexChartPoint = { time: now.toISOString(), price };
+
+    // 마지막 기록과 1분 이상 차이날 때만 추가
+    const last = history[history.length - 1];
+    if (!last || now.getTime() - new Date(last.time).getTime() >= 55000) {
+        history.push(point);
+    }
+
+    return history;
+}
+
 // KIS API 설정
 const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
 const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
@@ -147,6 +177,8 @@ async function getKospiFuturesPrice(): Promise<IndexData | null> {
             return null;
         }
 
+        const chartData = addChartPoint('kospi', currentPrice);
+
         const result: IndexData = {
             symbol: futuresCode,
             name: hasOutput1 ? 'KOSPI 200 야간선물' : 'KOSPI 200',
@@ -157,7 +189,7 @@ async function getKospiFuturesPrice(): Promise<IndexData | null> {
             changePercent: Math.round(changePercent * 100) / 100,
             high,
             low,
-            chartData: [],
+            chartData,
             marketOpen: currentPrice > 0,
             tradingHours: '18:00 ~ 익일 05:00',
         };
@@ -310,6 +342,9 @@ async function getKisIndexData(
         const high = parseFloat(output.bstp_nmix_hgpr) || 0;
         const low = parseFloat(output.bstp_nmix_lwpr) || 0;
 
+        // 차트 데이터: 매 조회마다 가격 기록
+        const chartData = addChartPoint(cacheKey, currentPrice);
+
         const result: IndexData = {
             symbol: indexCode,
             name,
@@ -320,7 +355,7 @@ async function getKisIndexData(
             changePercent: Math.round(signedPct * 100) / 100,
             high,
             low,
-            chartData: [],
+            chartData,
             marketOpen: currentPrice > 0,
             tradingHours,
         };

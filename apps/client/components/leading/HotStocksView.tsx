@@ -186,7 +186,7 @@ export default function HotStocksView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도주 분석</h2>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 검색량 + 뉴스 종합</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 등락률 + 거래량 + 뉴스 종합</span>
                 </div>
                 {data?.lastUpdateTime && (
                     <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)]">
@@ -195,9 +195,9 @@ export default function HotStocksView() {
                 )}
             </div>
 
-            {renderSection('HOT', '60점 이상', hotStocks, 1)}
-            {renderSection('WARM', '45~59점', warmStocks, hotStocks.length + 1)}
-            {renderSection('기타', '45점 미만', otherStocks, hotStocks.length + warmStocks.length + 1)}
+            {renderSection('HOT', '70점 이상', hotStocks, 1)}
+            {renderSection('WARM', '50~69점', warmStocks, hotStocks.length + 1)}
+            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1)}
 
             {stocks.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-48 text-[var(--text-tertiary)]">

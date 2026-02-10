@@ -202,34 +202,27 @@ export default function StockDetailPage() {
                             <ScoreBar
                                 label="거래대금"
                                 score={stock.hotness.tradingValueScore}
-                                maxScore={25}
+                                maxScore={30}
                                 color="bg-amber-500"
-                            />
-                            <ScoreBar
-                                label="검색량"
-                                score={stock.hotness.searchScore}
-                                maxScore={20}
-                                detail={stock.hotness.searchSurgeRate ? `${stock.hotness.searchSurgeRate > 0 ? '+' : ''}${stock.hotness.searchSurgeRate.toFixed(0)}%` : '-'}
-                                color="bg-[var(--accent-blue)]"
                             />
                             <ScoreBar
                                 label="등락률"
                                 score={stock.hotness.momentumScore}
-                                maxScore={20}
+                                maxScore={25}
                                 detail={`${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%`}
                                 color="bg-[var(--rise-color)]"
                             />
                             <ScoreBar
                                 label="거래량"
                                 score={stock.hotness.volumeScore}
-                                maxScore={20}
+                                maxScore={25}
                                 detail={stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-'}
                                 color="bg-violet-500"
                             />
                             <ScoreBar
                                 label="뉴스"
                                 score={stock.hotness.newsScore}
-                                maxScore={15}
+                                maxScore={20}
                                 detail={`${stock.hotness.newsCount}건`}
                                 color="bg-emerald-500"
                             />

@@ -1,9 +1,8 @@
 // 주도주 점수 통합 서비스
-// 주도주 점수 = 거래대금(20) + 검색량(20) + 등락률(15) + 거래량급증(15) + 뉴스(15) = 총 85점
+// 주도주 점수 = 거래대금(30) + 등락률(25) + 거래량급증(25) + 뉴스(20) = 총 100점
 
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
-import { getBatchSearchSurgeRates } from './naverDataLab';
 import { getBatchStockNewsCountFromApi } from './naverApi';
 
 export interface HotnessScore {
@@ -15,28 +14,26 @@ export interface HotnessScore {
     themes: string[];
 
     // 주도주 점수 상세
-    totalScore: number;         // 총점 (0~85)
-    tradingValueScore: number;  // 거래대금 (0~20)
-    searchScore: number;        // 검색량 급증 (0~20)
-    momentumScore: number;      // 등락률 (0~15)
-    volumeScore: number;        // 거래량 급증 (0~15)
-    newsScore: number;          // 뉴스 노출 (0~15)
+    totalScore: number;         // 총점 (0~100)
+    tradingValueScore: number;  // 거래대금 (0~30)
+    momentumScore: number;      // 등락률 (0~25)
+    volumeScore: number;        // 거래량 급증 (0~25)
+    newsScore: number;          // 뉴스 노출 (0~20)
 
     // 원본 데이터
     volumeSurgeRate: number | null;  // 거래량 급증률 (배수)
-    searchSurgeRate: number | null;  // 검색량 급증률 (%)
     newsCount: number;               // 뉴스 건수
 
     // 등급
     grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
 }
 
-// 등급 기준 (85점 만점 기준)
+// 등급 기준 (100점 만점 기준)
 function getGrade(score: number): HotnessScore['grade'] {
-    if (score >= 60) return 'HOT';
-    if (score >= 45) return 'WARM';
-    if (score >= 30) return 'NORMAL';
-    if (score >= 15) return 'COOL';
+    if (score >= 70) return 'HOT';
+    if (score >= 50) return 'WARM';
+    if (score >= 35) return 'NORMAL';
+    if (score >= 20) return 'COOL';
     return 'COLD';
 }
 
@@ -45,58 +42,47 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~20)
+// 거래대금 점수 (0~30)
 function calculateTradingValueScore(tradingValue: number): number {
     const billion = tradingValue / 100000000; // 억 단위
-    if (billion >= 1000) return 20;  // 1000억 이상
-    if (billion >= 500) return 17;   // 500억 이상
-    if (billion >= 300) return 14;   // 300억 이상
-    if (billion >= 200) return 11;   // 200억 이상
-    if (billion >= 100) return 8;    // 100억 이상
+    if (billion >= 1000) return 30;  // 1000억 이상
+    if (billion >= 500) return 25;   // 500억 이상
+    if (billion >= 300) return 20;   // 300억 이상
+    if (billion >= 200) return 15;   // 200억 이상
+    if (billion >= 100) return 10;   // 100억 이상
     if (billion >= 50) return 5;     // 50억 이상
     return 2;                        // 50억 미만
 }
 
-// 등락률 점수 (0~15)
+// 등락률 점수 (0~25)
 function calculateMomentumScore(changeRate: number): number {
-    if (changeRate >= 20) return 15;  // 상한가 근접
-    if (changeRate >= 15) return 13;
-    if (changeRate >= 10) return 11;
-    if (changeRate >= 7) return 9;
-    if (changeRate >= 5) return 7;
-    if (changeRate >= 3) return 5;
-    if (changeRate >= 1) return 3;
+    if (changeRate >= 20) return 25;  // 상한가 근접
+    if (changeRate >= 15) return 21;
+    if (changeRate >= 10) return 17;
+    if (changeRate >= 7) return 13;
+    if (changeRate >= 5) return 10;
+    if (changeRate >= 3) return 7;
+    if (changeRate >= 1) return 4;
     return 0;
 }
 
-// 거래량 급증률 점수 (0~15)
+// 거래량 급증률 점수 (0~25)
 function calculateVolumeSurgeScore(surgeRate: number | null): number {
     if (surgeRate === null) return 0;
-    if (surgeRate >= 10) return 15;
-    if (surgeRate >= 5) return 12;
-    if (surgeRate >= 3) return 9;
-    if (surgeRate >= 2) return 6;
-    if (surgeRate >= 1.5) return 3;
+    if (surgeRate >= 10) return 25;
+    if (surgeRate >= 5) return 20;
+    if (surgeRate >= 3) return 15;
+    if (surgeRate >= 2) return 10;
+    if (surgeRate >= 1.5) return 5;
     return 0;
 }
 
-// 검색량 점수 (0~20) - 급증률 기준
-function calculateSearchScore(surgeRate: number | null): number {
-    if (surgeRate === null) return 0;
-    if (surgeRate >= 100) return 20;  // +100% 이상 급증
-    if (surgeRate >= 50) return 16;   // +50% 이상
-    if (surgeRate >= 10) return 12;   // +10% 이상
-    if (surgeRate >= 0) return 8;     // 0% 이상
-    if (surgeRate >= -30) return 4;   // -30% 이상 (약간 감소도 점수)
-    return 0;                          // -30% 미만 (급감만 0점)
-}
-
-// 뉴스 점수 (0~15)
+// 뉴스 점수 (0~20)
 function calculateNewsScore(newsCount: number): number {
-    if (newsCount >= 10) return 15;
-    if (newsCount >= 5) return 12;
-    if (newsCount >= 3) return 9;
-    if (newsCount >= 1) return 5;
+    if (newsCount >= 10) return 20;
+    if (newsCount >= 5) return 16;
+    if (newsCount >= 3) return 12;
+    if (newsCount >= 1) return 6;
     return 0;
 }
 
@@ -110,9 +96,8 @@ export async function calculateBatchHotness(
     const stockNames = stocks.map((s) => s.stockName);
 
     // 모든 지표 병렬 조회
-    const [volumeSurges, searchSurges, newsCounts] = await Promise.all([
+    const [volumeSurges, newsCounts] = await Promise.all([
         getBatchVolumeSurgeRates(stockCodes),
-        getBatchSearchSurgeRates(stockNames),
         getBatchStockNewsCountFromApi(stockNames, 30), // 상위 30개만 API 검색
     ]);
 
@@ -123,17 +108,15 @@ export async function calculateBatchHotness(
         if (!priceData) continue;
 
         const volumeSurge = volumeSurges.get(stock.stockCode) || null;
-        const searchSurge = searchSurges.get(stock.stockName) || null;
         const newsCount = newsCounts.get(stock.stockName) || 0;
 
         // 점수 계산
         const tradingValueScore = calculateTradingValueScore(priceData.tradingValue);
-        const searchScore = calculateSearchScore(searchSurge);
         const momentumScore = calculateMomentumScore(priceData.changeRate);
         const volumeScore = calculateVolumeSurgeScore(volumeSurge);
         const newsScore = calculateNewsScore(newsCount);
 
-        const totalScore = tradingValueScore + searchScore + momentumScore + volumeScore + newsScore;
+        const totalScore = tradingValueScore + momentumScore + volumeScore + newsScore;
 
         results.push({
             stockCode: stock.stockCode,
@@ -145,13 +128,11 @@ export async function calculateBatchHotness(
 
             totalScore,
             tradingValueScore,
-            searchScore,
             momentumScore,
             volumeScore,
             newsScore,
 
             volumeSurgeRate: volumeSurge,
-            searchSurgeRate: searchSurge,
             newsCount,
 
             grade: getGrade(totalScore),
