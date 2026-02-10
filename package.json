@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@next/third-parties": "^16.1.6"
   }
 }
