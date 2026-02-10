@@ -91,14 +91,14 @@ export default function NewsDetailPanel({ news, onAnalyzed }: Props) {
             {/* 헤더: 언론사 + 시간 + 링크 */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 bg-slate-100 rounded text-slate-600">
+                    <span className="text-[13px] px-2 py-0.5 bg-slate-100 rounded text-slate-600">
                         {news.press}
                     </span>
-                    <span className="text-xs text-slate-500">{formatDate(news.createdAt)}</span>
+                    <span className="text-[13px] text-slate-500">{formatDate(news.createdAt)}</span>
                 </div>
                 <button
                     onClick={handleOpenLink}
-                    className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+                    className="flex items-center gap-1 text-[13px] text-slate-500 hover:text-slate-900 transition-colors"
                 >
                     <ExternalLink size={12} />
                     원문
@@ -118,11 +118,11 @@ export default function NewsDetailPanel({ news, onAnalyzed }: Props) {
                         {/* 호재 종목 */}
                         {stocks.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-[10px] text-red-500 font-medium">호재</span>
+                                <span className="text-[11px] text-red-500 font-medium">호재</span>
                                 {stocks.map((stock, i) => (
                                     <span
                                         key={`stock-${i}`}
-                                        className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200"
+                                        className="text-[13px] font-semibold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200"
                                     >
                                         {stock}
                                     </span>
@@ -132,11 +132,11 @@ export default function NewsDetailPanel({ news, onAnalyzed }: Props) {
                         {/* 악재 종목 */}
                         {negativeStocks.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-[10px] text-blue-500 font-medium">악재</span>
+                                <span className="text-[11px] text-blue-500 font-medium">악재</span>
                                 {negativeStocks.map((stock, i) => (
                                     <span
                                         key={`neg-stock-${i}`}
-                                        className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200"
+                                        className="text-[13px] font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200"
                                     >
                                         {stock}
                                     </span>
@@ -146,11 +146,11 @@ export default function NewsDetailPanel({ news, onAnalyzed }: Props) {
                         {/* 테마 */}
                         {themes.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-[10px] text-cyan-600 font-medium">테마</span>
+                                <span className="text-[11px] text-cyan-600 font-medium">테마</span>
                                 {themes.map((theme, i) => (
                                     <span
                                         key={`theme-${i}`}
-                                        className="flex items-center gap-1 text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-200"
+                                        className="flex items-center gap-1 text-[13px] text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-200"
                                     >
                                         <Tag size={10} />
                                         {theme}
@@ -189,7 +189,7 @@ export default function NewsDetailPanel({ news, onAnalyzed }: Props) {
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l"></div>
                             <div className="flex items-center gap-2 mb-2 pl-3">
                                 <Sparkles size={14} className="text-indigo-600" />
-                                <span className="text-xs font-semibold text-indigo-600">AI 분석</span>
+                                <span className="text-[13px] font-semibold text-indigo-600">AI 분석</span>
                             </div>
                             <p className="text-sm text-slate-700 pl-3 leading-relaxed">
                                 {aiReason}

@@ -1,12 +1,26 @@
 import { Router, Request, Response } from 'express';
 import { getStockPrice, getStockCode, StockPrice } from '../services/kisApi';
-import { getAllThemePrices, calculateThemePrice, getCachedThemePrices, isCacheValid, getLastUpdateTime } from '../services/themePrice';
 import { themePriceCache } from '../services/themePriceCache';
 import { calculateBatchHotness } from '../services/hotnessService';
 import Theme from '../models/Theme';
 import News from '../models/News';
 
 const router = Router();
+
+// 종목 검색
+router.get('/search', async (req: Request, res: Response) => {
+    try {
+        const q = (req.query.q as string || '').trim();
+        if (!q) {
+            res.json({ success: true, data: [] });
+            return;
+        }
+        const results = themePriceCache.searchStocks(q, 10);
+        res.json({ success: true, data: results });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 // 단일 종목 현재가 조회
 router.get('/price/:stockName', async (req: Request, res: Response) => {
@@ -48,30 +62,21 @@ router.get('/price/:stockName', async (req: Request, res: Response) => {
     }
 });
 
-// 모든 테마 등락률 조회
+// 모든 테마 등락률 조회 (themePriceCache 사용)
 router.get('/themes', async (req: Request, res: Response) => {
     try {
-        const forceRefresh = req.query.refresh === 'true';
-
-        // 캐시가 유효하고 강제 새로고침이 아니면 캐시 반환
-        if (!forceRefresh && isCacheValid()) {
-            const cached = getCachedThemePrices();
-            res.json({
-                success: true,
-                data: cached,
-                cached: true,
-                lastUpdate: getLastUpdateTime(),
-            });
-            return;
-        }
-
-        const themePrices = await getAllThemePrices(forceRefresh);
-
+        const allData = themePriceCache.getAllThemePrices();
         res.json({
             success: true,
-            data: themePrices,
-            cached: false,
-            lastUpdate: getLastUpdateTime(),
+            data: allData.themes.map(t => ({
+                themeName: t.themeName,
+                avgChangeRate: t.avgChangeRate,
+                stockCount: t.stockCount,
+                stockPrices: t.topStocks,
+                updatedAt: t.updatedAt,
+            })),
+            cached: true,
+            lastUpdate: allData.lastUpdateTime,
         });
     } catch (error: any) {
         console.error('테마 가격 조회 에러:', error);
@@ -82,15 +87,15 @@ router.get('/themes', async (req: Request, res: Response) => {
     }
 });
 
-// 단일 테마 등락률 조회
+// 단일 테마 등락률 조회 (themePriceCache 사용)
 router.get('/themes/:themeName', async (req: Request, res: Response) => {
     try {
         const { themeName } = req.params;
         const decodedName = decodeURIComponent(themeName);
 
-        const themePrice = await calculateThemePrice(decodedName);
+        const cached = themePriceCache.getThemePrice(decodedName);
 
-        if (!themePrice) {
+        if (!cached) {
             res.status(404).json({
                 success: false,
                 message: `테마 '${decodedName}'를 찾을 수 없습니다.`,
@@ -98,9 +103,29 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
             return;
         }
 
+        const stocks = cached.topStocks;
+        const sorted = [...stocks].sort((a, b) => b.changeRate - a.changeRate);
+
         res.json({
             success: true,
-            data: themePrice,
+            data: {
+                themeName: cached.themeName,
+                avgChangeRate: cached.avgChangeRate,
+                topGainer: sorted[0] || null,
+                topLoser: sorted[sorted.length - 1] || null,
+                stockPrices: stocks.map(s => ({
+                    stockName: s.stockName,
+                    stockCode: s.stockCode,
+                    currentPrice: s.currentPrice,
+                    changePrice: s.changePrice,
+                    changeRate: s.changeRate,
+                    volume: s.volume,
+                    tradingValue: s.tradingValue,
+                })),
+                stockCount: cached.stockCount,
+                totalStocks: cached.stockCount,
+                updatedAt: cached.updatedAt,
+            },
         });
     } catch (error: any) {
         console.error('테마 가격 조회 에러:', error);
@@ -155,7 +180,7 @@ router.get('/:stockCode', async (req: Request, res: Response) => {
             createdAt: news.publishedAt || news.crawledAt,
         }));
 
-        // 4. 핫함 점수 계산
+        // 4. 주도주 점수 계산
         const hotnessScores = await calculateBatchHotness([{
             stockCode,
             stockName,
@@ -177,7 +202,7 @@ router.get('/:stockCode', async (req: Request, res: Response) => {
                 updatedAt: cachedPrice.updatedAt,
                 themes: themeNames,
                 news: formattedNews,
-                // 핫함 점수
+                // 주도주 점수
                 hotness: hotness ? {
                     totalScore: hotness.totalScore,
                     grade: hotness.grade,

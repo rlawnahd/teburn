@@ -27,25 +27,27 @@ export interface LeadingSector {
     stockCount: number;
 }
 
-// 캘린더 날짜별 데이터
+// 캘린더 날짜별 데이터 (주도주 기반)
 export interface CalendarDay {
     date: string;
-    topThemes: Array<{
+    topStocks: Array<{
         rank: number;
-        themeName: string;
-        avgChangeRate: number;
-        totalTradingValue: number;
+        stockName: string;
+        stockCode: string;
+        changeRate: number;
+        tradingValue: number;
+        themes: string[];
     }>;
 }
 
-// 날짜 상세 테마
-export interface DayDetailTheme {
+// 날짜 상세 주도주
+export interface DayDetailStock {
     rank: number;
-    themeName: string;
-    avgChangeRate: number;
-    totalTradingValue: number;
-    topStock: string;
-    topStockRate: number;
+    stockCode: string;
+    stockName: string;
+    changeRate: number;
+    tradingValue: number;
+    themes: string[];
 }
 
 // API 응답 타입
@@ -82,7 +84,7 @@ interface DayDetailResponse {
     success: boolean;
     data: {
         date: string;
-        topThemes: DayDetailTheme[];
+        topStocks: DayDetailStock[];
     };
 }
 
@@ -134,13 +136,13 @@ export const fetchCalendarData = async (
     return data.data.days;
 };
 
-// 특정 날짜 상세 조회
-export const fetchDayDetail = async (date: string): Promise<DayDetailTheme[]> => {
+// 특정 날짜 상세 조회 (주도주)
+export const fetchDayDetail = async (date: string): Promise<DayDetailStock[]> => {
     const { data } = await axios.get<DayDetailResponse>(`${API_URL}/leading/calendar/${date}`);
-    return data.data.topThemes;
+    return data.data.topStocks;
 };
 
-// 핫함 점수 종목 (총 85점 만점)
+// 주도주 점수 종목 (총 85점 만점)
 export interface HotStock {
     stockCode: string;
     stockName: string;
@@ -173,7 +175,7 @@ interface HotStocksResponse {
     };
 }
 
-// 핫함 점수 TOP 종목 조회
+// 주도주 점수 TOP 종목 조회
 export const fetchHotStocks = async (
     limit: number = 30
 ): Promise<{

@@ -1,0 +1,195 @@
+'use client';
+
+import { useParams, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { fetchThemePrice, StockPrice } from '@/lib/api/stocks';
+
+function formatTradingValue(value: number): string {
+    const billion = value / 100000000;
+    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
+    if (billion >= 1) return `${billion.toFixed(0)}억`;
+    return `${(value / 10000).toFixed(0)}만`;
+}
+
+function formatVolume(value: number): string {
+    if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
+    if (value >= 10000) return `${(value / 10000).toFixed(0)}만`;
+    return value.toLocaleString();
+}
+
+function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; onClick: () => void }) {
+    const isPositive = stock.changeRate > 0;
+    const isNegative = stock.changeRate < 0;
+
+    return (
+        <button
+            onClick={onClick}
+            className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left cursor-pointer"
+        >
+            <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                {rank}
+            </span>
+            <div className="flex-1 min-w-0">
+                <span className="text-[13px] font-medium text-[var(--text-primary)] truncate block">{stock.stockName}</span>
+                <span className="text-[11px] text-[var(--text-tertiary)]">{stock.stockCode}</span>
+            </div>
+            <div className="text-right flex-shrink-0">
+                <div className="text-xs text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
+                <div className={`text-[11px] font-medium ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
+                    {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                </div>
+            </div>
+            <div className="w-12 text-right flex-shrink-0 hidden sm:block">
+                <div className="text-[11px] text-[var(--text-tertiary)]">{formatVolume(stock.volume)}</div>
+            </div>
+        </button>
+    );
+}
+
+export default function ThemeDetailPage() {
+    const params = useParams();
+    const router = useRouter();
+    const themeName = decodeURIComponent(params.themeName as string);
+
+    const { data: theme, isLoading, error } = useQuery({
+        queryKey: ['themeDetail', themeName],
+        queryFn: () => fetchThemePrice(themeName),
+        enabled: !!themeName,
+        refetchInterval: 60 * 1000,
+    });
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[var(--bg-secondary)]">
+                <main className="flex items-center justify-center h-[calc(100vh-2.5rem)]">
+                    <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
+                        <RefreshCw size={14} className="animate-spin" />
+                        <span>테마 정보 로딩 중...</span>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (error || !theme) {
+        return (
+            <div className="min-h-screen bg-[var(--bg-secondary)]">
+                <main className="flex flex-col items-center justify-center h-[calc(100vh-2.5rem)]">
+                    <p className="text-[13px] text-[var(--text-tertiary)] mb-3">테마를 찾을 수 없습니다</p>
+                    <Link href="/" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                        홈으로 돌아가기
+                    </Link>
+                </main>
+            </div>
+        );
+    }
+
+    const isPositive = theme.avgChangeRate > 0;
+    const isNegative = theme.avgChangeRate < 0;
+
+    const risingStocks = theme.stockPrices.filter((s) => s.changeRate > 0).sort((a, b) => b.changeRate - a.changeRate);
+    const fallingStocks = theme.stockPrices.filter((s) => s.changeRate <= 0).sort((a, b) => a.changeRate - b.changeRate);
+
+    const handleStockClick = (stockCode: string) => {
+        router.push(`/stocks/${encodeURIComponent(stockCode)}`);
+    };
+
+    return (
+        <div className="min-h-screen bg-[var(--bg-secondary)]">
+            {/* 테마 헤더 바 */}
+            <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+                <div className="flex items-center gap-3 px-3 py-2">
+                    <button
+                        onClick={() => router.back()}
+                        className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={14} />
+                    </button>
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <h1 className="text-sm font-semibold text-[var(--text-primary)] truncate">{theme.themeName}</h1>
+                        <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">{theme.stockCount}종목</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-sm font-bold ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
+                            {isPositive ? '+' : ''}{theme.avgChangeRate.toFixed(2)}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <main className="p-3 space-y-3">
+                {/* 요약 정보 */}
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                    <div className="grid grid-cols-3 gap-px bg-[var(--border-color)]">
+                        <div className="bg-[var(--bg-primary)] px-3 py-2">
+                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">평균 등락률</div>
+                            <div className={`text-[13px] font-semibold ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-primary)]'}`}>
+                                {isPositive ? '+' : ''}{theme.avgChangeRate.toFixed(2)}%
+                            </div>
+                        </div>
+                        <div className="bg-[var(--bg-primary)] px-3 py-2">
+                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">종목 수</div>
+                            <div className="text-[13px] font-semibold text-[var(--text-primary)]">
+                                {theme.stockCount} / {theme.totalStocks}
+                            </div>
+                        </div>
+                        <div className="bg-[var(--bg-primary)] px-3 py-2">
+                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">상승/하락</div>
+                            <div className="text-[13px] font-semibold">
+                                <span className="text-[var(--rise-color)]">{risingStocks.length}</span>
+                                <span className="text-[var(--text-tertiary)]"> / </span>
+                                <span className="text-[var(--fall-color)]">{fallingStocks.length}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 상승 종목 */}
+                {risingStocks.length > 0 && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-0.5 h-3 bg-[var(--rise-color)]" />
+                            <span className="text-xs font-medium text-[var(--text-primary)]">상승</span>
+                            <span className="text-[11px] text-[var(--text-tertiary)]">{risingStocks.length}</span>
+                        </div>
+                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                            <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
+                                <span className="w-5 text-center">#</span>
+                                <span className="flex-1">종목</span>
+                                <span className="text-right">현재가</span>
+                                <span className="w-12 text-right hidden sm:block">거래량</span>
+                            </div>
+                            {risingStocks.map((stock, i) => (
+                                <StockRow key={stock.stockCode} stock={stock} rank={i + 1} onClick={() => handleStockClick(stock.stockCode)} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 하락 종목 */}
+                {fallingStocks.length > 0 && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-0.5 h-3 bg-[var(--fall-color)]" />
+                            <span className="text-xs font-medium text-[var(--text-primary)]">하락</span>
+                            <span className="text-[11px] text-[var(--text-tertiary)]">{fallingStocks.length}</span>
+                        </div>
+                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                            <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
+                                <span className="w-5 text-center">#</span>
+                                <span className="flex-1">종목</span>
+                                <span className="text-right">현재가</span>
+                                <span className="w-12 text-right hidden sm:block">거래량</span>
+                            </div>
+                            {fallingStocks.map((stock, i) => (
+                                <StockRow key={stock.stockCode} stock={stock} rank={i + 1} onClick={() => handleStockClick(stock.stockCode)} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}

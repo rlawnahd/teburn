@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import Theme from '../models/Theme';
 import { getThemeHistory } from '../services/themeHistoryService';
-import { updateAllThemes, migrateFromJson } from '../services/themeCrawler';
+import { updateAllThemes } from '../services/themeCrawler';
 import { themePriceCache } from '../services/themePriceCache';
 import { getMarketStatus } from '../utils/marketStatus';
 
@@ -281,21 +281,5 @@ router.post('/admin/update', async (_req: Request, res: Response) => {
     }
 });
 
-// JSON 데이터 마이그레이션 (최초 1회)
-router.post('/admin/migrate', async (_req: Request, res: Response) => {
-    try {
-        await migrateFromJson();
-        res.json({
-            success: true,
-            message: 'JSON 데이터 마이그레이션이 완료되었습니다.',
-        });
-    } catch (error) {
-        console.error('마이그레이션 에러:', error);
-        res.status(500).json({
-            success: false,
-            message: '마이그레이션 중 오류가 발생했습니다.',
-        });
-    }
-});
 
 export default router;

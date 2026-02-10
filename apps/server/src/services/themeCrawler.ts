@@ -166,41 +166,6 @@ export const updateAllThemes = async (): Promise<void> => {
     }
 };
 
-// 기존 JSON 데이터를 DB로 마이그레이션 (최초 1회)
-export const migrateFromJson = async (): Promise<void> => {
-    try {
-        // 이미 데이터가 있으면 스킵
-        const count = await Theme.countDocuments();
-        if (count > 0) {
-            console.log(`ℹ️ 이미 ${count}개 테마가 DB에 있음. 마이그레이션 스킵.`);
-            return;
-        }
-
-        console.log('📦 JSON 데이터 마이그레이션 시작...');
-
-        // 기존 JSON 데이터 import
-        const themesJson = await import('../data/themes.json');
-        const themes = themesJson.default || themesJson;
-
-        for (const [name, data] of Object.entries(themes)) {
-            const themeData = data as { stocks: string[]; keywords: string[] };
-
-            await Theme.create({
-                name,
-                naverCode: '',  // JSON에는 네이버 코드가 없음
-                stocks: themeData.stocks.map(s => ({ name: s, code: '' })),
-                keywords: themeData.keywords,
-                isCustom: true,  // JSON 기반이므로 커스텀으로 표시
-                isActive: true,
-            });
-        }
-
-        console.log(`✅ ${Object.keys(themes).length}개 테마 마이그레이션 완료`);
-    } catch (error) {
-        console.error('❌ 마이그레이션 실패:', error);
-    }
-};
-
 // 1일 1회 자동 업데이트 스케줄러
 let updateTimer: NodeJS.Timeout | null = null;
 

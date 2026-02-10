@@ -141,7 +141,7 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                             <div className="space-y-3">
                                 {stocks.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-[var(--rise-color)] w-10">호재</span>
+                                        <span className="text-[13px] font-bold text-[var(--rise-color)] w-10">호재</span>
                                         {stocks.map((stock, i) => (
                                             <span
                                                 key={`stock-${i}`}
@@ -154,7 +154,7 @@ export default function NewsModal({ news, isOpen, onClose, onAnalyzed }: Props) 
                                 )}
                                 {negativeStocks.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-[var(--fall-color)] w-10">악재</span>
+                                        <span className="text-[13px] font-bold text-[var(--fall-color)] w-10">악재</span>
                                         {negativeStocks.map((stock, i) => (
                                             <span
                                                 key={`neg-${i}`}

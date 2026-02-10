@@ -123,10 +123,10 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
 
                 {/* Tags */}
                 <div className="flex gap-2 flex-wrap justify-center">
-                    {['핫함 점수 분석', '테마 급등 감지', '선물지수 모니터링'].map((tag) => (
+                    {['주도주 점수 분석', '테마 급등 감지', '선물지수 모니터링'].map((tag) => (
                         <span
                             key={tag}
-                            className="px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm"
+                            className="px-4 py-1.5 rounded-full text-[13px] font-medium backdrop-blur-sm"
                             style={{
                                 background: 'rgba(255,255,255,0.06)',
                                 color: 'rgba(255,200,180,0.7)',
@@ -171,7 +171,7 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
 
             {/* Bottom hint */}
             <div
-                className="absolute bottom-9 left-1/2 -translate-x-1/2 z-[10] text-[11px] text-white/20 flex flex-col items-center gap-1.5"
+                className="absolute bottom-9 left-1/2 -translate-x-1/2 z-[10] text-xs text-white/20 flex flex-col items-center gap-1.5"
                 style={{
                     opacity: phase === 'exit' ? 0 : 1,
                     transition: 'opacity 0.5s ease',

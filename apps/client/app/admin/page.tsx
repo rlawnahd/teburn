@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    LayoutDashboard,
     FolderTree,
     Plus,
     Search,
@@ -19,7 +18,6 @@ import {
     ChevronLeft,
     ChevronRight,
     X,
-    Check,
     AlertCircle,
 } from 'lucide-react';
 import {
@@ -37,9 +35,7 @@ import {
     refreshCache,
     ThemeListItem,
     ThemeDetail,
-    ThemeStock,
 } from '@/lib/api/admin';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 
 type TabType = 'dashboard' | 'themes';
 
@@ -107,7 +103,7 @@ function DashboardTab() {
                     <div className="text-2xl font-bold text-[var(--text-primary)]">
                         {dashboard?.themes.total || 0}
                     </div>
-                    <div className="text-xs text-[var(--text-tertiary)] mt-1">
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
                         네이버 {dashboard?.themes.fromNaver || 0} / 커스텀 {dashboard?.themes.custom || 0}
                     </div>
                 </div>
@@ -122,7 +118,7 @@ function DashboardTab() {
                     <div className="text-2xl font-bold text-[var(--text-primary)]">
                         {dashboard?.stocks.unique || 0}
                     </div>
-                    <div className="text-xs text-[var(--text-tertiary)] mt-1">
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
                         캐시 {dashboard?.stocks.cached ? '활성' : '비활성'}
                     </div>
                 </div>
@@ -137,7 +133,7 @@ function DashboardTab() {
                     <div className="text-2xl font-bold text-[var(--text-primary)]">
                         {dashboard?.news.total?.toLocaleString() || 0}
                     </div>
-                    <div className="text-xs text-[var(--text-tertiary)] mt-1">
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
                         최근 {formatTime(dashboard?.news.lastCrawled || null)}
                     </div>
                 </div>
@@ -152,7 +148,7 @@ function DashboardTab() {
                     <div className="text-2xl font-bold text-[var(--text-primary)]">
                         {dashboard?.dailyLeading.days || 0}일
                     </div>
-                    <div className="text-xs text-[var(--text-tertiary)] mt-1">
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
                         히스토리 {dashboard?.history.records?.toLocaleString() || 0}건
                     </div>
                 </div>
@@ -182,10 +178,10 @@ function DashboardTab() {
                 </div>
 
                 {crawlMutation.isSuccess && (
-                    <p className="text-xs text-emerald-500 mt-3">크롤링이 시작되었습니다.</p>
+                    <p className="text-[13px] text-emerald-500 mt-3">크롤링이 시작되었습니다.</p>
                 )}
                 {cacheMutation.isSuccess && (
-                    <p className="text-xs text-emerald-500 mt-3">캐시 갱신이 시작되었습니다.</p>
+                    <p className="text-[13px] text-emerald-500 mt-3">캐시 갱신이 시작되었습니다.</p>
                 )}
             </div>
 
@@ -376,7 +372,7 @@ function ThemeEditModal({
                                             <div>
                                                 <span className="text-sm text-[var(--text-primary)]">{stock.name}</span>
                                                 {stock.code && (
-                                                    <span className="text-xs text-[var(--text-tertiary)] ml-2">
+                                                    <span className="text-[13px] text-[var(--text-tertiary)] ml-2">
                                                         ({stock.code})
                                                     </span>
                                                 )}
@@ -512,11 +508,11 @@ function ThemesTab() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">
-                                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">테마명</th>
-                                <th className="text-center px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">종목 수</th>
-                                <th className="text-center px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">유형</th>
-                                <th className="text-center px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">상태</th>
-                                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">작업</th>
+                                <th className="text-left px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">테마명</th>
+                                <th className="text-center px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">종목 수</th>
+                                <th className="text-center px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">유형</th>
+                                <th className="text-center px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">상태</th>
+                                <th className="text-right px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">작업</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-color)]">
@@ -531,7 +527,7 @@ function ThemesTab() {
                                         {theme.stockCount}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                        <span className={`text-[13px] px-2 py-1 rounded-full ${
                                             theme.isCustom
                                                 ? 'bg-violet-500/10 text-violet-500'
                                                 : 'bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]'
@@ -634,47 +630,43 @@ export default function AdminPage() {
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
-            {/* 헤더 */}
-            <header className="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-primary)] sticky top-0 z-20">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-violet-500/10">
-                        <LayoutDashboard size={18} className="text-violet-500" />
-                    </div>
-                    <h1 className="text-lg font-bold text-[var(--text-primary)]">어드민</h1>
-                </div>
-                <ThemeToggle />
-            </header>
-
             {/* 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                <div className="flex gap-1 px-6">
+                <div className="flex px-3">
+                    <div className="flex items-center gap-2 pr-4 border-r border-[var(--border-color)]">
+                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">어드민</span>
+                    </div>
                     <button
                         onClick={() => setActiveTab('dashboard')}
-                        className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
                             activeTab === 'dashboard'
-                                ? 'text-[var(--accent-blue)] border-[var(--accent-blue)]'
-                                : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+                                ? 'text-[var(--text-primary)]'
+                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                         }`}
                     >
-                        <LayoutDashboard size={16} className="inline mr-2" />
                         대시보드
+                        {activeTab === 'dashboard' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-blue)]" />
+                        )}
                     </button>
                     <button
                         onClick={() => setActiveTab('themes')}
-                        className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
                             activeTab === 'themes'
-                                ? 'text-[var(--accent-blue)] border-[var(--accent-blue)]'
-                                : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+                                ? 'text-[var(--text-primary)]'
+                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                         }`}
                     >
-                        <FolderTree size={16} className="inline mr-2" />
                         테마 관리
+                        {activeTab === 'themes' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-blue)]" />
+                        )}
                     </button>
                 </div>
             </div>
 
             {/* 컨텐츠 */}
-            <main className="p-6 max-w-6xl mx-auto">
+            <main className="p-3 max-w-6xl mx-auto">
                 {activeTab === 'dashboard' && <DashboardTab />}
                 {activeTab === 'themes' && <ThemesTab />}
             </main>

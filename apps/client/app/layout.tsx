@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
+import Header from '@/components/layout/Header';
 
 export const metadata: Metadata = {
     title: 'TEBURN - 지금 타오르는 테마를 찾아라',
@@ -15,16 +16,12 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ko" suppressHydrationWarning>
-            <head>
-                <link
-                    rel="stylesheet"
-                    as="style"
-                    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
-                />
-            </head>
             <body className="antialiased">
                 <ThemeProvider>
-                    <QueryProvider>{children}</QueryProvider>
+                    <QueryProvider>
+                        <Header />
+                        {children}
+                    </QueryProvider>
                 </ThemeProvider>
             </body>
         </html>

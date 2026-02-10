@@ -1,7 +1,8 @@
 // apps/server/src/services/leadingStockService.ts
 import { themePriceCache, CachedStockPrice, CachedThemePrice } from './themePriceCache';
-import DailyLeadingTheme, { ITopTheme } from '../models/DailyLeadingTheme';
+import DailyLeadingTheme, { ITopTheme, ITopStock } from '../models/DailyLeadingTheme';
 import { getMarketStatus, MarketStatusInfo } from '../utils/marketStatus';
+import { getTopHotStocks } from './hotnessService';
 
 // 대금상위 종목 (테마 정보 포함)
 export interface LeadingStock {
@@ -27,14 +28,16 @@ export interface LeadingSector {
     stockCount: number;
 }
 
-// 캘린더 데이터
+// 캘린더 데이터 (주도주 기반)
 export interface CalendarDay {
     date: string;
-    topThemes: Array<{
+    topStocks: Array<{
         rank: number;
-        themeName: string;
-        avgChangeRate: number;
-        totalTradingValue: number;
+        stockName: string;
+        stockCode: string;
+        changeRate: number;
+        tradingValue: number;
+        themes: string[];
     }>;
 }
 
@@ -147,9 +150,10 @@ export function getLeadingSectors(limit: number = 20): LeadingSector[] {
 }
 
 /**
- * 캘린더 데이터 조회 (월별)
+ * 캘린더 데이터 조회 (월별, 주도주 기반)
  */
 export async function getCalendarData(year: number, month: number): Promise<CalendarDay[]> {
+    const todayStr = getKoreanToday();
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
@@ -157,21 +161,46 @@ export async function getCalendarData(year: number, month: number): Promise<Cale
         date: { $gte: startDate, $lte: endDate },
     }).sort({ date: 1 }).lean();
 
-    return dailyData.map(d => {
-        // 한국 시간 기준으로 날짜 포맷 (UTC+9)
+    const results: CalendarDay[] = dailyData.map(d => {
         const localDate = new Date(d.date.getTime() + 9 * 60 * 60 * 1000);
         const dateStr = localDate.toISOString().split('T')[0];
 
-        return {
-            date: dateStr,
-            topThemes: d.topThemes.slice(0, 3).map(t => ({
-                rank: t.rank,
-                themeName: t.themeName,
-                avgChangeRate: t.avgChangeRate,
-                totalTradingValue: t.totalTradingValue,
-            })),
-        };
+        // topStocks가 있으면 주도주 데이터 사용
+        if (d.topStocks && d.topStocks.length > 0) {
+            return {
+                date: dateStr,
+                topStocks: d.topStocks.slice(0, 3).map(s => ({
+                    rank: s.rank,
+                    stockName: s.stockName,
+                    stockCode: s.stockCode,
+                    changeRate: s.changeRate,
+                    tradingValue: s.tradingValue,
+                    themes: s.themes,
+                })),
+            };
+        }
+
+        // 이전 데이터 폴백: 테마 대장주 중복 제거
+        const seen = new Set<string>();
+        const fallbackStocks: CalendarDay['topStocks'] = [];
+        for (const t of d.topThemes) {
+            const name = t.topStock || t.themeName;
+            if (seen.has(name)) continue;
+            seen.add(name);
+            fallbackStocks.push({
+                rank: fallbackStocks.length + 1,
+                stockName: name,
+                stockCode: '',
+                changeRate: t.topStockRate || t.avgChangeRate,
+                tradingValue: t.totalTradingValue,
+                themes: [t.themeName],
+            });
+            if (fallbackStocks.length >= 3) break;
+        }
+        return { date: dateStr, topStocks: fallbackStocks };
     });
+
+    return results;
 }
 
 /**
@@ -194,13 +223,20 @@ function koreanDateToUTC(dateStr: string): Date {
 }
 
 /**
- * 특정 날짜 상세 조회
+ * 특정 날짜 상세 조회 (주도주 기반)
  */
-export async function getDayDetail(dateStr: string): Promise<ITopTheme[] | null> {
-    // dateStr은 한국 날짜 기준 (YYYY-MM-DD)
-    const targetDate = koreanDateToUTC(dateStr);
+export interface DayDetailStock {
+    rank: number;
+    stockCode: string;
+    stockName: string;
+    changeRate: number;
+    tradingValue: number;
+    themes: string[];
+}
 
-    // 해당 날짜 범위로 검색 (하루 범위)
+export async function getDayDetail(dateStr: string): Promise<DayDetailStock[] | null> {
+    // DB 확정 데이터만 조회 (장 마감 후 saveDailyLeadingThemes로 저장된 데이터)
+    const targetDate = koreanDateToUTC(dateStr);
     const nextDay = new Date(targetDate.getTime() + 24 * 60 * 60 * 1000);
 
     const daily = await DailyLeadingTheme.findOne({
@@ -208,46 +244,53 @@ export async function getDayDetail(dateStr: string): Promise<ITopTheme[] | null>
     }).lean();
 
     if (daily) {
-        return daily.topThemes;
-    }
-
-    // 오늘 날짜인 경우 실시간 데이터로 생성
-    const todayStr = getKoreanToday();
-
-    if (dateStr === todayStr) {
-        const sectors = getLeadingSectors(10);
-        if (sectors.length === 0) return null;
-
-        return sectors.map((sector, index) => ({
-            rank: index + 1,
-            themeName: sector.themeName,
-            avgChangeRate: sector.avgChangeRate,
-            totalTradingValue: sector.totalTradingValue,
-            topStock: sector.topStock?.name || '',
-            topStockRate: sector.topStock?.changeRate || 0,
-        }));
+        // topStocks가 있으면 사용
+        if (daily.topStocks && daily.topStocks.length > 0) {
+            return daily.topStocks.map(s => ({
+                rank: s.rank,
+                stockCode: s.stockCode,
+                stockName: s.stockName,
+                changeRate: s.changeRate,
+                tradingValue: s.tradingValue,
+                themes: s.themes,
+            }));
+        }
+        // 이전 데이터 폴백: 테마 대장주 중복 제거
+        const seen = new Set<string>();
+        const results: DayDetailStock[] = [];
+        for (const t of daily.topThemes) {
+            const name = t.topStock || t.themeName;
+            if (seen.has(name)) continue;
+            seen.add(name);
+            results.push({
+                rank: results.length + 1,
+                stockCode: '',
+                stockName: name,
+                changeRate: t.topStockRate || t.avgChangeRate,
+                tradingValue: t.totalTradingValue,
+                themes: [t.themeName],
+            });
+        }
+        return results;
     }
 
     return null;
 }
 
 /**
- * 오늘의 주도테마 저장 (장 마감 후 호출)
+ * 오늘의 주도테마 + 주도주 저장 (장 마감 후 호출)
  */
 export async function saveDailyLeadingThemes(): Promise<void> {
-    // 한국 시간 기준 오늘 날짜로 저장
     const todayStr = getKoreanToday();
     const todayDate = koreanDateToUTC(todayStr);
     const nextDay = new Date(todayDate.getTime() + 24 * 60 * 60 * 1000);
 
-    // 이미 오늘 데이터가 있으면 업데이트
     const existing = await DailyLeadingTheme.findOne({
         date: { $gte: todayDate, $lt: nextDay },
     });
 
-    // 현재 주도섹터 데이터로 TOP 10 저장
+    // 주도섹터 TOP 10
     const sectors = getLeadingSectors(10);
-
     const topThemes: ITopTheme[] = sectors.map((sector, index) => ({
         rank: index + 1,
         themeName: sector.themeName,
@@ -257,18 +300,30 @@ export async function saveDailyLeadingThemes(): Promise<void> {
         topStockRate: sector.topStock?.changeRate || 0,
     }));
 
+    // 주도주 TOP 20 (주도주 점수 기반)
+    const hotStocks = await getTopHotStocks(20);
+    const topStocks: ITopStock[] = hotStocks.map((s, index) => ({
+        rank: index + 1,
+        stockCode: s.stockCode,
+        stockName: s.stockName,
+        changeRate: s.changeRate,
+        tradingValue: s.tradingValue,
+        themes: s.themes,
+    }));
+
     if (existing) {
         await DailyLeadingTheme.updateOne(
             { _id: existing._id },
-            { $set: { topThemes } }
+            { $set: { topThemes, topStocks } }
         );
-        console.log(`📅 오늘(${todayStr}) 주도테마 업데이트 완료: ${topThemes.length}개`);
+        console.log(`📅 오늘(${todayStr}) 주도데이터 업데이트: 테마 ${topThemes.length}개, 주도주 ${topStocks.length}개`);
     } else {
         await DailyLeadingTheme.create({
             date: todayDate,
             topThemes,
+            topStocks,
         });
-        console.log(`📅 오늘(${todayStr}) 주도테마 저장 완료: ${topThemes.length}개`);
+        console.log(`📅 오늘(${todayStr}) 주도데이터 저장: 테마 ${topThemes.length}개, 주도주 ${topStocks.length}개`);
     }
 }
 

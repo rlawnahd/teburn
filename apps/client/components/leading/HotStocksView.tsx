@@ -2,89 +2,32 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import {
-    RefreshCw,
-    Newspaper,
-    Search,
-    BarChart3,
-    Activity,
-    ArrowUpRight,
-    ArrowDownRight,
-    DollarSign,
-    TrendingUp,
-} from 'lucide-react';
+import { RefreshCw, Activity } from 'lucide-react';
 import { fetchHotStocks, HotStock } from '@/lib/api/leading';
 
-// 거래대금 포맷
 function formatTradingValue(value: number): string {
     const billion = value / 100000000;
-    if (billion >= 10000) {
-        return `${(billion / 10000).toFixed(1)}조`;
-    } else if (billion >= 1) {
-        return `${billion.toFixed(0)}억`;
-    } else {
-        return `${(value / 10000).toFixed(0)}만`;
-    }
+    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
+    if (billion >= 1) return `${billion.toFixed(0)}억`;
+    return `${(value / 10000).toFixed(0)}만`;
 }
 
-// 등급별 스타일 및 한글 라벨
 function getGradeStyle(grade: HotStock['grade']): { bg: string; text: string; label: string } {
     switch (grade) {
         case 'HOT':
-            return { bg: 'bg-[var(--rise-color)]', text: 'text-white', label: '핫함' };
+            return { bg: 'bg-[var(--rise-color)]', text: 'text-white', label: 'HOT' };
         case 'WARM':
-            return { bg: 'bg-orange-500', text: 'text-white', label: '관심' };
+            return { bg: 'bg-orange-500', text: 'text-white', label: 'WARM' };
         case 'NORMAL':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]', label: '보통' };
+            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]', label: 'MID' };
         case 'COOL':
-            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]', label: '저조' };
+            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]', label: 'LOW' };
         case 'COLD':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]', label: '냉각' };
+            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]', label: 'COLD' };
     }
 }
 
-// 점수 게이지 컴포넌트
-function ScoreGauge({
-    label,
-    score,
-    maxScore,
-    icon,
-    detail,
-    color,
-}: {
-    label: string;
-    score: number;
-    maxScore: number;
-    icon: React.ReactNode;
-    detail?: string;
-    color: string;
-}) {
-    const percentage = (score / maxScore) * 100;
-
-    return (
-        <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="w-12 md:w-14 flex items-center gap-0.5 md:gap-1 text-[10px] md:text-[11px] text-[var(--text-tertiary)]">
-                {icon}
-                <span>{label}</span>
-            </div>
-            <div className="flex-1 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                <div
-                    className={`h-full rounded-full transition-all ${color}`}
-                    style={{ width: `${percentage}%` }}
-                />
-            </div>
-            <div className="w-5 md:w-6 text-right text-[10px] md:text-[11px] font-medium text-[var(--text-secondary)]">
-                {score}
-            </div>
-            {detail && (
-                <div className="w-12 md:w-14 text-right text-[9px] md:text-[10px] text-[var(--text-tertiary)]">{detail}</div>
-            )}
-        </div>
-    );
-}
-
-// 종목 카드 컴포넌트
-function StockCard({
+function StockRow({
     stock,
     rank,
     onStockClick,
@@ -97,137 +40,55 @@ function StockCard({
     const isPositive = stock.changeRate > 0;
 
     return (
-        <div
+        <button
             onClick={() => onStockClick(stock.stockCode)}
-            className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors">
-            {/* 순위 & 등급 */}
-            <div className="absolute top-2.5 left-2.5 md:top-3 md:left-3 flex items-center gap-1.5 md:gap-2">
-                <span className={`text-base md:text-lg font-bold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
-                    #{rank}
-                </span>
-                <span className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] font-bold rounded ${gradeStyle.bg} ${gradeStyle.text}`}>
-                    {gradeStyle.label}
-                </span>
-            </div>
+            className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left"
+        >
+            {/* 순위 */}
+            <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                {rank}
+            </span>
 
-            {/* 총점 */}
-            <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 text-right">
-                <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">{stock.totalScore}</div>
-                <div className="text-[9px] md:text-[10px] text-[var(--text-tertiary)]">점</div>
-            </div>
-
-            <div className="pt-10 md:pt-12 p-3 md:p-4">
-                {/* 종목 정보 */}
-                <div className="mb-2 md:mb-3">
-                    <h3 className="text-sm md:text-base font-bold text-[var(--text-primary)] mb-0.5 md:mb-1 truncate">{stock.stockName}</h3>
-                    <div className="flex items-center gap-2 md:gap-3">
-                        <span className="text-xs md:text-sm text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}원</span>
-                        <span className={`flex items-center gap-0.5 text-xs md:text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                            {isPositive ? <ArrowUpRight size={12} className="md:w-3.5 md:h-3.5" /> : <ArrowDownRight size={12} className="md:w-3.5 md:h-3.5" />}
-                            {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
-                        </span>
-                    </div>
+            {/* 종목명 + 테마 */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                    <span className={`px-1 py-0.5 text-[9px] font-bold ${gradeStyle.bg} ${gradeStyle.text} flex-shrink-0`}>
+                        {gradeStyle.label}
+                    </span>
                 </div>
-
-                {/* 테마 태그 */}
                 {stock.themes.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3 md:mb-4">
-                        {stock.themes.map((theme) => (
-                            <span
-                                key={theme}
-                                className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-[11px] rounded bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] truncate max-w-[100px]"
-                            >
+                    <div className="flex items-center gap-1 mt-0.5">
+                        {stock.themes.slice(0, 2).map((theme) => (
+                            <span key={theme} className="text-[11px] text-[var(--text-tertiary)] truncate max-w-[60px]">
                                 {theme}
                             </span>
                         ))}
+                        {stock.themes.length > 2 && (
+                            <span className="text-[11px] text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                        )}
                     </div>
                 )}
+            </div>
 
-                {/* 점수 상세 */}
-                <div className="space-y-1 md:space-y-1.5 mb-3 md:mb-4">
-                    <ScoreGauge
-                        label="거래대금"
-                        score={stock.tradingValueScore}
-                        maxScore={20}
-                        icon={<DollarSign size={10} />}
-                        detail={formatTradingValue(stock.tradingValue)}
-                        color="bg-amber-500"
-                    />
-                    <ScoreGauge
-                        label="검색량"
-                        score={stock.searchScore}
-                        maxScore={20}
-                        icon={<Search size={10} />}
-                        detail={
-                            stock.searchSurgeRate !== null
-                                ? `${stock.searchSurgeRate > 0 ? '+' : ''}${stock.searchSurgeRate.toFixed(0)}%`
-                                : '-'
-                        }
-                        color="bg-[var(--accent-blue)]"
-                    />
-                    <ScoreGauge
-                        label="등락률"
-                        score={stock.momentumScore}
-                        maxScore={15}
-                        icon={<TrendingUp size={10} />}
-                        detail={`${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%`}
-                        color="bg-[var(--rise-color)]"
-                    />
-                    <ScoreGauge
-                        label="거래량"
-                        score={stock.volumeScore}
-                        maxScore={15}
-                        icon={<BarChart3 size={10} />}
-                        detail={stock.volumeSurgeRate ? `${stock.volumeSurgeRate.toFixed(1)}배` : '-'}
-                        color="bg-violet-500"
-                    />
-                    <ScoreGauge
-                        label="뉴스"
-                        score={stock.newsScore}
-                        maxScore={15}
-                        icon={<Newspaper size={10} />}
-                        detail={`${stock.newsCount}건`}
-                        color="bg-emerald-500"
-                    />
-                </div>
-
-                {/* 거래대금 */}
-                <div className="flex items-center justify-between text-sm pt-3 border-t border-[var(--border-color)]">
-                    <span className="text-[var(--text-tertiary)]">거래대금</span>
-                    <span className="font-bold text-[var(--text-secondary)]">
-                        {formatTradingValue(stock.tradingValue)}
-                    </span>
+            {/* 가격 + 등락률 */}
+            <div className="text-right flex-shrink-0">
+                <div className="text-xs text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
+                <div className={`text-[11px] font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                    {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
                 </div>
             </div>
-        </div>
-    );
-}
 
-// 섹션 헤더
-function SectionHeader({
-    title,
-    description,
-    count,
-    color,
-}: {
-    title: string;
-    description: string;
-    count: number;
-    color: string;
-}) {
-    return (
-        <div className="flex items-center justify-between mb-3 md:mb-4">
-            <div className="flex items-center gap-2 md:gap-3">
-                <div className={`w-1 h-6 md:h-8 rounded-full ${color}`} />
-                <div>
-                    <h2 className="text-base md:text-lg font-bold text-[var(--text-primary)]">{title}</h2>
-                    <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">{description}</p>
-                </div>
+            {/* 거래대금 */}
+            <div className="w-12 text-right flex-shrink-0">
+                <div className="text-[11px] text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
             </div>
-            <span className="px-2 md:px-2.5 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-tertiary)] rounded-full">
-                {count}개
-            </span>
-        </div>
+
+            {/* 점수 */}
+            <div className="w-8 text-right flex-shrink-0">
+                <span className="text-[13px] font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
+            </div>
+        </button>
     );
 }
 
@@ -249,8 +110,8 @@ export default function HotStocksView() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="flex items-center gap-3 text-[var(--text-tertiary)]">
-                    <RefreshCw size={20} className="animate-spin text-[var(--accent-blue)]" />
+                <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
+                    <RefreshCw size={14} className="animate-spin" />
                     <span>주도주 분석 중...</span>
                 </div>
             </div>
@@ -259,18 +120,16 @@ export default function HotStocksView() {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center h-64 text-[var(--text-tertiary)]">
+            <div className="flex items-center justify-center h-64 text-[13px] text-[var(--text-tertiary)]">
                 데이터를 불러오는데 실패했습니다.
             </div>
         );
     }
 
-    // 등급별 분류
     const hotStocks = stocks.filter((s) => s.grade === 'HOT');
     const warmStocks = stocks.filter((s) => s.grade === 'WARM');
     const otherStocks = stocks.filter((s) => !['HOT', 'WARM'].includes(s.grade));
 
-    // 날짜 포맷
     const formatDataDate = (dateStr: string) => {
         const date = new Date(dateStr);
         return `${date.toLocaleDateString('ko-KR', {
@@ -282,114 +141,73 @@ export default function HotStocksView() {
         })}`;
     };
 
+    const renderSection = (title: string, description: string, sectionStocks: HotStock[], startRank: number) => {
+        if (sectionStocks.length === 0) return null;
+        return (
+            <section>
+                <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</span>
+                        <span className="text-[11px] text-[var(--text-tertiary)]">{description}</span>
+                    </div>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">{sectionStocks.length}종목</span>
+                </div>
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                    {/* 테이블 헤더 */}
+                    <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
+                        <span className="w-5 text-center">#</span>
+                        <span className="flex-1">종목</span>
+                        <span className="text-right">현재가</span>
+                        <span className="w-12 text-right">거래대금</span>
+                        <span className="w-8 text-right">점수</span>
+                    </div>
+                    {sectionStocks.map((stock, i) => (
+                        <StockRow
+                            key={stock.stockCode}
+                            stock={stock}
+                            rank={startRank + i}
+                            onStockClick={handleStockClick}
+                        />
+                    ))}
+                </div>
+            </section>
+        );
+    };
+
     return (
-        <div className="space-y-6 md:space-y-8">
-            {/* 헤더 + 기준 시점 */}
+        <div className="space-y-4">
+            {/* 헤더 */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-[var(--accent-blue)]/10 flex items-center justify-center flex-shrink-0">
-                        <Activity size={16} className="md:w-5 md:h-5 text-[var(--accent-blue)]" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-[var(--text-primary)]">주도주 분석</h3>
-                        <p className="text-[10px] md:text-xs text-[var(--text-tertiary)]">
-                            돈과 관심이 집중되는 종목
-                        </p>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도주 분석</h2>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 검색량 + 뉴스 종합</span>
                 </div>
                 {data?.lastUpdateTime && (
-                    <div className="hidden sm:block px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
-                        <span className="text-xs text-[var(--text-tertiary)]">
-                            {formatDataDate(data.lastUpdateTime)} 기준
-                        </span>
-                    </div>
+                    <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)]">
+                        {formatDataDate(data.lastUpdateTime)}
+                    </span>
                 )}
             </div>
 
-            {/* 핫함 종목 */}
-            {hotStocks.length > 0 && (
-                <section>
-                    <SectionHeader
-                        title="🔥 핫함"
-                        description="60점 이상 · 강력한 주도주"
-                        count={hotStocks.length}
-                        color="bg-[var(--rise-color)]"
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                        {hotStocks.map((stock, i) => (
-                            <StockCard
-                                key={stock.stockCode}
-                                stock={stock}
-                                rank={i + 1}
-                                onStockClick={handleStockClick}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* 관심 종목 */}
-            {warmStocks.length > 0 && (
-                <section>
-                    <SectionHeader
-                        title="👀 관심"
-                        description="45~59점 · 관심 종목"
-                        count={warmStocks.length}
-                        color="bg-orange-500"
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                        {warmStocks.map((stock, i) => (
-                            <StockCard
-                                key={stock.stockCode}
-                                stock={stock}
-                                rank={hotStocks.length + i + 1}
-                                onStockClick={handleStockClick}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* 기타 종목 */}
-            {otherStocks.length > 0 && (
-                <section>
-                    <SectionHeader
-                        title="기타"
-                        description="45점 미만"
-                        count={otherStocks.length}
-                        color="bg-[var(--text-tertiary)]"
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                        {otherStocks.map((stock, i) => (
-                            <StockCard
-                                key={stock.stockCode}
-                                stock={stock}
-                                rank={hotStocks.length + warmStocks.length + i + 1}
-                                onStockClick={handleStockClick}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
+            {renderSection('HOT', '60점 이상', hotStocks, 1)}
+            {renderSection('WARM', '45~59점', warmStocks, hotStocks.length + 1)}
+            {renderSection('기타', '45점 미만', otherStocks, hotStocks.length + warmStocks.length + 1)}
 
             {stocks.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-64 text-[var(--text-tertiary)]">
+                <div className="flex flex-col items-center justify-center h-48 text-[var(--text-tertiary)]">
                     {!data?.lastUpdateTime ? (
                         <>
-                            <RefreshCw size={48} className="mb-4 opacity-50 animate-spin" />
-                            <p className="text-lg font-medium">데이터 준비 중...</p>
-                            <p className="text-sm mt-1">서버 캐시를 불러오는 중입니다 (약 1분 소요)</p>
+                            <RefreshCw size={24} className="mb-2 opacity-50 animate-spin" />
+                            <p className="text-[13px]">데이터 준비 중... (약 1분)</p>
                         </>
                     ) : (
                         <>
-                            <Activity size={48} className="mb-4 opacity-30" />
-                            <p className="text-lg font-medium">분석할 종목이 없습니다</p>
-                            <p className="text-sm mt-1">4% 이상 상승한 종목이 없습니다</p>
+                            <Activity size={24} className="mb-2 opacity-30" />
+                            <p className="text-[13px]">분석할 종목이 없습니다</p>
                         </>
                     )}
                 </div>
             )}
-
         </div>
     );
 }

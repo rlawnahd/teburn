@@ -70,7 +70,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                 {/* 상단: 배지 + 시간 + 언론사 + AI 분석 버튼 */}
                 <div className="flex items-center gap-2 mb-3">
                     {hasAnalysis ? (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-200">
+                        <span className="flex items-center gap-1 text-[13px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-200">
                             <Sparkles size={12} />
                             AI 분석 완료
                         </span>
@@ -78,7 +78,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         <button
                             onClick={handleAnalyze}
                             disabled={isAnalyzing}
-                            className="flex items-center gap-1 text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded border border-yellow-300 hover:bg-yellow-100 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 text-[13px] font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded border border-yellow-300 hover:bg-yellow-100 transition-colors disabled:opacity-50"
                         >
                             {isAnalyzing ? (
                                 <>
@@ -93,8 +93,8 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                             )}
                         </button>
                     )}
-                    <span className="text-xs text-slate-500">{data.createdAt}</span>
-                    <span className="text-xs px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{data.press}</span>
+                    <span className="text-[13px] text-slate-500">{data.createdAt}</span>
+                    <span className="text-[13px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{data.press}</span>
                 </div>
 
                 {/* 관련 종목 + 테마 */}
@@ -103,7 +103,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         {stocks.map((stock, i) => (
                             <span
                                 key={`stock-${i}`}
-                                className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-200"
+                                className="text-[13px] font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-200"
                             >
                                 {stock}
                             </span>
@@ -111,7 +111,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                         {themes.map((theme, i) => (
                             <span
                                 key={`theme-${i}`}
-                                className="flex items-center gap-1 text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-200"
+                                className="flex items-center gap-1 text-[13px] text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-200"
                             >
                                 <Tag size={10} />
                                 {theme}
@@ -133,7 +133,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                     <div className="relative p-4 bg-indigo-50 rounded-lg border border-indigo-200 mb-4">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l"></div>
                         <p className="text-sm text-slate-700 pl-3 leading-relaxed">
-                            <span className="text-indigo-600 font-semibold text-xs mr-2">AI 분석</span>
+                            <span className="text-indigo-600 font-semibold text-[13px] mr-2">AI 분석</span>
                             {aiReason}
                         </p>
                     </div>
@@ -156,13 +156,13 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                             ) : (
                                 <div className="w-2 h-0.5 bg-slate-400"></div>
                             )}
-                            <span className={`text-xs font-bold ${sentimentColor}`}>
+                            <span className={`text-[13px] font-bold ${sentimentColor}`}>
                                 {sentimentLabel[sentiment]}
                             </span>
                         </div>
 
                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full">
-                            <span className="text-xs text-slate-500">영향도</span>
+                            <span className="text-[13px] text-slate-500">영향도</span>
                             <span className={`text-sm font-mono font-bold ${score >= 80 ? 'text-yellow-600' : score >= 60 ? 'text-slate-700' : 'text-slate-500'}`}>
                                 {score}
                             </span>
@@ -181,13 +181,13 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
             className="group flex items-center gap-4 p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors"
         >
             {/* 시간 */}
-            <div className="w-14 text-xs text-slate-500 font-mono shrink-0">
+            <div className="w-14 text-[13px] text-slate-500 font-mono shrink-0">
                 {data.createdAt.split(' ')[1] || data.createdAt}
             </div>
 
             {/* 언론사 */}
             <div className="w-16 shrink-0">
-                <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 truncate block">{data.press}</span>
+                <span className="text-[11px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 truncate block">{data.press}</span>
             </div>
 
             {/* 제목 (클릭하면 링크 열기) */}
@@ -202,7 +202,7 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                 <button
                     onClick={handleAnalyze}
                     disabled={isAnalyzing}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded border border-yellow-300 hover:bg-yellow-100 transition-colors disabled:opacity-50 shrink-0"
+                    className="flex items-center gap-1 text-[11px] font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded border border-yellow-300 hover:bg-yellow-100 transition-colors disabled:opacity-50 shrink-0"
                 >
                     {isAnalyzing ? (
                         <Loader2 size={10} className="animate-spin" />
@@ -221,12 +221,12 @@ export default function NewsRow({ data, onAnalyzed }: Props) {
                 ) : (
                     <div className="w-1.5 h-0.5 bg-slate-400"></div>
                 )}
-                <span className={`text-[10px] font-bold ${sentimentColor}`}>{sentimentLabel[sentiment]}</span>
+                <span className={`text-[11px] font-bold ${sentimentColor}`}>{sentimentLabel[sentiment]}</span>
             </div>
 
             {/* 영향도 */}
             <div className="w-10 text-right">
-                <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-yellow-600' : score >= 60 ? 'text-slate-700' : 'text-slate-500'}`}>
+                <span className={`text-[13px] font-mono font-bold ${score >= 80 ? 'text-yellow-600' : score >= 60 ? 'text-slate-700' : 'text-slate-500'}`}>
                     {score}
                 </span>
             </div>

@@ -127,7 +127,7 @@ router.get('/calendar/:date', async (req: Request, res: Response) => {
             success: true,
             data: {
                 date,
-                topThemes: detail,
+                topStocks: detail,
             },
         });
     } catch (error: any) {
@@ -139,7 +139,7 @@ router.get('/calendar/:date', async (req: Request, res: Response) => {
     }
 });
 
-// 핫함 점수 TOP 종목 조회
+// 주도주 점수 TOP 종목 조회
 router.get('/hot', async (req: Request, res: Response) => {
     try {
         const limit = parseInt(req.query.limit as string) || 30;
@@ -157,15 +157,15 @@ router.get('/hot', async (req: Request, res: Response) => {
             },
         });
     } catch (error: any) {
-        console.error('핫함 점수 조회 에러:', error);
+        console.error('주도주 점수 조회 에러:', error);
         res.status(500).json({
             success: false,
-            message: error.message || '핫함 점수 조회 중 오류가 발생했습니다.',
+            message: error.message || '주도주 점수 조회 중 오류가 발생했습니다.',
         });
     }
 });
 
-// 특정 테마의 핫함 점수 조회
+// 특정 테마의 주도주 점수 조회
 router.get('/hot/theme/:themeName', async (req: Request, res: Response) => {
     try {
         const { themeName } = req.params;
@@ -178,10 +178,10 @@ router.get('/hot/theme/:themeName', async (req: Request, res: Response) => {
             data: themeHotness,
         });
     } catch (error: any) {
-        console.error('테마 핫함 점수 조회 에러:', error);
+        console.error('테마 주도주 점수 조회 에러:', error);
         res.status(500).json({
             success: false,
-            message: error.message || '테마 핫함 점수 조회 중 오류가 발생했습니다.',
+            message: error.message || '테마 주도주 점수 조회 중 오류가 발생했습니다.',
         });
     }
 });

@@ -83,7 +83,7 @@ export default function Sidebar() {
       {/* 하단 영역 */}
       <div className="p-4 border-t border-[var(--border-color)]">
         <div className="flex items-center justify-between px-2">
-          <span className="text-xs text-[var(--text-tertiary)]">테마 변경</span>
+          <span className="text-[13px] text-[var(--text-tertiary)]">테마 변경</span>
           <ThemeToggle size="sm" />
         </div>
       </div>

@@ -55,17 +55,17 @@ export default function NewsCard({ news, isSelected, onClick }: Props) {
         >
             {/* 상단: 호재/악재 배지 + 시간 + 언론사 */}
             <div className="flex items-center gap-2 mb-3">
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${config.bg} ${config.text}`}>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-bold ${config.bg} ${config.text}`}>
                     {Icon && <Icon size={12} />}
                     {config.label}
                 </span>
 
-                <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                <div className="flex items-center gap-1.5 text-[13px] text-[var(--text-tertiary)]">
                     <Clock size={12} />
                     {formatTime(news.createdAt)}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                <div className="flex items-center gap-1.5 text-[13px] text-[var(--text-tertiary)]">
                     <Building2 size={12} />
                     {news.press}
                 </div>
@@ -82,7 +82,7 @@ export default function NewsCard({ news, isSelected, onClick }: Props) {
                     {stocks.map((stock, i) => (
                         <span
                             key={`stock-${i}`}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[var(--rise-bg)] text-[var(--rise-color)]"
+                            className="text-[13px] font-semibold px-2.5 py-1 rounded-lg bg-[var(--rise-bg)] text-[var(--rise-color)]"
                         >
                             {stock}
                         </span>
@@ -90,7 +90,7 @@ export default function NewsCard({ news, isSelected, onClick }: Props) {
                     {negativeStocks.map((stock, i) => (
                         <span
                             key={`neg-${i}`}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[var(--fall-bg)] text-[var(--fall-color)]"
+                            className="text-[13px] font-semibold px-2.5 py-1 rounded-lg bg-[var(--fall-bg)] text-[var(--fall-color)]"
                         >
                             {stock}
                         </span>
@@ -104,7 +104,7 @@ export default function NewsCard({ news, isSelected, onClick }: Props) {
                     {themes.map((theme, i) => (
                         <span
                             key={`theme-${i}`}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                            className="text-[13px] px-2.5 py-1 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
                         >
                             #{theme}
                         </span>

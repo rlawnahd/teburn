@@ -9,9 +9,19 @@ export interface ITopTheme {
     topStockRate: number;
 }
 
+export interface ITopStock {
+    rank: number;
+    stockCode: string;
+    stockName: string;
+    changeRate: number;
+    tradingValue: number;
+    themes: string[];
+}
+
 export interface IDailyLeadingTheme extends Document {
     date: Date;
     topThemes: ITopTheme[];
+    topStocks: ITopStock[];
     createdAt: Date;
 }
 
@@ -27,9 +37,22 @@ const TopThemeSchema = new Schema<ITopTheme>(
     { _id: false }
 );
 
+const TopStockSchema = new Schema<ITopStock>(
+    {
+        rank: { type: Number, required: true },
+        stockCode: { type: String, required: true },
+        stockName: { type: String, required: true },
+        changeRate: { type: Number, required: true },
+        tradingValue: { type: Number, required: true },
+        themes: { type: [String], default: [] },
+    },
+    { _id: false }
+);
+
 const DailyLeadingThemeSchema: Schema = new Schema({
     date: { type: Date, required: true, unique: true },
     topThemes: { type: [TopThemeSchema], default: [] },
+    topStocks: { type: [TopStockSchema], default: [] },
     createdAt: { type: Date, default: Date.now },
 });
 

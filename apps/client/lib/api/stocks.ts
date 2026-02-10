@@ -77,7 +77,7 @@ export const fetchThemePrice = async (themeName: string): Promise<ThemePriceInfo
     return data.data;
 };
 
-// 핫함 점수 정보
+// 주도주 점수 정보
 export interface HotnessInfo {
     totalScore: number;
     grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
@@ -116,6 +116,24 @@ interface StockDetailResponse {
     success: boolean;
     data: StockDetail;
 }
+
+// 종목 검색
+export interface SearchStockResult {
+    stockCode: string;
+    stockName: string;
+    currentPrice: number;
+    changeRate: number;
+    tradingValue: number;
+}
+
+export const searchStocks = async (query: string): Promise<SearchStockResult[]> => {
+    if (!query.trim()) return [];
+    const { data } = await axios.get<{ success: boolean; data: SearchStockResult[] }>(
+        `${API_URL}/stocks/search`,
+        { params: { q: query } }
+    );
+    return data.data;
+};
 
 // 종목 상세 조회 (종목코드로)
 export const fetchStockDetail = async (stockCode: string): Promise<StockDetail> => {

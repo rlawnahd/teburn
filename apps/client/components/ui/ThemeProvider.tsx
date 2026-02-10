@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useSyncExternalStore, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useSyncExternalStore, useCallback, ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -12,9 +12,32 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const subscribe = () => () => {};
+// --- 테마 external store ---
+let themeListeners: (() => void)[] = [];
+
+function emitThemeChange() {
+  themeListeners.forEach((l) => l());
+}
+
+function subscribeTheme(listener: () => void) {
+  themeListeners.push(listener);
+  return () => {
+    themeListeners = themeListeners.filter((l) => l !== listener);
+  };
+}
+
+function getThemeSnapshot(): Theme {
+  return (localStorage.getItem('teburn-theme') as Theme) || 'light';
+}
+
+function getThemeServerSnapshot(): Theme {
+  return 'light';
+}
+
+// --- mounted store ---
+const subscribeMounted = () => () => {};
 function useMounted() {
-  return useSyncExternalStore(subscribe, () => true, () => false);
+  return useSyncExternalStore(subscribeMounted, () => true, () => false);
 }
 
 export function useTheme() {
@@ -27,31 +50,28 @@ export function useTheme() {
 
 interface ThemeProviderProps {
   children: ReactNode;
-  defaultTheme?: Theme;
 }
 
-export default function ThemeProvider({ children, defaultTheme = 'light' }: ThemeProviderProps) {
+export default function ThemeProvider({ children }: ThemeProviderProps) {
   const mounted = useMounted();
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return defaultTheme;
-    return (localStorage.getItem('teburn-theme') as Theme) || defaultTheme;
-  });
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getThemeServerSnapshot);
 
   // 테마 변경 시 DOM 업데이트
   useEffect(() => {
     if (!mounted) return;
-
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('teburn-theme', theme);
   }, [theme, mounted]);
 
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = useCallback(() => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('teburn-theme', next);
+    emitThemeChange();
+  }, [theme]);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-  };
+  const setTheme = useCallback((newTheme: Theme) => {
+    localStorage.setItem('teburn-theme', newTheme);
+    emitThemeChange();
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

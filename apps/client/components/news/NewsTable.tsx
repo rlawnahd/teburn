@@ -52,7 +52,7 @@ export default function NewsTable({ news, selectedLink, onSelect }: Props) {
     return (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
             {/* 테이블 헤더 */}
-            <div className="grid grid-cols-[60px_100px_50px_1fr] gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-medium">
+            <div className="grid grid-cols-[60px_100px_50px_1fr] gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200 text-[13px] text-slate-500 font-medium">
                 <div>시간</div>
                 <div>종목</div>
                 <div className="text-center">호/악</div>
@@ -77,21 +77,21 @@ export default function NewsTable({ news, selectedLink, onSelect }: Props) {
                             }`}
                         >
                             {/* 시간 */}
-                            <div className="text-xs font-mono text-slate-500">
+                            <div className="text-[13px] font-mono text-slate-500">
                                 {formatTime(item.createdAt)}
                             </div>
 
                             {/* 종목 */}
                             <div className="flex items-center gap-1 overflow-hidden">
                                 {stocks.length > 0 ? (
-                                    <span className="text-xs font-semibold text-orange-600 truncate">
+                                    <span className="text-[13px] font-semibold text-orange-600 truncate">
                                         {stocks[0]}
                                         {stocks.length > 1 && (
                                             <span className="text-slate-400 ml-1">+{stocks.length - 1}</span>
                                         )}
                                     </span>
                                 ) : (
-                                    <span className="text-xs text-slate-400">-</span>
+                                    <span className="text-[13px] text-slate-400">-</span>
                                 )}
                             </div>
 

@@ -1,5 +1,5 @@
-// 핫함 점수 통합 서비스
-// 핫함 = 거래대금(20) + 검색량(20) + 등락률(15) + 거래량급증(15) + 뉴스(15) = 총 85점
+// 주도주 점수 통합 서비스
+// 주도주 점수 = 거래대금(20) + 검색량(20) + 등락률(15) + 거래량급증(15) + 뉴스(15) = 총 85점
 
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
@@ -14,7 +14,7 @@ export interface HotnessScore {
     tradingValue: number;
     themes: string[];
 
-    // 핫함 점수 상세
+    // 주도주 점수 상세
     totalScore: number;         // 총점 (0~85)
     tradingValueScore: number;  // 거래대금 (0~20)
     searchScore: number;        // 검색량 급증 (0~20)
@@ -40,7 +40,7 @@ function getGrade(score: number): HotnessScore['grade'] {
     return 'COLD';
 }
 
-// 핫함 점수 캐시 (5분 유지, stale-while-revalidate)
+// 주도주 점수 캐시 (5분 유지, stale-while-revalidate)
 let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
@@ -101,7 +101,7 @@ function calculateNewsScore(newsCount: number): number {
 }
 
 /**
- * 여러 종목의 핫함 점수 일괄 계산
+ * 여러 종목의 주도주 점수 일괄 계산
  */
 export async function calculateBatchHotness(
     stocks: Array<{ stockCode: string; stockName: string; themes: string[] }>
@@ -158,14 +158,14 @@ export async function calculateBatchHotness(
         });
     }
 
-    // 핫함 점수 순 정렬
+    // 주도주 점수 순 정렬
     results.sort((a, b) => b.totalScore - a.totalScore);
 
     return results;
 }
 
 /**
- * 핫함 점수 재계산 (내부용)
+ * 주도주 점수 재계산 (내부용)
  * refreshPromise를 공유하여 동시 요청 시 같은 계산을 기다림
  */
 async function doRefresh(): Promise<void> {
@@ -234,7 +234,7 @@ function refreshHotStocks(): Promise<void> {
 }
 
 /**
- * 전체 종목 중 핫함 TOP N 조회 (stale-while-revalidate)
+ * 전체 종목 중 주도주 점수 TOP N 조회 (stale-while-revalidate)
  */
 export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[]> {
     // 캐시 유효 → 즉시 반환
@@ -256,7 +256,7 @@ export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[
 }
 
 /**
- * 서버 시작 시 핫함 점수 사전 계산 (warmup)
+ * 서버 시작 시 주도주 점수 사전 계산 (warmup)
  */
 export async function warmupHotStocks(): Promise<void> {
     console.log('🔥 주도주 점수 사전 계산 시작...');
@@ -265,7 +265,7 @@ export async function warmupHotStocks(): Promise<void> {
 }
 
 /**
- * 테마별 핫함 점수 집계
+ * 테마별 주도주 점수 집계
  */
 export async function getThemeHotness(themeName: string): Promise<{
     themeName: string;

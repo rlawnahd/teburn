@@ -311,6 +311,21 @@ class ThemePriceCacheService {
     }
 
     /**
+     * 종목 검색 (종목명 or 종목코드)
+     */
+    searchStocks(query: string, limit: number = 10): CachedStockPrice[] {
+        const q = query.toLowerCase();
+        const results: CachedStockPrice[] = [];
+        for (const stock of this.stockPriceCache.values()) {
+            if (stock.stockName.toLowerCase().includes(q) || stock.stockCode.includes(q)) {
+                results.push(stock);
+                if (results.length >= limit) break;
+            }
+        }
+        return results;
+    }
+
+    /**
      * 캐시 통계
      */
     getStats(): {
