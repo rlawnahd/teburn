@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
-import { fetchFuturesData, FuturesData } from '@/lib/api/futures';
+import { fetchIndexData, IndexData } from '@/lib/api/indices';
 import {
     LineChart,
     Line,
@@ -14,11 +14,11 @@ import {
     ReferenceLine,
 } from 'recharts';
 
-function FuturesChart({ data, color }: { data: FuturesData; color: string }) {
+function IndexChart({ data, color }: { data: IndexData; color: string }) {
     const chartData = data.chartData.map((p) => {
         const d = new Date(p.time);
         return {
-            time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+            time: d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }),
             price: p.price,
         };
     });
@@ -91,7 +91,7 @@ function FuturesChart({ data, color }: { data: FuturesData; color: string }) {
     );
 }
 
-function FuturesDetailCard({ data, color }: { data: FuturesData | null; color: string }) {
+function IndexDetailCard({ data, color }: { data: IndexData | null; color: string }) {
     if (!data) {
         return (
             <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] p-5">
@@ -123,15 +123,20 @@ function FuturesDetailCard({ data, color }: { data: FuturesData | null; color: s
                     </div>
                 </div>
                 {!data.marketOpen && (
-                    <span className="inline-block mt-2 text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]">
-                        장 마감
-                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]">
+                            장 마감
+                        </span>
+                        <span className="text-[10px] text-[var(--text-tertiary)]">
+                            거래시간 {data.tradingHours}
+                        </span>
+                    </div>
                 )}
             </div>
 
             {/* 차트 */}
             <div className="p-4">
-                <FuturesChart data={data} color={color} />
+                <IndexChart data={data} color={color} />
             </div>
 
             {/* 상세 정보 */}
@@ -161,16 +166,16 @@ function FuturesDetailCard({ data, color }: { data: FuturesData | null; color: s
     );
 }
 
-export default function FuturesView() {
+export default function IndexView() {
     const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
-        queryKey: ['futures-detail'],
-        queryFn: fetchFuturesData,
+        queryKey: ['index-detail'],
+        queryFn: fetchIndexData,
         refetchInterval: 60 * 1000,
         staleTime: 30 * 1000,
     });
 
     const updatedTime = dataUpdatedAt
-        ? new Date(dataUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+        ? new Date(dataUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' })
         : null;
 
     return (
@@ -178,7 +183,7 @@ export default function FuturesView() {
             {/* 헤더 */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-[var(--text-primary)]">선물지수</h2>
+                    <h2 className="text-base font-bold text-[var(--text-primary)]">지수</h2>
                     {updatedTime && (
                         <span className="text-[11px] text-[var(--text-tertiary)]">
                             {updatedTime} 기준
@@ -195,24 +200,55 @@ export default function FuturesView() {
             </div>
 
             {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[0, 1].map((i) => (
-                        <div
-                            key={i}
-                            className="h-[380px] rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] animate-pulse"
-                        />
-                    ))}
+                <div className="space-y-6">
+                    <div>
+                        <div className="h-5 w-20 rounded bg-[var(--bg-tertiary)] animate-pulse mb-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[0, 1].map((i) => (
+                                <div key={i} className="h-[380px] rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] animate-pulse" />
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="h-5 w-20 rounded bg-[var(--bg-tertiary)] animate-pulse mb-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[0, 1].map((i) => (
+                                <div key={i} className="h-[380px] rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] animate-pulse" />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FuturesDetailCard
-                        data={data?.kospi ?? null}
-                        color="var(--rise-color, #ef4444)"
-                    />
-                    <FuturesDetailCard
-                        data={data?.nasdaq ?? null}
-                        color="#22c55e"
-                    />
+                <div className="space-y-6">
+                    {/* 국내 지수 섹션 */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">국내 지수</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <IndexDetailCard
+                                data={data?.kospiIndex ?? null}
+                                color="var(--rise-color, #ef4444)"
+                            />
+                            <IndexDetailCard
+                                data={data?.kosdaqIndex ?? null}
+                                color="#8b5cf6"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 선물 지수 섹션 */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">선물 지수</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <IndexDetailCard
+                                data={data?.kospi ?? null}
+                                color="var(--rise-color, #ef4444)"
+                            />
+                            <IndexDetailCard
+                                data={data?.nasdaq ?? null}
+                                color="#22c55e"
+                            />
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

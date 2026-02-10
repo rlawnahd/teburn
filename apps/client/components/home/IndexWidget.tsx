@@ -1,16 +1,16 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchFuturesData, FuturesData } from '@/lib/api/futures';
+import { fetchIndexData, IndexData } from '@/lib/api/indices';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 
-interface FuturesCardProps {
-    data: FuturesData | null;
+interface IndexCardProps {
+    data: IndexData | null;
     label: string;
     onClick: () => void;
 }
 
-function FuturesCard({ data, label, onClick }: FuturesCardProps) {
+function IndexCard({ data, label, onClick }: IndexCardProps) {
     if (!data) {
         return (
             <button
@@ -49,7 +49,7 @@ function FuturesCard({ data, label, onClick }: FuturesCardProps) {
                         {isPositive ? '+' : ''}{data.changePercent.toFixed(2)}%
                     </span>
                     {!data.marketOpen && (
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-tertiary)]">
+                        <span className="text-[9px] px-1 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-tertiary)]" title={`거래시간 ${data.tradingHours}`}>
                             마감
                         </span>
                     )}
@@ -76,18 +76,18 @@ function FuturesCard({ data, label, onClick }: FuturesCardProps) {
     );
 }
 
-export default function FuturesWidget({ onTabChange }: { onTabChange: (tab: string) => void }) {
+export default function IndexWidget({ onTabChange }: { onTabChange: (tab: string) => void }) {
     const { data, isLoading } = useQuery({
-        queryKey: ['futures-widget'],
-        queryFn: fetchFuturesData,
+        queryKey: ['index-widget'],
+        queryFn: fetchIndexData,
         refetchInterval: 60 * 1000,
         staleTime: 30 * 1000,
     });
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-                {[0, 1].map((i) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {[0, 1, 2, 3].map((i) => (
                     <div
                         key={i}
                         className="h-14 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)] animate-pulse"
@@ -98,16 +98,26 @@ export default function FuturesWidget({ onTabChange }: { onTabChange: (tab: stri
     }
 
     return (
-        <div className="grid grid-cols-2 gap-3 mb-4">
-            <FuturesCard
-                data={data?.kospi ?? null}
-                label="KOSPI 200 야간선물"
-                onClick={() => onTabChange('futures')}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <IndexCard
+                data={data?.kospiIndex ?? null}
+                label="코스피"
+                onClick={() => onTabChange('index')}
             />
-            <FuturesCard
+            <IndexCard
+                data={data?.kosdaqIndex ?? null}
+                label="코스닥"
+                onClick={() => onTabChange('index')}
+            />
+            <IndexCard
+                data={data?.kospi ?? null}
+                label="KOSPI 야간선물"
+                onClick={() => onTabChange('index')}
+            />
+            <IndexCard
                 data={data?.nasdaq ?? null}
-                label="NASDAQ 100 선물"
-                onClick={() => onTabChange('futures')}
+                label="NASDAQ 선물"
+                onClick={() => onTabChange('index')}
             />
         </div>
     );

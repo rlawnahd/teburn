@@ -2,26 +2,30 @@ import axios from 'axios';
 import { getAccessToken } from './kisApi';
 
 // 인터페이스 정의
-export interface FuturesChartPoint {
+export interface IndexChartPoint {
     time: string;
     price: number;
 }
 
-export interface FuturesData {
+export type IndexCategory = 'index' | 'futures';
+
+export interface IndexData {
     symbol: string;
     name: string;
+    category: IndexCategory;
     currentPrice: number;
     previousClose: number;
     change: number;
     changePercent: number;
     high: number;
     low: number;
-    chartData: FuturesChartPoint[];
+    chartData: IndexChartPoint[];
     marketOpen: boolean;
+    tradingHours: string;
 }
 
 // 인메모리 캐시 (60초 TTL)
-const futuresCache = new Map<string, { data: FuturesData; timestamp: number }>();
+const indexCache = new Map<string, { data: IndexData; timestamp: number }>();
 const CACHE_TTL = 60 * 1000;
 
 // KIS API 설정
@@ -73,9 +77,9 @@ function getKospiFuturesCode(): string {
 }
 
 // KOSPI 200 야간선물 현재가 조회
-async function getKospiFuturesPrice(): Promise<FuturesData | null> {
+async function getKospiFuturesPrice(): Promise<IndexData | null> {
     // 캐시 확인
-    const cached = futuresCache.get('kospi');
+    const cached = indexCache.get('kospi');
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
         return cached.data;
     }
@@ -143,9 +147,10 @@ async function getKospiFuturesPrice(): Promise<FuturesData | null> {
             return null;
         }
 
-        const result: FuturesData = {
+        const result: IndexData = {
             symbol: futuresCode,
             name: hasOutput1 ? 'KOSPI 200 야간선물' : 'KOSPI 200',
+            category: 'futures',
             currentPrice,
             previousClose,
             change: Math.round(change * 100) / 100,
@@ -154,29 +159,35 @@ async function getKospiFuturesPrice(): Promise<FuturesData | null> {
             low,
             chartData: [],
             marketOpen: currentPrice > 0,
+            tradingHours: '18:00 ~ 익일 05:00',
         };
 
-        futuresCache.set('kospi', { data: result, timestamp: Date.now() });
+        indexCache.set('kospi', { data: result, timestamp: Date.now() });
         return result;
     } catch (error: any) {
         console.error('KOSPI 야간선물 조회 에러:', error.response?.data || error.message);
         // 캐시된 데이터가 있으면 반환
-        const stale = futuresCache.get('kospi');
+        const stale = indexCache.get('kospi');
         return stale ? stale.data : null;
     }
 }
 
-// NASDAQ 100 선물 데이터 조회 (Yahoo Finance)
-async function getNasdaqFuturesData(): Promise<FuturesData | null> {
-    // 캐시 확인
-    const cached = futuresCache.get('nasdaq');
+// Yahoo Finance 공통 함수
+async function getYahooFinanceData(
+    ticker: string,
+    cacheKey: string,
+    name: string,
+    category: IndexCategory,
+    tradingHours: string,
+): Promise<IndexData | null> {
+    const cached = indexCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
         return cached.data;
     }
 
     try {
         const response = await axios.get(
-            'https://query1.finance.yahoo.com/v8/finance/chart/NQ%3DF',
+            `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}`,
             {
                 params: {
                     interval: '5m',
@@ -191,7 +202,7 @@ async function getNasdaqFuturesData(): Promise<FuturesData | null> {
 
         const result = response.data.chart?.result?.[0];
         if (!result) {
-            console.error('NASDAQ 선물 데이터 없음');
+            console.error(`${name} 데이터 없음`);
             return null;
         }
 
@@ -199,8 +210,7 @@ async function getNasdaqFuturesData(): Promise<FuturesData | null> {
         const timestamps = result.timestamp || [];
         const closes = result.indicators?.quote?.[0]?.close || [];
 
-        // 차트 데이터 생성
-        const chartData: FuturesChartPoint[] = [];
+        const chartData: IndexChartPoint[] = [];
         for (let i = 0; i < timestamps.length; i++) {
             if (closes[i] != null) {
                 const date = new Date(timestamps[i] * 1000);
@@ -216,14 +226,14 @@ async function getNasdaqFuturesData(): Promise<FuturesData | null> {
         const change = currentPrice - previousClose;
         const changePercent = previousClose ? (change / previousClose) * 100 : 0;
 
-        // 고가/저가 계산
         const validCloses = closes.filter((c: number | null) => c != null) as number[];
         const high = validCloses.length > 0 ? Math.max(...validCloses) : 0;
         const low = validCloses.length > 0 ? Math.min(...validCloses) : 0;
 
-        const data: FuturesData = {
-            symbol: 'NQ=F',
-            name: 'NASDAQ 100 선물',
+        const data: IndexData = {
+            symbol: ticker,
+            name,
+            category,
             currentPrice,
             previousClose,
             change: Math.round(change * 100) / 100,
@@ -232,27 +242,47 @@ async function getNasdaqFuturesData(): Promise<FuturesData | null> {
             low,
             chartData,
             marketOpen: meta.marketState === 'REGULAR' || meta.marketState === 'PRE' || meta.marketState === 'POST',
+            tradingHours,
         };
 
-        futuresCache.set('nasdaq', { data, timestamp: Date.now() });
+        indexCache.set(cacheKey, { data, timestamp: Date.now() });
         return data;
     } catch (error: any) {
-        console.error('NASDAQ 선물 조회 에러:', error.message);
-        const stale = futuresCache.get('nasdaq');
+        console.error(`${name} 조회 에러:`, error.message);
+        const stale = indexCache.get(cacheKey);
         return stale ? stale.data : null;
     }
 }
 
-// 두 지수 병렬 조회
-export async function getAllFuturesData(): Promise<{
-    nasdaq: FuturesData | null;
-    kospi: FuturesData | null;
-}> {
-    const [nasdaq, kospi] = await Promise.all([
-        getNasdaqFuturesData(),
-        getKospiFuturesPrice(),
-    ]);
-    return { nasdaq, kospi };
+// KOSPI 지수 조회 (Yahoo Finance)
+async function getKospiIndexData(): Promise<IndexData | null> {
+    return getYahooFinanceData('^KS11', 'kospi-index', '코스피', 'index', '09:00 ~ 15:30');
 }
 
-export { getNasdaqFuturesData, getKospiFuturesPrice };
+// KOSDAQ 지수 조회 (Yahoo Finance)
+async function getKosdaqIndexData(): Promise<IndexData | null> {
+    return getYahooFinanceData('^KQ11', 'kosdaq-index', '코스닥', 'index', '09:00 ~ 15:30');
+}
+
+// NASDAQ 100 선물 데이터 조회 (Yahoo Finance)
+async function getNasdaqIndexData(): Promise<IndexData | null> {
+    return getYahooFinanceData('NQ=F', 'nasdaq', 'NASDAQ 100 선물', 'futures', '07:00 ~ 익일 06:00');
+}
+
+// 전체 지수 병렬 조회
+export async function getAllIndexData(): Promise<{
+    nasdaq: IndexData | null;
+    kospi: IndexData | null;
+    kospiIndex: IndexData | null;
+    kosdaqIndex: IndexData | null;
+}> {
+    const [nasdaq, kospi, kospiIndex, kosdaqIndex] = await Promise.all([
+        getNasdaqIndexData(),
+        getKospiFuturesPrice(),
+        getKospiIndexData(),
+        getKosdaqIndexData(),
+    ]);
+    return { nasdaq, kospi, kospiIndex, kosdaqIndex };
+}
+
+export { getNasdaqIndexData, getKospiFuturesPrice, getKospiIndexData, getKosdaqIndexData };

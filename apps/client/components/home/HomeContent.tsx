@@ -9,12 +9,12 @@ import HotStocksView from '@/components/leading/HotStocksView';
 import TopTradingView from '@/components/leading/TopTradingView';
 import LeadingSectorView from '@/components/leading/LeadingSectorView';
 import CalendarView from '@/components/leading/CalendarView';
-import FuturesView from '@/components/leading/FuturesView';
-import FuturesWidget from '@/components/home/FuturesWidget';
+import IndexView from '@/components/leading/IndexView';
+import IndexWidget from '@/components/home/IndexWidget';
 
-type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'futures';
+type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index';
 
-const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'futures'];
+const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'index'];
 
 export default function HomeContent() {
     const searchParams = useSearchParams();
@@ -29,7 +29,7 @@ export default function HomeContent() {
         { key: 'stocks', label: '테마주 거래대금', icon: <TrendingUp size={16} /> },
         { key: 'sectors', label: '주도섹터', icon: <BarChart3 size={16} /> },
         { key: 'calendar', label: '일별 기록', icon: <Calendar size={16} /> },
-        { key: 'futures', label: '선물지수', icon: <Globe size={16} /> },
+        { key: 'index', label: '지수', icon: <Globe size={16} /> },
     ];
 
     const handleTabChange = (tab: TabType) => {
@@ -79,8 +79,8 @@ export default function HomeContent() {
                         <span className="px-2 py-0.5 text-[10px] font-medium text-cyan-500 bg-cyan-500/10 rounded">BETA</span>
                     </div>
 
-                    {/* 선물지수 미니 위젯 */}
-                    <FuturesWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
+                    {/* 지수 미니 위젯 */}
+                    <IndexWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
 
                     {/* 탭 */}
                     <div className="flex gap-1">
@@ -111,7 +111,7 @@ export default function HomeContent() {
                 {activeTab === 'stocks' && <TopTradingView />}
                 {activeTab === 'sectors' && <LeadingSectorView />}
                 {activeTab === 'calendar' && <CalendarView />}
-                {activeTab === 'futures' && <FuturesView />}
+                {activeTab === 'index' && <IndexView />}
             </main>
         </div>
     );

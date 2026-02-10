@@ -1,8 +1,13 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useSyncExternalStore } from 'react';
 import HomeContent from '@/components/home/HomeContent';
 import LandingPage from '@/components/home/LandingPage';
+
+const subscribe = () => () => {};
+function useMounted() {
+    return useSyncExternalStore(subscribe, () => true, () => false);
+}
 
 function HomeLoading() {
     return (
@@ -13,17 +18,11 @@ function HomeLoading() {
 }
 
 export default function HomePage() {
-    const [showLanding, setShowLanding] = useState(false);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-        // 세션 중 재방문 시엔 바로 대시보드
-        const visited = sessionStorage.getItem('teburn-visited');
-        if (!visited) {
-            setShowLanding(true);
-        }
-    }, []);
+    const mounted = useMounted();
+    const [showLanding, setShowLanding] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return !sessionStorage.getItem('teburn-visited');
+    });
 
     const handleEnter = () => {
         sessionStorage.setItem('teburn-visited', '1');
