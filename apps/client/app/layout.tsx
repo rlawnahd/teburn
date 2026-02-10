@@ -3,6 +3,7 @@ import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 import Header from '@/components/layout/Header';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
     title: 'TEBURN - 지금 타오르는 테마를 찾아라',
@@ -23,6 +24,7 @@ export default function RootLayout({
                         {children}
                     </QueryProvider>
                 </ThemeProvider>
+                <Analytics />
             </body>
         </html>
     );
