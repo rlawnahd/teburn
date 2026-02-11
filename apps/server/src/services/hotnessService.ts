@@ -24,6 +24,7 @@ export interface HotnessScore {
     // 원본 데이터
     volumeSurgeRate: number | null;  // 거래량 급증률 (배수)
     newsCount: number;               // 뉴스 건수
+    latestNews: string | null;       // 최신 뉴스 제목
     themeConcentration: number;      // 최대 집중도 (%)
 
     // 등급
@@ -141,7 +142,8 @@ export async function calculateBatchHotness(
         if (!priceData) continue;
 
         const volumeSurge = volumeSurges.get(stock.stockCode) || null;
-        const newsCount = newsCounts.get(stock.stockName) || 0;
+        const newsData = newsCounts.get(stock.stockName) || { count: 0, latestNewsTitle: null };
+        const newsCount = newsData.count;
 
         // 점수 계산
         const tradingValueScore = calculateTradingValueScore(priceData.tradingValue);
@@ -170,6 +172,7 @@ export async function calculateBatchHotness(
 
             volumeSurgeRate: volumeSurge,
             newsCount,
+            latestNews: newsData.latestNewsTitle,
             themeConcentration,
 
             grade: getGrade(totalScore),

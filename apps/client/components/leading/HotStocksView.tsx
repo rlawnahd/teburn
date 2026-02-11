@@ -75,6 +75,11 @@ function StockRow({
                         )}
                     </div>
                 )}
+                {stock.latestNews && (
+                    <p className="text-[11px] text-[var(--text-tertiary)] truncate mt-0.5">
+                        {stock.latestNews}
+                    </p>
+                )}
             </div>
 
             {/* 가격 + 등락률 */}

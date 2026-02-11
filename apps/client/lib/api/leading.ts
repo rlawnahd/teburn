@@ -160,6 +160,7 @@ export interface HotStock {
 
     volumeSurgeRate: number | null;
     newsCount: number;
+    latestNews: string | null;
     themeConcentration: number;        // 최대 집중도 (%)
 
     grade: 'S' | 'A' | 'B' | 'C' | 'D';

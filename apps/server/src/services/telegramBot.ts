@@ -27,7 +27,7 @@ function getKSTTime(): { hour: number; minute: number; dayOfWeek: number } {
 // 거래대금 포맷 (억 단위)
 function formatTradingValue(value: number): string {
     const billion = value / 100000000;
-    if (billion >= 1000) return `${(billion / 1000).toFixed(1)}조`;
+    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
     return `${Math.round(billion)}억`;
 }
 
@@ -54,6 +54,9 @@ function formatSGradeAlert(stock: HotnessScore): string {
     if (stock.themes.length > 0) {
         lines.push(`   테마: ${stock.themes.join(', ')}`);
     }
+    if (stock.latestNews) {
+        lines.push(`   📰 ${stock.latestNews}`);
+    }
     return lines.join('\n');
 }
 
@@ -77,6 +80,9 @@ function formatHotStocksList(stocks: HotnessScore[]): string {
             `   ${formatPrice(s.currentPrice)}원 ${formatChangeRate(s.changeRate)}`,
             `   거래대금 ${formatTradingValue(s.tradingValue)}`,
         );
+        if (s.latestNews) {
+            lines.push(`   📰 ${s.latestNews}`);
+        }
         if (i < stocks.length - 1) lines.push('');
     });
 
@@ -115,6 +121,9 @@ function formatDailySummary(stocks: HotnessScore[]): string {
         );
         if (s.themes.length > 0) {
             lines.push(`   테마: ${s.themes.join(', ')}`);
+        }
+        if (s.latestNews) {
+            lines.push(`   📰 ${s.latestNews}`);
         }
     });
 

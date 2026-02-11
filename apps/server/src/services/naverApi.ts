@@ -69,14 +69,14 @@ export const fetchNaverNewsApi = async (query: string = '주식'): Promise<NewsI
 };
 
 // 종목별 24시간 이내 뉴스 개수 조회 (네이버 검색 API 사용)
-const stockNewsCountCache = new Map<string, { count: number; timestamp: number }>();
+const stockNewsCountCache = new Map<string, { count: number; latestNewsTitle: string | null; timestamp: number }>();
 const STOCK_NEWS_CACHE_TTL = 10 * 60 * 1000; // 10분
 
-export const getStockNewsCountFromApi = async (stockName: string): Promise<number> => {
+export const getStockNewsCountFromApi = async (stockName: string): Promise<{ count: number; latestNewsTitle: string | null }> => {
     // 캐시 확인
     const cached = stockNewsCountCache.get(stockName);
     if (cached && Date.now() - cached.timestamp < STOCK_NEWS_CACHE_TTL) {
-        return cached.count;
+        return { count: cached.count, latestNewsTitle: cached.latestNewsTitle };
     }
 
     const clientId = process.env.NAVER_CLIENT_ID;
@@ -84,7 +84,7 @@ export const getStockNewsCountFromApi = async (stockName: string): Promise<numbe
 
     if (!clientId || !clientSecret) {
         console.warn(`⚠️ 네이버 API 키 없음 - ${stockName} 뉴스 검색 스킵`);
-        return 0;
+        return { count: 0, latestNewsTitle: null };
     }
 
     try {
@@ -110,14 +110,17 @@ export const getStockNewsCountFromApi = async (stockName: string): Promise<numbe
         });
 
         const count = recentNews.length;
+        const latestNewsTitle = recentNews.length > 0
+            ? recentNews[0].title.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            : null;
 
         // 캐시 저장
-        stockNewsCountCache.set(stockName, { count, timestamp: Date.now() });
+        stockNewsCountCache.set(stockName, { count, latestNewsTitle, timestamp: Date.now() });
 
-        return count;
+        return { count, latestNewsTitle };
     } catch (error: any) {
         console.error(`❌ 네이버 API 에러 (${stockName}):`, error.message || error);
-        return 0;
+        return { count: 0, latestNewsTitle: null };
     }
 };
 
@@ -125,8 +128,8 @@ export const getStockNewsCountFromApi = async (stockName: string): Promise<numbe
 export const getBatchStockNewsCountFromApi = async (
     stockNames: string[],
     limit: number = 30
-): Promise<Map<string, number>> => {
-    const result = new Map<string, number>();
+): Promise<Map<string, { count: number; latestNewsTitle: string | null }>> => {
+    const result = new Map<string, { count: number; latestNewsTitle: string | null }>();
     const targetStocks = stockNames.slice(0, limit);
 
     console.log(`📰 네이버 API로 뉴스 검색: ${targetStocks.length}개 종목 (${targetStocks.slice(0, 3).join(', ')}...)`);
@@ -134,14 +137,14 @@ export const getBatchStockNewsCountFromApi = async (
     // 첫 번째 종목 상세 로그
     if (targetStocks.length > 0) {
         const firstStock = targetStocks[0];
-        const testCount = await getStockNewsCountFromApi(firstStock);
-        console.log(`📰 [테스트] ${firstStock}: ${testCount}건`);
+        const testResult = await getStockNewsCountFromApi(firstStock);
+        console.log(`📰 [테스트] ${firstStock}: ${testResult.count}건`);
     }
 
     // 순차 처리 (API 제한 방지)
     for (const name of targetStocks) {
-        const count = await getStockNewsCountFromApi(name);
-        result.set(name, count);
+        const newsResult = await getStockNewsCountFromApi(name);
+        result.set(name, newsResult);
 
         // API 호출 제한 방지 (200ms 대기)
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -150,13 +153,13 @@ export const getBatchStockNewsCountFromApi = async (
     // 검색 안 한 종목은 0으로 설정
     stockNames.forEach((name) => {
         if (!result.has(name)) {
-            result.set(name, 0);
+            result.set(name, { count: 0, latestNewsTitle: null });
         }
     });
 
-    const matched = Array.from(result.entries()).filter(([, count]) => count > 0);
+    const matched = Array.from(result.entries()).filter(([, r]) => r.count > 0);
     if (matched.length > 0) {
-        console.log(`📰 뉴스 있는 종목: ${matched.map(([name, count]) => `${name}(${count})`).join(', ')}`);
+        console.log(`📰 뉴스 있는 종목: ${matched.map(([name, r]) => `${name}(${r.count})`).join(', ')}`);
     }
 
     return result;
