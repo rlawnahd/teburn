@@ -3,7 +3,6 @@ import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 import Header from '@/components/layout/Header';
-import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
@@ -33,11 +32,10 @@ export default function RootLayout({
     return (
         <html lang="ko" suppressHydrationWarning>
             <head>
-                <Script
+                <script
                     async
                     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8213713469516212"
                     crossOrigin="anonymous"
-                    strategy="beforeInteractive"
                 />
             </head>
             <body className="antialiased">
