@@ -12,6 +12,7 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
                 defaultOptions: {
                     queries: {
                         staleTime: 60 * 1000, // 1분 동안은 데이터가 신선하다고 판단 (재요청 안 함)
+                        gcTime: 2 * 60 * 1000, // 2분 후 미사용 캐시 제거 (기본 5분)
                         retry: 1, // 실패시 1번만 재시도
                     },
                 },

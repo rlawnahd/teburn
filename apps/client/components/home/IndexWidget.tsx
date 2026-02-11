@@ -43,7 +43,7 @@ function IndexCard({ data, label, onClick }: { data: IndexData | null; label: st
 
 export default function IndexWidget({ onTabChange }: { onTabChange: (tab: string) => void }) {
     const { data, isLoading } = useQuery({
-        queryKey: ['index-widget'],
+        queryKey: ['index-detail'],
         queryFn: fetchIndexData,
         refetchInterval: 60 * 1000,
         staleTime: 30 * 1000,

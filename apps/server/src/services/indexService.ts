@@ -32,6 +32,23 @@ const CACHE_TTL = 60 * 1000;
 const chartHistory = new Map<string, IndexChartPoint[]>();
 let chartDate = ''; // 현재 저장 중인 날짜 (YYYY-MM-DD)
 
+// 차트 데이터 다운샘플링 (최대 MAX_CHART_POINTS 포인트)
+const MAX_CHART_POINTS = 80;
+
+function downsampleChart(points: IndexChartPoint[]): IndexChartPoint[] {
+    if (points.length <= MAX_CHART_POINTS) return points;
+
+    const result: IndexChartPoint[] = [points[0]]; // 첫 포인트 유지
+    const step = (points.length - 1) / (MAX_CHART_POINTS - 1);
+
+    for (let i = 1; i < MAX_CHART_POINTS - 1; i++) {
+        result.push(points[Math.round(i * step)]);
+    }
+
+    result.push(points[points.length - 1]); // 마지막 포인트 유지
+    return result;
+}
+
 function addChartPoint(cacheKey: string, price: number): IndexChartPoint[] {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
@@ -55,7 +72,8 @@ function addChartPoint(cacheKey: string, price: number): IndexChartPoint[] {
         history.push(point);
     }
 
-    return history;
+    // 클라이언트에는 다운샘플링된 데이터 반환
+    return downsampleChart(history);
 }
 
 // KIS API 설정
