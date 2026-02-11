@@ -9,6 +9,14 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 export const metadata: Metadata = {
     title: 'TEBURN - 오늘의 주도주를 찾아라',
     description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+    openGraph: {
+        title: 'TEBURN - 오늘의 주도주를 찾아라',
+        description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+        url: 'https://teburn.com',
+        siteName: 'TEBURN',
+        locale: 'ko_KR',
+        type: 'website',
+    },
     verification: {
         other: {
             'naver-site-verification': 'c2743785cd38a455bdd975b9a7e56b8fa202a3dd',
