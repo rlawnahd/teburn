@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import HomeContent from '@/components/home/HomeContent';
 
+export const dynamic = 'force-dynamic';
+
 function HomeLoading() {
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
