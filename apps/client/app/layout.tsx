@@ -63,7 +63,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     </QueryProvider>
                 </ThemeProvider>
                 <Analytics />
-                <GoogleAnalytics gaId="G-3EZD3GJYNY" />
+                <GoogleAnalytics gaId="G-MMMVGBL8ZP" />
             </body>
         </html>
     );
