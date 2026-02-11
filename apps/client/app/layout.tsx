@@ -3,6 +3,7 @@ import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 import Header from '@/components/layout/Header';
+import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
@@ -40,6 +41,12 @@ export default function RootLayout({
                 </ThemeProvider>
                 <Analytics />
                 <GoogleAnalytics gaId="G-3EZD3GJYNY" />
+                <Script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8213713469516212"
+                    crossOrigin="anonymous"
+                    strategy="afterInteractive"
+                />
             </body>
         </html>
     );
