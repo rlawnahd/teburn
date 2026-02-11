@@ -32,6 +32,14 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ko" suppressHydrationWarning>
+            <head>
+                <Script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8213713469516212"
+                    crossOrigin="anonymous"
+                    strategy="beforeInteractive"
+                />
+            </head>
             <body className="antialiased">
                 <ThemeProvider>
                     <QueryProvider>
@@ -41,12 +49,6 @@ export default function RootLayout({
                 </ThemeProvider>
                 <Analytics />
                 <GoogleAnalytics gaId="G-3EZD3GJYNY" />
-                <Script
-                    async
-                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8213713469516212"
-                    crossOrigin="anonymous"
-                    strategy="afterInteractive"
-                />
             </body>
         </html>
     );
