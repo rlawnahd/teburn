@@ -15,6 +15,7 @@ import { themePriceCache } from './services/themePriceCache';
 import { saveDailyLeadingThemes } from './services/leadingStockService';
 import { warmupHotStocks } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
+import { startTelegramBot } from './services/telegramBot';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -158,6 +159,7 @@ connectDB().then(async () => {
         // DB에서 캐시 복원 후 백그라운드 갱신 → 완료 후 주도주 점수 사전 계산
         themePriceCache.startScheduler()
             .then(() => warmupHotStocks())
+            .then(() => startTelegramBot())
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
             });
