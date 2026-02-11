@@ -3,6 +3,7 @@ import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
@@ -60,6 +61,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <QueryProvider>
                         <Header />
                         {children}
+                        <Footer />
                     </QueryProvider>
                 </ThemeProvider>
                 <Analytics />
