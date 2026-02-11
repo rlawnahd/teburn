@@ -7,8 +7,13 @@ import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
 export const metadata: Metadata = {
-    title: 'TEBURN - 지금 타오르는 테마를 찾아라',
-    description: '오늘 불붙은 테마를 가장 빠르게, 실시간 테마 주식 모니터링',
+    title: 'TEBURN - 오늘의 주도주를 찾아라',
+    description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+    verification: {
+        other: {
+            'naver-site-verification': 'c2743785cd38a455bdd975b9a7e56b8fa202a3dd',
+        },
+    },
 };
 
 export default function RootLayout({
