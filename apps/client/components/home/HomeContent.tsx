@@ -35,7 +35,7 @@ export default function HomeContent() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 지수 위젯 + 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                <div className="px-3 pt-2 pb-0">
+                <div className="max-w-[1280px] mx-auto px-3 pt-2 pb-0">
                     {/* 지수 미니 위젯 */}
                     <IndexWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
 
@@ -64,7 +64,7 @@ export default function HomeContent() {
             </div>
 
             {/* 컨텐츠 */}
-            <main className="p-3">
+            <main className="max-w-[1280px] mx-auto p-3">
                 {activeTab === 'hot' && <HotStocksView />}
                 {activeTab === 'stocks' && <TopTradingView />}
                 {activeTab === 'sectors' && <LeadingSectorView />}

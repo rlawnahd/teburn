@@ -128,7 +128,7 @@ export default function StockDetailPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 종목 헤더 바 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                <div className="flex items-center gap-3 px-3 py-2">
+                <div className="max-w-[1280px] mx-auto flex items-center gap-3 px-3 py-2">
                     <button
                         onClick={() => router.back()}
                         className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
@@ -163,7 +163,7 @@ export default function StockDetailPage() {
             </div>
 
             {/* 컨텐츠 */}
-            <main className="p-3 space-y-3">
+            <main className="max-w-[1280px] mx-auto p-3 space-y-3">
                 {/* 요약 정보 — 테이블 스타일 */}
                 <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border-color)]">
