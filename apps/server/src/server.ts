@@ -16,6 +16,7 @@ import { saveDailyLeadingThemes } from './services/leadingStockService';
 import { warmupHotStocks } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
+import { warmupChartHistory } from './services/indexService';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -154,6 +155,11 @@ connectDB().then(async () => {
         // 주기적 크롤링 시작
         setInterval(backgroundCrawl, CRAWL_INTERVAL);
         console.log(`⏰ 백그라운드 크롤링: ${CRAWL_INTERVAL / 1000}초마다 실행`);
+
+        // 지수 차트 히스토리 워밍업 (당일 분봉 데이터 백필)
+        warmupChartHistory().catch(err => {
+            console.error('⚠️ 지수 차트 워밍업 실패:', err);
+        });
 
         // 모든 테마 주가 배치 캐싱 스케줄러 시작 (5분 간격)
         // DB에서 캐시 복원 후 백그라운드 갱신 → 완료 후 주도주 점수 사전 계산

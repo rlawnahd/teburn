@@ -472,6 +472,76 @@ function getDateStr(offsetDays: number): string {
     return d.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
+// Yahoo Finance에서 당일 분봉 데이터를 가져와 차트 히스토리 백필
+async function fetchYahooIntradayChart(ticker: string, cacheKey: string): Promise<number> {
+    try {
+        const response = await axios.get(
+            `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}`,
+            {
+                params: {
+                    interval: '1m',
+                    range: '1d',
+                },
+                headers: {
+                    'User-Agent': 'Mozilla/5.0',
+                },
+                timeout: 10000,
+            }
+        );
+
+        const result = response.data.chart?.result?.[0];
+        if (!result) return 0;
+
+        const timestamps = result.timestamp || [];
+        const closes = result.indicators?.quote?.[0]?.close || [];
+
+        const points: IndexChartPoint[] = [];
+        for (let i = 0; i < timestamps.length; i++) {
+            if (closes[i] != null) {
+                points.push({
+                    time: new Date(timestamps[i] * 1000).toISOString(),
+                    price: closes[i],
+                });
+            }
+        }
+
+        if (points.length > 0) {
+            chartHistory.set(cacheKey, points);
+            chartDate = new Date().toISOString().split('T')[0];
+        }
+
+        return points.length;
+    } catch (error: any) {
+        console.error(`⚠️ ${ticker} 차트 백필 실패:`, error.message);
+        return 0;
+    }
+}
+
+// 서버 시작 시 차트 히스토리 워밍업 (당일 분봉 데이터 백필)
+export async function warmupChartHistory(): Promise<void> {
+    console.log('📊 지수 차트 히스토리 워밍업 시작...');
+
+    const targets: { ticker: string; cacheKey: string; name: string }[] = [
+        { ticker: '^KS11', cacheKey: 'kospi-index', name: '코스피' },
+        { ticker: '^KQ11', cacheKey: 'kosdaq-index', name: '코스닥' },
+    ];
+
+    const results = await Promise.all(
+        targets.map(async ({ ticker, cacheKey, name }) => {
+            const count = await fetchYahooIntradayChart(ticker, cacheKey);
+            if (count > 0) {
+                console.log(`  ✅ ${name} (${ticker}): ${count}개 포인트 백필 완료`);
+            } else {
+                console.log(`  ⚠️ ${name} (${ticker}): 백필 데이터 없음`);
+            }
+            return count;
+        })
+    );
+
+    const total = results.reduce((a, b) => a + b, 0);
+    console.log(`📊 지수 차트 워밍업 완료 (총 ${total}개 포인트)`);
+}
+
 // 전체 지수 병렬 조회
 export async function getAllIndexData(): Promise<{
     nasdaq: IndexData | null;
