@@ -38,8 +38,7 @@ const ThemeSchema: Schema = new Schema(
     }
 );
 
-// 인덱스
-ThemeSchema.index({ name: 1 });
+// name은 unique: true로 이미 인덱스 생성됨
 ThemeSchema.index({ naverCode: 1 });
 ThemeSchema.index({ isActive: 1 });
 

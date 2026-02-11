@@ -9,11 +9,11 @@ export interface IThemeHistory extends Document {
 }
 
 const ThemeHistorySchema: Schema = new Schema({
-    themeName: { type: String, required: true, index: true },
+    themeName: { type: String, required: true },
     avgChangeRate: { type: Number, required: true },
     topStock: { type: String, default: '' },
     topStockRate: { type: Number, default: 0 },
-    timestamp: { type: Date, required: true, index: true },
+    timestamp: { type: Date, required: true },
 });
 
 // 복합 인덱스: 테마별 시간순 조회 최적화

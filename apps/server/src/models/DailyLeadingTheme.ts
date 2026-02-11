@@ -50,16 +50,13 @@ const TopStockSchema = new Schema<ITopStock>(
 );
 
 const DailyLeadingThemeSchema: Schema = new Schema({
-    date: { type: Date, required: true, unique: true },
+    date: { type: Date, required: true },
     topThemes: { type: [TopThemeSchema], default: [] },
     topStocks: { type: [TopStockSchema], default: [] },
     createdAt: { type: Date, default: Date.now },
 });
 
-// 날짜 인덱스 (조회 최적화)
-DailyLeadingThemeSchema.index({ date: -1 });
-
-// 90일 후 자동 삭제
-DailyLeadingThemeSchema.index({ date: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
+// 날짜 인덱스 (유니크 + 90일 후 자동 삭제)
+DailyLeadingThemeSchema.index({ date: 1 }, { unique: true, expireAfterSeconds: 90 * 24 * 60 * 60 });
 
 export default mongoose.model<IDailyLeadingTheme>('DailyLeadingTheme', DailyLeadingThemeSchema);

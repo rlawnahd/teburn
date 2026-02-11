@@ -27,7 +27,7 @@ const TelegramSubscriberSchema: Schema = new Schema(
     }
 );
 
-TelegramSubscriberSchema.index({ chatId: 1 });
+// chatId는 unique: true로 이미 인덱스 생성됨
 TelegramSubscriberSchema.index({ isActive: 1 });
 
 export default mongoose.model<ITelegramSubscriber>('TelegramSubscriber', TelegramSubscriberSchema);

@@ -52,8 +52,7 @@ const NewsSchema: Schema = new Schema(
     }
 );
 
-// link 필드에 인덱스 추가 (중복 체크 성능 향상)
-NewsSchema.index({ link: 1 });
+// link는 unique: true로 이미 인덱스 생성됨
 // 최신순 정렬을 위한 인덱스
 NewsSchema.index({ createdAt: -1 });
 
