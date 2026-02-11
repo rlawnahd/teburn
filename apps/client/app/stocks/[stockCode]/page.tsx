@@ -122,6 +122,7 @@ export default function StockDetailPage() {
 
     const isPositive = stock.changeRate > 0;
     const isNegative = stock.changeRate < 0;
+    const isLimitUp = stock.changeRate >= 29.9;
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
@@ -137,6 +138,11 @@ export default function StockDetailPage() {
                     <div className="flex items-center gap-2 min-w-0">
                         <h1 className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</h1>
                         <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">{stock.stockCode}</span>
+                        {isLimitUp && (
+                            <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                                상한가
+                            </span>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 ml-auto flex-shrink-0">
                         <span className="text-sm font-bold text-[var(--text-primary)]">

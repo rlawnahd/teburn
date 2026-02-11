@@ -105,7 +105,14 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                             {stock.rank}
                                         </span>
                                         <div className="flex-1 min-w-0">
-                                            <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate block">{stock.stockName}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                                                {stock.changeRate >= 29.9 && (
+                                                    <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                                                        상한가
+                                                    </span>
+                                                )}
+                                            </div>
                                             {stock.themes.length > 0 && (
                                                 <div className="flex items-center gap-1 mt-0.5">
                                                     {stock.themes.slice(0, 2).map((theme) => (

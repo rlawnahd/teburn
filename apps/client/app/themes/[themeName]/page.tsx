@@ -22,6 +22,7 @@ function formatVolume(value: number): string {
 function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; onClick: () => void }) {
     const isPositive = stock.changeRate > 0;
     const isNegative = stock.changeRate < 0;
+    const isLimitUp = stock.changeRate >= 29.9;
 
     return (
         <button
@@ -32,7 +33,14 @@ function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; o
                 {rank}
             </span>
             <div className="flex-1 min-w-0">
-                <span className="text-[13px] font-medium text-[var(--text-primary)] truncate block">{stock.stockName}</span>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-medium text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                    {isLimitUp && (
+                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                            상한가
+                        </span>
+                    )}
+                </div>
                 <span className="text-[11px] text-[var(--text-tertiary)]">{stock.stockCode}</span>
             </div>
             <div className="text-right flex-shrink-0">

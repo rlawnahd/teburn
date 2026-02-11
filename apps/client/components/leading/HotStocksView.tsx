@@ -38,6 +38,7 @@ function StockRow({
 }) {
     const gradeStyle = getGradeStyle(stock.grade);
     const isPositive = stock.changeRate > 0;
+    const isLimitUp = stock.changeRate >= 29.9;
 
     return (
         <button
@@ -56,6 +57,11 @@ function StockRow({
                     <span className={`px-1 py-0.5 text-[9px] font-bold ${gradeStyle.bg} ${gradeStyle.text} flex-shrink-0`}>
                         {gradeStyle.label}
                     </span>
+                    {isLimitUp && (
+                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                            상한가
+                        </span>
+                    )}
                 </div>
                 {stock.themes.length > 0 && (
                     <div className="flex items-center gap-1 mt-0.5">
