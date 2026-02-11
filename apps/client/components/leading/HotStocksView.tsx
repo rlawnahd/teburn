@@ -14,16 +14,16 @@ function formatTradingValue(value: number): string {
 
 function getGradeStyle(grade: HotStock['grade']): { bg: string; text: string; label: string } {
     switch (grade) {
-        case 'HOT':
-            return { bg: 'bg-[var(--rise-color)]', text: 'text-white', label: 'HOT' };
-        case 'WARM':
-            return { bg: 'bg-orange-500', text: 'text-white', label: 'WARM' };
-        case 'NORMAL':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]', label: 'MID' };
-        case 'COOL':
-            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]', label: 'LOW' };
-        case 'COLD':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]', label: 'COLD' };
+        case 'S':
+            return { bg: 'bg-[var(--rise-color)]', text: 'text-white', label: 'S' };
+        case 'A':
+            return { bg: 'bg-orange-500', text: 'text-white', label: 'A' };
+        case 'B':
+            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]', label: 'B' };
+        case 'C':
+            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]', label: 'C' };
+        case 'D':
+            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]', label: 'D' };
     }
 }
 
@@ -132,9 +132,9 @@ export default function HotStocksView() {
         );
     }
 
-    const hotStocks = stocks.filter((s) => s.grade === 'HOT');
-    const warmStocks = stocks.filter((s) => s.grade === 'WARM');
-    const otherStocks = stocks.filter((s) => !['HOT', 'WARM'].includes(s.grade));
+    const hotStocks = stocks.filter((s) => s.grade === 'S');
+    const warmStocks = stocks.filter((s) => s.grade === 'A');
+    const otherStocks = stocks.filter((s) => !['S', 'A'].includes(s.grade));
 
     const formatDataDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -186,7 +186,7 @@ export default function HotStocksView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도주 분석</h2>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 등락률 + 거래량 + 뉴스 종합</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 등락률 + 거래량 + 뉴스 + 대장주집중도</span>
                 </div>
                 {data?.lastUpdateTime && (
                     <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)]">
@@ -195,8 +195,8 @@ export default function HotStocksView() {
                 )}
             </div>
 
-            {renderSection('HOT', '70점 이상', hotStocks, 1)}
-            {renderSection('WARM', '50~69점', warmStocks, hotStocks.length + 1)}
+            {renderSection('S등급', '70점 이상', hotStocks, 1)}
+            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1)}
             {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1)}
 
             {stocks.length === 0 && (

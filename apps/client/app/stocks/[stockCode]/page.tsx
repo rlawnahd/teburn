@@ -37,16 +37,16 @@ function formatRelativeTime(dateStr: string): string {
 
 function getGradeStyle(grade: string): { color: string; bg: string; label: string } {
     switch (grade) {
-        case 'HOT':
-            return { color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]', label: 'HOT' };
-        case 'WARM':
-            return { color: 'text-orange-500', bg: 'bg-orange-500', label: 'WARM' };
-        case 'NORMAL':
-            return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: 'MID' };
-        case 'COOL':
-            return { color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]', label: 'LOW' };
-        case 'COLD':
-            return { color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]', label: 'COLD' };
+        case 'S':
+            return { color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]', label: 'S' };
+        case 'A':
+            return { color: 'text-orange-500', bg: 'bg-orange-500', label: 'A' };
+        case 'B':
+            return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: 'B' };
+        case 'C':
+            return { color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]', label: 'C' };
+        case 'D':
+            return { color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]', label: 'D' };
         default:
             return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: grade };
     }
@@ -202,7 +202,7 @@ export default function StockDetailPage() {
                             <ScoreBar
                                 label="거래대금"
                                 score={stock.hotness.tradingValueScore}
-                                maxScore={30}
+                                maxScore={25}
                                 color="bg-amber-500"
                             />
                             <ScoreBar
@@ -215,16 +215,23 @@ export default function StockDetailPage() {
                             <ScoreBar
                                 label="거래량"
                                 score={stock.hotness.volumeScore}
-                                maxScore={25}
+                                maxScore={20}
                                 detail={stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-'}
                                 color="bg-violet-500"
                             />
                             <ScoreBar
                                 label="뉴스"
                                 score={stock.hotness.newsScore}
-                                maxScore={20}
+                                maxScore={15}
                                 detail={`${stock.hotness.newsCount}건`}
                                 color="bg-emerald-500"
+                            />
+                            <ScoreBar
+                                label="대장주"
+                                score={stock.hotness.themeConcentrationScore}
+                                maxScore={15}
+                                detail={`${stock.hotness.themeConcentration}%`}
+                                color="bg-sky-500"
                             />
                         </div>
                     </div>

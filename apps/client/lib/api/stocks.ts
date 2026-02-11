@@ -80,13 +80,15 @@ export const fetchThemePrice = async (themeName: string): Promise<ThemePriceInfo
 // 주도주 점수 정보
 export interface HotnessInfo {
     totalScore: number;
-    grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
+    grade: 'S' | 'A' | 'B' | 'C' | 'D';
     tradingValueScore: number;
     momentumScore: number;
     volumeScore: number;
     newsScore: number;
+    themeConcentrationScore: number;
     volumeSurgeRate: number | null;
     newsCount: number;
+    themeConcentration: number;
 }
 
 // 종목 상세 정보

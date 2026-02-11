@@ -1,5 +1,5 @@
 // 주도주 점수 통합 서비스
-// 주도주 점수 = 거래대금(30) + 등락률(25) + 거래량급증(25) + 뉴스(20) = 총 100점
+// 주도주 점수 = 거래대금(25) + 등락률(25) + 거래량급증(20) + 뉴스(15) + 대장주집중도(15) = 총 100점
 
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
@@ -14,27 +14,29 @@ export interface HotnessScore {
     themes: string[];
 
     // 주도주 점수 상세
-    totalScore: number;         // 총점 (0~100)
-    tradingValueScore: number;  // 거래대금 (0~30)
-    momentumScore: number;      // 등락률 (0~25)
-    volumeScore: number;        // 거래량 급증 (0~25)
-    newsScore: number;          // 뉴스 노출 (0~20)
+    totalScore: number;                // 총점 (0~100)
+    tradingValueScore: number;         // 거래대금 (0~25)
+    momentumScore: number;             // 등락률 (0~25)
+    volumeScore: number;               // 거래량 급증 (0~20)
+    newsScore: number;                 // 뉴스 노출 (0~15)
+    themeConcentrationScore: number;   // 대장주 집중도 (0~15)
 
     // 원본 데이터
     volumeSurgeRate: number | null;  // 거래량 급증률 (배수)
     newsCount: number;               // 뉴스 건수
+    themeConcentration: number;      // 최대 집중도 (%)
 
     // 등급
-    grade: 'HOT' | 'WARM' | 'NORMAL' | 'COOL' | 'COLD';
+    grade: 'S' | 'A' | 'B' | 'C' | 'D';
 }
 
 // 등급 기준 (100점 만점 기준)
 function getGrade(score: number): HotnessScore['grade'] {
-    if (score >= 70) return 'HOT';
-    if (score >= 50) return 'WARM';
-    if (score >= 35) return 'NORMAL';
-    if (score >= 20) return 'COOL';
-    return 'COLD';
+    if (score >= 70) return 'S';
+    if (score >= 50) return 'A';
+    if (score >= 35) return 'B';
+    if (score >= 20) return 'C';
+    return 'D';
 }
 
 // 주도주 점수 캐시 (5분 유지, stale-while-revalidate)
@@ -42,14 +44,14 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~30)
+// 거래대금 점수 (0~25)
 function calculateTradingValueScore(tradingValue: number): number {
     const billion = tradingValue / 100000000; // 억 단위
-    if (billion >= 1000) return 30;  // 1000억 이상
-    if (billion >= 500) return 25;   // 500억 이상
-    if (billion >= 300) return 20;   // 300억 이상
-    if (billion >= 200) return 15;   // 200억 이상
-    if (billion >= 100) return 10;   // 100억 이상
+    if (billion >= 1000) return 25;  // 1000억 이상
+    if (billion >= 500) return 21;   // 500억 이상
+    if (billion >= 300) return 17;   // 300억 이상
+    if (billion >= 200) return 13;   // 200억 이상
+    if (billion >= 100) return 9;    // 100억 이상
     if (billion >= 50) return 5;     // 50억 이상
     return 2;                        // 50억 미만
 }
@@ -66,24 +68,55 @@ function calculateMomentumScore(changeRate: number): number {
     return 0;
 }
 
-// 거래량 급증률 점수 (0~25)
+// 거래량 급증률 점수 (0~20)
 function calculateVolumeSurgeScore(surgeRate: number | null): number {
     if (surgeRate === null) return 0;
-    if (surgeRate >= 10) return 25;
-    if (surgeRate >= 5) return 20;
-    if (surgeRate >= 3) return 15;
-    if (surgeRate >= 2) return 10;
-    if (surgeRate >= 1.5) return 5;
+    if (surgeRate >= 10) return 20;
+    if (surgeRate >= 5) return 16;
+    if (surgeRate >= 3) return 12;
+    if (surgeRate >= 2) return 8;
+    if (surgeRate >= 1.5) return 4;
     return 0;
 }
 
-// 뉴스 점수 (0~20)
+// 뉴스 점수 (0~15)
 function calculateNewsScore(newsCount: number): number {
-    if (newsCount >= 10) return 20;
-    if (newsCount >= 5) return 16;
-    if (newsCount >= 3) return 12;
-    if (newsCount >= 1) return 6;
+    if (newsCount >= 10) return 15;
+    if (newsCount >= 5) return 12;
+    if (newsCount >= 3) return 9;
+    if (newsCount >= 1) return 4;
     return 0;
+}
+
+// 대장주 집중도 점수 (0~15)
+// 테마 내 거래대금 점유율로 자금이 집중되는 대장주 식별
+function calculateThemeConcentrationScore(stockCode: string, themes: string[]): { score: number; concentration: number } {
+    let maxConcentration = 0;
+
+    for (const themeName of themes) {
+        const themeData = themePriceCache.getThemePrice(themeName);
+        if (!themeData || themeData.topStocks.length === 0) continue;
+
+        const totalTradingValue = themeData.topStocks.reduce((sum, s) => sum + s.tradingValue, 0);
+        if (totalTradingValue === 0) continue;
+
+        const stockData = themeData.topStocks.find(s => s.stockCode === stockCode);
+        if (!stockData) continue;
+
+        const concentration = (stockData.tradingValue / totalTradingValue) * 100;
+        if (concentration > maxConcentration) {
+            maxConcentration = concentration;
+        }
+    }
+
+    let score = 0;
+    if (maxConcentration >= 50) score = 15;
+    else if (maxConcentration >= 40) score = 12;
+    else if (maxConcentration >= 30) score = 9;
+    else if (maxConcentration >= 20) score = 6;
+    else if (maxConcentration >= 10) score = 3;
+
+    return { score, concentration: Math.round(maxConcentration * 10) / 10 };
 }
 
 /**
@@ -115,8 +148,10 @@ export async function calculateBatchHotness(
         const momentumScore = calculateMomentumScore(priceData.changeRate);
         const volumeScore = calculateVolumeSurgeScore(volumeSurge);
         const newsScore = calculateNewsScore(newsCount);
+        const { score: themeConcentrationScore, concentration: themeConcentration } =
+            calculateThemeConcentrationScore(stock.stockCode, stock.themes);
 
-        const totalScore = tradingValueScore + momentumScore + volumeScore + newsScore;
+        const totalScore = tradingValueScore + momentumScore + volumeScore + newsScore + themeConcentrationScore;
 
         results.push({
             stockCode: stock.stockCode,
@@ -131,9 +166,11 @@ export async function calculateBatchHotness(
             momentumScore,
             volumeScore,
             newsScore,
+            themeConcentrationScore,
 
             volumeSurgeRate: volumeSurge,
             newsCount,
+            themeConcentration,
 
             grade: getGrade(totalScore),
         });
@@ -260,7 +297,7 @@ export async function getThemeHotness(themeName: string): Promise<{
             themeName,
             avgHotnessScore: 0,
             topStocks: [],
-            grade: 'COLD',
+            grade: 'D',
         };
     }
 

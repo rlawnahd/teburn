@@ -210,8 +210,10 @@ router.get('/:stockCode', async (req: Request, res: Response) => {
                     momentumScore: hotness.momentumScore,
                     volumeScore: hotness.volumeScore,
                     newsScore: hotness.newsScore,
+                    themeConcentrationScore: hotness.themeConcentrationScore,
                     volumeSurgeRate: hotness.volumeSurgeRate,
                     newsCount: hotness.newsCount,
+                    themeConcentration: hotness.themeConcentration,
                 } : null,
             },
         });
