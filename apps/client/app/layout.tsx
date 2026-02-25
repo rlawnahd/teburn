@@ -62,8 +62,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <QueryProvider>
                         <Header />
                         {children}
-                        <div className="flex justify-center py-4">
-                            <KakaoAdFit adUnit="DAN-21FIxbmqCsa8aQij" width={728} height={90} />
+                        {/* 데스크톱: 오른쪽 여백에 고정 광고 (콘텐츠 중앙 정렬 유지) */}
+                        <aside className="hidden xl:block fixed right-4 top-16 z-10">
+                            <KakaoAdFit adUnit="DAN-wGcNGCgZbNV7h6Oa" width={160} height={600} />
+                        </aside>
+                        {/* 모바일 하단 광고 */}
+                        <div className="xl:hidden flex justify-center py-4">
+                            <KakaoAdFit adUnit="DAN-2f3e80wfJpcTWx5H" width={320} height={100} />
                         </div>
                         <Footer />
                     </QueryProvider>
