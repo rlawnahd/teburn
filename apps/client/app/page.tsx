@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import HomeContent from '@/components/home/HomeContent';
 
 export const dynamic = 'force-dynamic';
@@ -51,13 +50,6 @@ export default function HomePage() {
                             title="무료 · 회원가입 불필요"
                             description="TEBURN의 모든 기능은 완전 무료이며, 별도의 회원가입 없이 웹 브라우저에서 바로 이용할 수 있습니다."
                         />
-                    </div>
-
-                    <div className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[13px]">
-                        <Link href="/about" className="text-[var(--accent-blue)] hover:underline">서비스 소개</Link>
-                        <Link href="/guide" className="text-[var(--accent-blue)] hover:underline">이용 가이드</Link>
-                        <Link href="/faq" className="text-[var(--accent-blue)] hover:underline">자주 묻는 질문</Link>
-                        <Link href="/articles" className="text-[var(--accent-blue)] hover:underline">투자 가이드</Link>
                     </div>
 
                     <p className="mt-6 text-[12px] text-[var(--text-tertiary)] text-center leading-relaxed">
