@@ -17,6 +17,8 @@ export default function KakaoAdFit({ adUnit, width, height, className }: KakaoAd
         if (loadedRef.current) return;
         loadedRef.current = true;
 
+        const container = containerRef.current;
+
         const ins = document.createElement('ins');
         ins.className = 'kakao_ad_area';
         ins.style.display = 'none';
@@ -29,14 +31,14 @@ export default function KakaoAdFit({ adUnit, width, height, className }: KakaoAd
         script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
         script.async = true;
 
-        if (containerRef.current) {
-            containerRef.current.appendChild(ins);
-            containerRef.current.appendChild(script);
+        if (container) {
+            container.appendChild(ins);
+            container.appendChild(script);
         }
 
         return () => {
-            if (containerRef.current) {
-                containerRef.current.innerHTML = '';
+            if (container) {
+                container.innerHTML = '';
             }
             loadedRef.current = false;
         };

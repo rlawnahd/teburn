@@ -178,6 +178,31 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  apps/teburn-bot:
+    dependencies:
+      axios:
+        specifier: ^1.7.0
+        version: 1.13.2
+      dotenv:
+        specifier: ^16.4.0
+        version: 16.6.1
+      mongoose:
+        specifier: ^8.0.0
+        version: 8.20.1
+      telegraf:
+        specifier: ^4.16.0
+        version: 4.16.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.1
+      tsx:
+        specifier: ^4.7.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
 packages:
 
   '@0no-co/graphql.web@1.2.0':
