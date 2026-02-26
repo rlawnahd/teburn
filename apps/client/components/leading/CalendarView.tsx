@@ -28,27 +28,22 @@ function DateCell({
 }) {
     const day = date.getDate();
     const hasData = dayData && dayData.topStocks.length > 0;
-    const dayOfWeek = date.getDay();
-    const isSunday = dayOfWeek === 0;
-    const isSaturday = dayOfWeek === 6;
 
     return (
         <div
             onClick={hasData ? onClick : undefined}
-            className={`relative min-h-[56px] md:min-h-[80px] p-1 md:p-1.5 border-r border-b border-[var(--border-color)] ${
+            className={`relative min-h-[64px] md:min-h-[88px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] ${
                 isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]'
-            } ${hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''}`}
+            } ${isToday ? 'ring-1 ring-inset ring-[var(--accent-blue)]' : ''} ${
+                hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''
+            }`}
         >
             <div
-                className={`text-[11px] md:text-[13px] font-medium mb-1 ${
+                className={`text-[12px] md:text-[13px] font-medium mb-1 ${
                     isToday
-                        ? 'w-5 h-5 bg-[var(--accent-blue)] text-white flex items-center justify-center'
+                        ? 'w-5 h-5 bg-[var(--accent-blue)] text-white rounded-full flex items-center justify-center'
                         : isCurrentMonth
-                        ? isSunday
-                            ? 'text-[var(--rise-color)]'
-                            : isSaturday
-                            ? 'text-[var(--accent-blue)]'
-                            : 'text-[var(--text-primary)]'
+                        ? 'text-[var(--text-primary)]'
                         : 'text-[var(--text-disabled)]'
                 }`}
             >
@@ -56,20 +51,37 @@ function DateCell({
             </div>
 
             {hasData && (
-                <div className="space-y-px">
+                <div className="space-y-0.5">
                     {dayData.topStocks.slice(0, 3).map((stock, idx) => {
                         const isPositive = stock.changeRate > 0;
+                        const isTop = idx === 0;
+                        const colorClass = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
+
+                        if (isTop) {
+                            const sectorTag = stock.themes?.[0] || null;
+                            return (
+                                <div key={`${stock.stockCode || stock.stockName}-${idx}`}>
+                                    <div className={`text-[11px] md:text-[12px] font-semibold truncate ${colorClass}`}>
+                                        {stock.stockName}
+                                        <span className="ml-0.5 font-medium">
+                                            {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
+                                        </span>
+                                    </div>
+                                    {sectorTag && (
+                                        <div className="text-[8px] md:text-[9px] text-[var(--text-tertiary)] truncate">
+                                            {sectorTag}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
                         return (
                             <div
                                 key={`${stock.stockCode || stock.stockName}-${idx}`}
-                                className={`text-[9px] md:text-[9px] px-0.5 truncate ${
-                                    isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'
-                                }`}
+                                className={`text-[9px] md:text-[10px] px-0.5 truncate opacity-45 ${colorClass}`}
                             >
                                 {stock.stockName}
-                                <span className="opacity-60 hidden sm:inline ml-0.5">
-                                    {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
-                                </span>
                             </div>
                         );
                     })}
@@ -100,25 +112,40 @@ export default function CalendarView() {
         return map;
     }, [calendarData]);
 
+    // 평일(월~금)만 생성
     const calendarDates = useMemo(() => {
         const firstDay = new Date(currentYear, currentMonth - 1, 1);
         const lastDay = new Date(currentYear, currentMonth, 0);
-        const startDay = firstDay.getDay();
+
+        // 월초가 포함된 주의 월요일 찾기
+        const startDate = new Date(firstDay);
+        const dow = startDate.getDay();
+        if (dow === 0) {
+            startDate.setDate(startDate.getDate() - 6); // 일요일 → 전주 월요일
+        } else if (dow > 1) {
+            startDate.setDate(startDate.getDate() - (dow - 1));
+        }
+
+        // 월말이 포함된 주의 금요일 찾기
+        const endDate = new Date(lastDay);
+        const endDow = endDate.getDay();
+        if (endDow === 0) {
+            endDate.setDate(endDate.getDate() - 2); // 일요일 → 전주 금요일
+        } else if (endDow === 6) {
+            endDate.setDate(endDate.getDate() - 1); // 토요일 → 금요일
+        } else if (endDow < 5) {
+            endDate.setDate(endDate.getDate() + (5 - endDow)); // 해당 주 금요일
+        }
 
         const dates: Date[] = [];
+        const current = new Date(startDate);
 
-        for (let i = startDay - 1; i >= 0; i--) {
-            const d = new Date(currentYear, currentMonth - 1, -i);
-            dates.push(d);
-        }
-
-        for (let i = 1; i <= lastDay.getDate(); i++) {
-            dates.push(new Date(currentYear, currentMonth - 1, i));
-        }
-
-        const remaining = 42 - dates.length;
-        for (let i = 1; i <= remaining; i++) {
-            dates.push(new Date(currentYear, currentMonth, i));
+        while (current <= endDate) {
+            const d = current.getDay();
+            if (d >= 1 && d <= 5) {
+                dates.push(new Date(current));
+            }
+            current.setDate(current.getDate() + 1);
         }
 
         return dates;
@@ -152,7 +179,7 @@ export default function CalendarView() {
         setSelectedDate(dateStr);
     };
 
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const dayNames = ['월', '화', '수', '목', '금'];
 
     return (
         <div className="space-y-3">
@@ -193,13 +220,11 @@ export default function CalendarView() {
             {/* 캘린더 */}
             <div className="border border-[var(--border-color)] overflow-hidden">
                 {/* 요일 헤더 */}
-                <div className="grid grid-cols-7 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
-                    {dayNames.map((name, i) => (
+                <div className="grid grid-cols-5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                    {dayNames.map((name) => (
                         <div
                             key={name}
-                            className={`text-center py-1 text-[11px] font-medium ${
-                                i === 0 ? 'text-[var(--rise-color)]' : i === 6 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'
-                            }`}
+                            className="text-center py-1 text-[11px] font-medium text-[var(--text-tertiary)]"
                         >
                             {name}
                         </div>
@@ -214,7 +239,7 @@ export default function CalendarView() {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-7">
+                    <div className="grid grid-cols-5">
                         {calendarDates.map((date, i) => {
                             const dateStr = formatLocalDate(date);
                             const isToday =
