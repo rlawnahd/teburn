@@ -64,7 +64,7 @@ export default function HomePage() {
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
     return (
-        <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-4">
+        <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md p-4">
             <h3 className="text-[13px] font-semibold text-[var(--text-primary)] mb-1">{title}</h3>
             <p className="text-[12px] text-[var(--text-secondary)] leading-relaxed">{description}</p>
         </div>

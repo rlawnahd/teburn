@@ -4,17 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { X, RefreshCw } from 'lucide-react';
 import { fetchDayDetail } from '@/lib/api/leading';
 import { useRouter } from 'next/navigation';
-
-function formatTradingValue(value: number): string {
-    const billion = value / 100000000;
-    if (billion >= 10000) {
-        return `${(billion / 10000).toFixed(1)}조`;
-    } else if (billion >= 1) {
-        return `${billion.toFixed(0)}억`;
-    } else {
-        return `${(value / 10000).toFixed(0)}만`;
-    }
-}
+import { formatTradingValue } from '@/lib/utils/format';
 
 interface CalendarDetailModalProps {
     date: string;
@@ -52,7 +42,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-            <div className="relative w-full max-w-lg mx-3 bg-[var(--bg-primary)] border border-[var(--border-color)] overflow-hidden">
+            <div className="relative w-full max-w-lg mx-3 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden">
                 {/* 헤더 */}
                 <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
                     <div className="flex items-center gap-2">
@@ -108,7 +98,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                                                 {stock.changeRate >= 29.9 && (
-                                                    <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                                                    <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                                                         상한가
                                                     </span>
                                                 )}

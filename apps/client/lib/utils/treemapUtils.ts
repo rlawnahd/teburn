@@ -99,13 +99,5 @@ export function getTextColorByChangeRate(rate: number): string {
   return '#ffffff';
 }
 
-// 거래대금 포맷 (억 단위)
-export function formatTradingValueShort(value: number): string {
-  const billion = value / 100000000; // 억 단위
-  if (billion >= 1000) {
-    return `${(billion / 1000).toFixed(1)}조`;
-  } else if (billion >= 1) {
-    return `${billion.toFixed(0)}억`;
-  }
-  return `${(value / 10000).toFixed(0)}만`;
-}
+// Re-export for backwards compatibility
+export { formatTradingValue as formatTradingValueShort } from './format';

@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchCalendarData, CalendarDay } from '@/lib/api/leading';
 import CalendarDetailModal from './CalendarDetailModal';
 
@@ -56,20 +57,22 @@ function DateCell({
                         const isPositive = stock.changeRate > 0;
                         const isTop = idx === 0;
                         const colorClass = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
+                        const themeTag = stock.themes?.[0] || null;
 
                         if (isTop) {
-                            const sectorTag = stock.themes?.[0] || null;
                             return (
                                 <div key={`${stock.stockCode || stock.stockName}-${idx}`}>
-                                    <div className={`text-[11px] md:text-[12px] font-semibold truncate ${colorClass}`}>
-                                        {stock.stockName}
-                                        <span className="ml-0.5 font-medium">
+                                    <div className="flex items-baseline gap-1">
+                                        <span className={`text-[11px] md:text-[12px] font-semibold truncate ${colorClass}`}>
+                                            {stock.stockName}
+                                        </span>
+                                        <span className={`text-[10px] md:text-[11px] font-medium flex-shrink-0 ${colorClass}`}>
                                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                                         </span>
                                     </div>
-                                    {sectorTag && (
+                                    {themeTag && (
                                         <div className="text-[8px] md:text-[9px] text-[var(--text-tertiary)] truncate">
-                                            {sectorTag}
+                                            {themeTag}
                                         </div>
                                     )}
                                 </div>
@@ -79,9 +82,16 @@ function DateCell({
                         return (
                             <div
                                 key={`${stock.stockCode || stock.stockName}-${idx}`}
-                                className={`text-[9px] md:text-[10px] px-0.5 truncate opacity-45 ${colorClass}`}
+                                className="flex items-baseline gap-1"
                             >
-                                {stock.stockName}
+                                <span className={`text-[9px] md:text-[10px] truncate opacity-50 ${colorClass}`}>
+                                    {stock.stockName}
+                                </span>
+                                {themeTag && (
+                                    <span className="text-[7px] md:text-[8px] text-[var(--text-disabled)] truncate flex-shrink-0">
+                                        {themeTag}
+                                    </span>
+                                )}
                             </div>
                         );
                     })}
@@ -232,11 +242,14 @@ export default function CalendarView() {
                 </div>
 
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
-                            <RefreshCw size={14} className="animate-spin" />
-                            <span>로딩 중...</span>
-                        </div>
+                    <div className="grid grid-cols-5">
+                        {Array.from({ length: 25 }).map((_, i) => (
+                            <div key={i} className="min-h-[64px] md:min-h-[88px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+                                <Skeleton className="h-3 w-4 rounded-sm mb-2" />
+                                <Skeleton className="h-3 w-full rounded-sm mb-1" />
+                                <Skeleton className="h-2 w-2/3 rounded-sm" />
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-5">

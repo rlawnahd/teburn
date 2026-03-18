@@ -24,3 +24,4 @@ out
 
 # Cache
 .cache
+.gstack/

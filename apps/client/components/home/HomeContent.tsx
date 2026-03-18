@@ -1,6 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Flame, TrendingUp, LayoutGrid, Calendar, BarChart2 } from 'lucide-react';
 import HotStocksView from '@/components/leading/HotStocksView';
 import TopTradingView from '@/components/leading/TopTradingView';
 import LeadingSectorView from '@/components/leading/LeadingSectorView';
@@ -12,20 +13,20 @@ type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index';
 
 const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'index'];
 
+const TAB_CONFIG: { key: TabType; label: string; icon: typeof Flame }[] = [
+    { key: 'hot', label: '주도주', icon: Flame },
+    { key: 'stocks', label: '거래대금', icon: TrendingUp },
+    { key: 'sectors', label: '섹터', icon: LayoutGrid },
+    { key: 'calendar', label: '캘린더', icon: Calendar },
+    { key: 'index', label: '지수', icon: BarChart2 },
+];
+
 export default function HomeContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
     const tabParam = searchParams.get('tab') as TabType | null;
     const activeTab: TabType = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'hot';
-
-    const tabs: { key: TabType; label: string }[] = [
-        { key: 'hot', label: '주도주' },
-        { key: 'stocks', label: '거래대금' },
-        { key: 'sectors', label: '섹터' },
-        { key: 'calendar', label: '캘린더' },
-        { key: 'index', label: '지수' },
-    ];
 
     const handleTabChange = (tab: TabType) => {
         router.push(`/?tab=${tab}`, { scroll: false });
@@ -36,28 +37,28 @@ export default function HomeContent() {
             {/* 지수 위젯 + 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
                 <div className="max-w-[1280px] mx-auto px-3 pt-2 pb-0">
-                    {/* 지수 미니 위젯 */}
                     <IndexWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
 
-                    {/* 탭 — 밑줄 스타일 */}
+                    {/* 탭 — pill 스타일 */}
                     <div className="overflow-x-auto -mx-3 px-3 scrollbar-hide">
-                        <div className="flex min-w-max border-b border-transparent">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.key}
-                                    onClick={() => handleTabChange(tab.key)}
-                                    className={`relative px-3 py-2 text-[13px] font-medium transition-colors whitespace-nowrap ${
-                                        activeTab === tab.key
-                                            ? 'text-[var(--text-primary)]'
-                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
-                                    }`}
-                                >
-                                    {tab.label}
-                                    {activeTab === tab.key && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-blue)]" />
-                                    )}
-                                </button>
-                            ))}
+                        <div className="flex gap-1 min-w-max py-1">
+                            {TAB_CONFIG.map((tab) => {
+                                const isActive = activeTab === tab.key;
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => handleTabChange(tab.key)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium transition-all rounded-md whitespace-nowrap ${
+                                            isActive
+                                                ? 'bg-[var(--text-primary)] text-[var(--bg-primary)]'
+                                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                                        }`}
+                                    >
+                                        <tab.icon size={13} />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -65,11 +66,13 @@ export default function HomeContent() {
 
             {/* 컨텐츠 */}
             <main className="max-w-[1280px] mx-auto p-3">
-                {activeTab === 'hot' && <HotStocksView />}
-                {activeTab === 'stocks' && <TopTradingView />}
-                {activeTab === 'sectors' && <LeadingSectorView />}
-                {activeTab === 'calendar' && <CalendarView />}
-                {activeTab === 'index' && <IndexView />}
+                <div key={activeTab} className="animate-contentFadeIn">
+                    {activeTab === 'hot' && <HotStocksView />}
+                    {activeTab === 'stocks' && <TopTradingView />}
+                    {activeTab === 'sectors' && <LeadingSectorView />}
+                    {activeTab === 'calendar' && <CalendarView />}
+                    {activeTab === 'index' && <IndexView />}
+                </div>
             </main>
         </div>
     );

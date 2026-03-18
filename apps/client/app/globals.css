@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================
-   트레이딩뷰 스타일 디자인 시스템
+   TEBURN 디자인 시스템
    ============================ */
 
 /* ============================
@@ -13,6 +13,8 @@
   --bg-secondary: #f5f5f5;
   --bg-tertiary: #ebebeb;
   --bg-elevated: #ffffff;
+  --bg-hover: rgba(0, 0, 0, 0.03);
+  --bg-active: rgba(0, 0, 0, 0.06);
 
   /* 텍스트 색상 */
   --text-primary: #131722;
@@ -25,9 +27,19 @@
   --border-strong: #c8ccd5;
 
   /* 브랜드 색상 */
+  --brand-primary: #ef4444;
+  --brand-secondary: #f97316;
+  --brand-gradient: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
   --accent-blue: #2962ff;
   --accent-blue-light: #e3edff;
   --accent-blue-dark: #1948cc;
+
+  /* 등급 색상 */
+  --grade-s: #ef4444;
+  --grade-a: #f97316;
+  --grade-b: #787b86;
+  --grade-c: #2962ff;
+  --grade-d: #a3a6af;
 
   /* 주식 색상 */
   --rise-color: #f23645;
@@ -45,19 +57,29 @@
   --error-color: #f23645;
   --error-bg: #fff0f1;
 
-  /* 그림자 — 최소화 */
+  /* 그림자 */
   --shadow-sm: none;
   --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.08);
   --shadow-xl: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.08);
 
-  /* 반경 — 샤프 */
+  /* 반경 */
   --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-  --radius-xl: 4px;
-  --radius-2xl: 4px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
   --radius-full: 9999px;
+
+  /* 타이포 스케일 */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 15px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
 
   /* 트랜지션 */
   --transition-fast: 100ms ease;
@@ -74,6 +96,8 @@
   --bg-secondary: #131722;
   --bg-tertiary: #2a2e39;
   --bg-elevated: #262b3d;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(255, 255, 255, 0.08);
 
   /* 텍스트 색상 */
   --text-primary: #d1d4dc;
@@ -86,9 +110,19 @@
   --border-strong: #363a45;
 
   /* 브랜드 색상 */
+  --brand-primary: #ef4444;
+  --brand-secondary: #f97316;
+  --brand-gradient: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
   --accent-blue: #2962ff;
   --accent-blue-light: #1a2744;
   --accent-blue-dark: #5b8def;
+
+  /* 등급 색상 */
+  --grade-s: #ef4444;
+  --grade-a: #f97316;
+  --grade-b: #636770;
+  --grade-c: #2962ff;
+  --grade-d: #434651;
 
   /* 주식 색상 */
   --rise-color: #f23645;
@@ -111,6 +145,7 @@
   --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.25);
   --shadow-xl: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* ============================
@@ -119,7 +154,7 @@
 @theme inline {
   --color-background: var(--bg-primary);
   --color-foreground: var(--text-primary);
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', sans-serif;
   --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
 }
 
@@ -139,10 +174,10 @@ html {
 body {
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', sans-serif;
   font-size: 13px;
   line-height: 1.5;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
   transition: background-color var(--transition-normal), color var(--transition-normal);
@@ -153,7 +188,7 @@ body {
    ============================ */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
@@ -186,6 +221,7 @@ h1, h2, h3, h4, h5, h6 {
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   transition: border-color var(--transition-fast);
 }
 
@@ -217,6 +253,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 6px 12px;
   font-weight: 500;
   font-size: 12px;
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
@@ -230,6 +267,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 6px 12px;
   font-weight: 500;
   font-size: 12px;
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
@@ -255,6 +293,28 @@ h1, h2, h3, h4, h5, h6 {
   50% { opacity: 0.6; }
 }
 
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes flash-rise {
+  0% { background-color: transparent; }
+  30% { background-color: var(--rise-bg); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-fall {
+  0% { background-color: transparent; }
+  30% { background-color: var(--fall-bg); }
+  100% { background-color: transparent; }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
@@ -267,24 +327,12 @@ h1, h2, h3, h4, h5, h6 {
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
-/* ============================
-   랜딩페이지 애니메이션
-   ============================ */
-@keyframes landing-float {
-  0% { transform: translateY(100vh) scale(0); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.8; }
-  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
-@keyframes landing-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@keyframes landing-bounce {
-  0%, 100% { transform: rotate(45deg) translateY(0); }
-  50% { transform: rotate(45deg) translateY(4px); }
+.animate-contentFadeIn {
+  animation: contentFadeIn 0.25s ease-out;
 }
 
 /* ============================
@@ -310,6 +358,7 @@ input, textarea, select {
   background: var(--bg-tertiary);
   border: 1px solid transparent;
   color: var(--text-primary);
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 

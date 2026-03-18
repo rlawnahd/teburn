@@ -5,19 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { fetchThemePrice, StockPrice } from '@/lib/api/stocks';
-
-function formatTradingValue(value: number): string {
-    const billion = value / 100000000;
-    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
-    if (billion >= 1) return `${billion.toFixed(0)}억`;
-    return `${(value / 10000).toFixed(0)}만`;
-}
-
-function formatVolume(value: number): string {
-    if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
-    if (value >= 10000) return `${(value / 10000).toFixed(0)}만`;
-    return value.toLocaleString();
-}
+import { formatVolume } from '@/lib/utils/format';
 
 function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; onClick: () => void }) {
     const isPositive = stock.changeRate > 0;
@@ -36,7 +24,7 @@ function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; o
                 <div className="flex items-center gap-1.5">
                     <span className="text-[13px] font-medium text-[var(--text-primary)] truncate">{stock.stockName}</span>
                     {isLimitUp && (
-                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                             상한가
                         </span>
                     )}
@@ -129,7 +117,7 @@ export default function ThemeDetailPage() {
 
             <main className="max-w-[1280px] mx-auto p-3 space-y-3">
                 {/* 요약 정보 */}
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
                     <div className="grid grid-cols-3 gap-px bg-[var(--border-color)]">
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
                             <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">평균 등락률</div>
@@ -162,7 +150,7 @@ export default function ThemeDetailPage() {
                             <span className="text-xs font-medium text-[var(--text-primary)]">상승</span>
                             <span className="text-[11px] text-[var(--text-tertiary)]">{risingStocks.length}</span>
                         </div>
-                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
                             <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                                 <span className="w-5 text-center">#</span>
                                 <span className="flex-1">종목</span>
@@ -184,7 +172,7 @@ export default function ThemeDetailPage() {
                             <span className="text-xs font-medium text-[var(--text-primary)]">하락</span>
                             <span className="text-[11px] text-[var(--text-tertiary)]">{fallingStocks.length}</span>
                         </div>
-                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
                             <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                                 <span className="w-5 text-center">#</span>
                                 <span className="flex-1">종목</span>

@@ -5,35 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 import { fetchStockDetail } from '@/lib/api/stocks';
-
-function formatTradingValue(value: number): string {
-    const billion = value / 100000000;
-    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
-    if (billion >= 1) return `${billion.toFixed(0)}억`;
-    return `${(value / 10000).toFixed(0)}만`;
-}
-
-function formatVolume(value: number): string {
-    if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
-    if (value >= 10000) return `${(value / 10000).toFixed(0)}만`;
-    return value.toLocaleString();
-}
-
-function formatRelativeTime(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return '방금 전';
-    if (diffMins < 60) return `${diffMins}분 전`;
-    if (diffHours < 24) return `${diffHours}시간 전`;
-    if (diffDays < 7) return `${diffDays}일 전`;
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-}
+import { formatTradingValue, formatVolume, formatRelativeTime } from '@/lib/utils/format';
 
 function getGradeStyle(grade: string): { color: string; bg: string; label: string } {
     switch (grade) {
@@ -139,7 +111,7 @@ export default function StockDetailPage() {
                         <h1 className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</h1>
                         <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">{stock.stockCode}</span>
                         {isLimitUp && (
-                            <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                            <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                                 상한가
                             </span>
                         )}
@@ -165,7 +137,7 @@ export default function StockDetailPage() {
             {/* 컨텐츠 */}
             <main className="max-w-[1280px] mx-auto p-3 space-y-3">
                 {/* 요약 정보 — 테이블 스타일 */}
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border-color)]">
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
                             <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래대금</div>
@@ -188,7 +160,7 @@ export default function StockDetailPage() {
 
                 {/* 주도주 점수 */}
                 {stock.hotness && (
-                    <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                    <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
                         <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                             <div className="flex items-center gap-2">
                                 <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
@@ -245,19 +217,20 @@ export default function StockDetailPage() {
 
                 {/* 관련 테마 */}
                 {stock.themes.length > 0 && (
-                    <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
+                    <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
                         <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)]">
                             <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 테마</span>
                             <span className="text-[11px] text-[var(--text-tertiary)]">{stock.themes.length}개</span>
                         </div>
                         <div className="px-3 py-2 flex flex-wrap gap-1">
                             {stock.themes.map((theme) => (
-                                <span
+                                <button
                                     key={theme}
-                                    className="px-1.5 py-0.5 text-[11px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                                    onClick={() => router.push(`/themes/${encodeURIComponent(theme)}`)}
+                                    className="px-1.5 py-0.5 text-[11px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-colors cursor-pointer rounded-sm"
                                 >
                                     {theme}
-                                </span>
+                                </button>
                             ))}
                         </div>
                     </div>

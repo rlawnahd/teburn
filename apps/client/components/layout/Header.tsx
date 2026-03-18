@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, X } from 'lucide-react';
+import { Search, X, Menu } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { searchStocks, SearchStockResult } from '@/lib/api/stocks';
 
@@ -20,7 +20,6 @@ function SearchModal({ onClose }: { onClose: () => void }) {
         inputRef.current?.focus();
     }, []);
 
-    // ESC로 닫기
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -59,9 +58,8 @@ function SearchModal({ onClose }: { onClose: () => void }) {
     return (
         <div className="fixed inset-0 z-[100]">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative max-w-lg mx-auto mt-12 mx-3">
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] shadow-lg">
-                    {/* 검색 입력 */}
+            <div className="relative max-w-lg mx-3 sm:mx-auto mt-12">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-lg overflow-hidden">
                     <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-color)]">
                         <Search size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
                         <input
@@ -70,7 +68,7 @@ function SearchModal({ onClose }: { onClose: () => void }) {
                             value={query}
                             onChange={(e) => handleChange(e.target.value)}
                             placeholder="종목명 또는 종목코드 검색..."
-                            className="flex-1 text-[14px] bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none"
+                            className="flex-1 text-[14px] bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none border-none"
                         />
                         {query && (
                             <button
@@ -82,7 +80,6 @@ function SearchModal({ onClose }: { onClose: () => void }) {
                         )}
                     </div>
 
-                    {/* 결과 */}
                     <div className="max-h-[300px] overflow-y-auto">
                         {isSearching && (
                             <div className="px-4 py-4 text-center text-[13px] text-[var(--text-tertiary)]">검색 중...</div>
@@ -113,7 +110,6 @@ function SearchModal({ onClose }: { onClose: () => void }) {
                         })}
                     </div>
 
-                    {/* 힌트 */}
                     {!query && (
                         <div className="px-4 py-3 text-center text-[13px] text-[var(--text-tertiary)]">
                             종목명(삼성전자) 또는 종목코드(005930)로 검색
@@ -125,25 +121,46 @@ function SearchModal({ onClose }: { onClose: () => void }) {
     );
 }
 
+const NAV_LINKS = [
+    { href: '/', label: '홈' },
+    { href: '/guide', label: '가이드' },
+];
+
 export default function Header() {
     const [showSearch, setShowSearch] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
-    // Ctrl+K / Cmd+K 단축키
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
                 setShowSearch(true);
             }
+            if (e.key === 'Escape' && showMobileMenu) {
+                setShowMobileMenu(false);
+            }
         };
         window.addEventListener('keydown', handleKey);
         return () => window.removeEventListener('keydown', handleKey);
+    }, [showMobileMenu]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 0);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
         <>
-            <header className="h-12 border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-[var(--bg-primary)] sticky top-0 z-50">
-                <div className="flex items-center gap-3">
+            <header
+                className={`h-12 border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-[var(--bg-primary)] sticky top-0 z-50 transition-shadow duration-200 ${
+                    scrolled ? 'shadow-[var(--shadow-header)]' : ''
+                }`}
+            >
+                <div className="flex items-center gap-4">
                     <Link href="/" className="flex items-center">
                         <Image
                             src="/teburn-text-logo.svg"
@@ -153,40 +170,89 @@ export default function Header() {
                             priority
                         />
                     </Link>
-                    <span className="text-[12px] font-medium text-[var(--accent-blue)] bg-[var(--accent-blue)]/10 px-1.5 py-0.5">BETA</span>
+                    {/* 데스크톱 네비 */}
+                    <nav className="hidden md:flex items-center gap-1 ml-2">
+                        {NAV_LINKS.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className="px-2.5 py-1.5 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded"
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                    </nav>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {/* 텔레그램 알림봇 */}
+                <div className="flex items-center gap-1.5">
+                    {/* 텔레그램 — 데스크톱 */}
                     <a
                         href="https://t.me/teburn_hot_bot"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 h-8 px-2.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+                        className="hidden sm:flex items-center gap-1.5 h-8 px-2.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded"
                         title="텔레그램 알림봇"
                     >
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                        >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                         </svg>
-                        <span className="text-[13px] hidden sm:inline">알림봇</span>
+                        <span className="text-[12px]">알림봇</span>
                     </a>
+
                     {/* 검색 버튼 */}
                     <button
                         onClick={() => setShowSearch(true)}
-                        className="flex items-center gap-1.5 h-8 px-2.5 border border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-colors"
+                        className="flex items-center gap-1.5 h-8 px-2.5 border border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-colors rounded"
                     >
                         <Search size={14} />
-                        <span className="text-[13px] hidden sm:inline">검색</span>
-                        <kbd className="text-[13px] hidden sm:inline opacity-50 ml-1">⌘K</kbd>
+                        <span className="text-[12px] hidden sm:inline">검색</span>
+                        <kbd className="text-[11px] hidden sm:inline opacity-40 ml-1">⌘K</kbd>
                     </button>
+
                     <ThemeToggle />
+
+                    {/* 모바일 햄버거 */}
+                    <button
+                        onClick={() => setShowMobileMenu(!showMobileMenu)}
+                        className="md:hidden flex items-center justify-center w-8 h-8 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+                    >
+                        {showMobileMenu ? <X size={18} /> : <Menu size={18} />}
+                    </button>
                 </div>
             </header>
+
+            {/* 모바일 메뉴 */}
+            {showMobileMenu && (
+                <>
+                <div className="md:hidden fixed inset-0 top-12 z-30" onClick={() => setShowMobileMenu(false)} />
+                <div className="md:hidden fixed inset-x-0 top-12 z-40 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-lg animate-slideUp">
+                    <nav className="p-3 space-y-1">
+                        {NAV_LINKS.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={() => setShowMobileMenu(false)}
+                                className="block px-3 py-2.5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                        <a
+                            href="https://t.me/teburn_hot_bot"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setShowMobileMenu(false)}
+                            className="flex items-center gap-2 px-3 py-2.5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                            </svg>
+                            텔레그램 알림봇
+                        </a>
+                    </nav>
+                </div>
+                </>
+            )}
 
             {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}
         </>

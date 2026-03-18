@@ -193,6 +193,7 @@ export default function IndexView() {
                     onClick={() => refetch()}
                     className="p-1 hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors"
                     title="새로고침"
+                    aria-label="새로고침"
                 >
                     <RefreshCw size={12} />
                 </button>

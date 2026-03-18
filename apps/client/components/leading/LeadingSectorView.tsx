@@ -2,19 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, Crown } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { fetchLeadingSectors, LeadingSector } from '@/lib/api/leading';
-
-function formatTradingValue(value: number): string {
-    const billion = value / 100000000;
-    if (billion >= 10000) {
-        return `${(billion / 10000).toFixed(1)}조`;
-    } else if (billion >= 1) {
-        return `${billion.toFixed(0)}억`;
-    } else {
-        return `${(value / 10000).toFixed(0)}만`;
-    }
-}
+import { formatTradingValue, formatDataDate } from '@/lib/utils/format';
+import { SkeletonCard } from '@/components/ui/Skeleton';
 
 function getScoreGrade(score: number): { label: string; color: string; bg: string } {
     if (score >= 80) return { label: '급등', color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]' };
@@ -24,12 +15,27 @@ function getScoreGrade(score: number): { label: string; color: string; bg: strin
     return { label: '급락', color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]' };
 }
 
+function getAccentColor(score: number): string {
+    if (score >= 80) return 'var(--rise-color)';
+    if (score >= 60) return '#f97316';
+    if (score >= 40) return 'var(--text-tertiary)';
+    if (score >= 20) return 'var(--accent-blue)';
+    return 'var(--fall-color)';
+}
+
 function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: number; onClick: () => void }) {
     const isPositive = sector.avgChangeRate > 0;
     const grade = getScoreGrade(sector.leadingScore);
+    const accentColor = getAccentColor(sector.leadingScore);
 
     return (
-        <div onClick={onClick} className="border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors">
+        <div
+            onClick={onClick}
+            className="border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors rounded overflow-hidden"
+        >
+            {/* 컬러 악센트 스트라이프 */}
+            <div className="h-[3px]" style={{ background: accentColor }} />
+
             {/* 헤더 */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -39,7 +45,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                     <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{sector.themeName}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`px-1 py-0.5 text-[9px] font-bold text-white ${grade.bg}`}>
+                    <span className={`px-1 py-0.5 text-[9px] font-bold text-white rounded-sm ${grade.bg}`}>
                         {grade.label}
                     </span>
                     <span className={`text-sm font-bold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
@@ -49,7 +55,6 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
             </div>
 
             <div className="px-3 py-2">
-                {/* 정보 */}
                 <div className="flex items-center gap-3 text-xs mb-2">
                     <span className="text-[var(--text-tertiary)]">
                         종목 <span className="text-[var(--text-secondary)] font-medium">{sector.stockCount}</span>
@@ -59,21 +64,23 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                     </span>
                 </div>
 
-                {/* 주도점수 바 */}
+                {/* 주도점수 바 — 그래디언트 */}
                 <div className="mb-2">
                     <div className="flex items-center justify-between text-[11px] mb-0.5">
                         <span className="text-[var(--text-tertiary)]">주도점수</span>
                         <span className={`font-semibold ${grade.color}`}>{sector.leadingScore.toFixed(0)}</span>
                     </div>
-                    <div className="h-[3px] bg-[var(--bg-tertiary)] overflow-hidden">
+                    <div className="h-[3px] bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                         <div
-                            className={`h-full ${grade.bg} transition-all`}
-                            style={{ width: `${Math.min(sector.leadingScore, 100)}%` }}
+                            className="h-full rounded-full transition-all"
+                            style={{
+                                width: `${Math.min(sector.leadingScore, 100)}%`,
+                                background: `linear-gradient(90deg, ${accentColor}88, ${accentColor})`,
+                            }}
                         />
                     </div>
                 </div>
 
-                {/* 대장주 */}
                 {sector.topStock && (
                     <div className="flex items-center gap-1.5 pt-2 border-t border-[var(--border-color)] text-xs">
                         <Crown size={10} className="text-amber-500 flex-shrink-0" />
@@ -92,7 +99,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
 
 export default function LeadingSectorView() {
     const router = useRouter();
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['leadingSectors'],
         queryFn: () => fetchLeadingSectors(20),
         refetchInterval: 60 * 1000,
@@ -102,23 +109,17 @@ export default function LeadingSectorView() {
     const risingSectors = sectors.filter((s) => s.avgChangeRate > 0);
     const fallingSectors = sectors.filter((s) => s.avgChangeRate <= 0);
 
-    const formatDataDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return `${date.toLocaleDateString('ko-KR', {
-            month: 'long',
-            day: 'numeric',
-        })} ${date.toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-        })}`;
-    };
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>로딩 중...</span>
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <div className="h-4 w-20 bg-[var(--bg-tertiary)] rounded animate-pulse" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <SkeletonCard key={i} />
+                    ))}
                 </div>
             </div>
         );
@@ -126,15 +127,15 @@ export default function LeadingSectorView() {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center h-64 text-[13px] text-[var(--text-tertiary)]">
-                데이터를 불러오는데 실패했습니다.
+            <div className="flex flex-col items-center justify-center h-64 gap-2">
+                <p className="text-[13px] text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
+                <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
     }
 
     return (
         <div className="space-y-4">
-            {/* 헤더 */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도섹터</h2>
@@ -147,11 +148,10 @@ export default function LeadingSectorView() {
                 )}
             </div>
 
-            {/* 상승 섹터 */}
             {risingSectors.length > 0 && (
                 <section>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-0.5 h-3 bg-[var(--rise-color)]" />
+                        <div className="w-0.5 h-3 bg-[var(--rise-color)] rounded-full" />
                         <span className="text-xs font-medium text-[var(--text-primary)]">상승 섹터</span>
                         <span className="text-[11px] text-[var(--text-tertiary)]">{risingSectors.length}</span>
                     </div>
@@ -163,11 +163,10 @@ export default function LeadingSectorView() {
                 </section>
             )}
 
-            {/* 하락 섹터 */}
             {fallingSectors.length > 0 && (
                 <section>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-0.5 h-3 bg-[var(--fall-color)]" />
+                        <div className="w-0.5 h-3 bg-[var(--fall-color)] rounded-full" />
                         <span className="text-xs font-medium text-[var(--text-primary)]">하락 섹터</span>
                         <span className="text-[11px] text-[var(--text-tertiary)]">{fallingSectors.length}</span>
                     </div>

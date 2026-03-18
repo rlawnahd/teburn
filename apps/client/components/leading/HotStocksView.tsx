@@ -2,41 +2,44 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { fetchHotStocks, HotStock } from '@/lib/api/leading';
+import { formatTradingValue, formatDataDate } from '@/lib/utils/format';
+import GradeBadge from '@/components/ui/GradeBadge';
+import { SkeletonRow } from '@/components/ui/Skeleton';
+import EmptyState from '@/components/ui/EmptyState';
 
-function formatTradingValue(value: number): string {
-    const billion = value / 100000000;
-    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
-    if (billion >= 1) return `${billion.toFixed(0)}억`;
-    return `${(value / 10000).toFixed(0)}만`;
-}
-
-function getGradeStyle(grade: HotStock['grade']): { bg: string; text: string; label: string } {
-    switch (grade) {
-        case 'S':
-            return { bg: 'bg-[var(--rise-color)]', text: 'text-white', label: 'S' };
-        case 'A':
-            return { bg: 'bg-orange-500', text: 'text-white', label: 'A' };
-        case 'B':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]', label: 'B' };
-        case 'C':
-            return { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]', label: 'C' };
-        case 'D':
-            return { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]', label: 'D' };
-    }
+function ScoreMiniGauge({ score }: { score: number }) {
+    return (
+        <div className="w-8 flex items-center gap-1">
+            <div className="flex-1 h-[3px] bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                        width: `${Math.min(score, 100)}%`,
+                        background: score >= 70
+                            ? 'var(--grade-s)'
+                            : score >= 50
+                            ? 'var(--grade-a)'
+                            : 'var(--text-tertiary)',
+                    }}
+                />
+            </div>
+        </div>
+    );
 }
 
 function StockRow({
     stock,
     rank,
     onStockClick,
+    onThemeClick,
 }: {
     stock: HotStock;
     rank: number;
     onStockClick: (stockCode: string) => void;
+    onThemeClick: (theme: string) => void;
 }) {
-    const gradeStyle = getGradeStyle(stock.grade);
     const isPositive = stock.changeRate > 0;
     const isLimitUp = stock.changeRate >= 29.9;
 
@@ -45,20 +48,16 @@ function StockRow({
             onClick={() => onStockClick(stock.stockCode)}
             className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left"
         >
-            {/* 순위 */}
             <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                 {rank}
             </span>
 
-            {/* 종목명 + 테마 */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                     <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
-                    <span className={`px-1 py-0.5 text-[9px] font-bold ${gradeStyle.bg} ${gradeStyle.text} flex-shrink-0`}>
-                        {gradeStyle.label}
-                    </span>
+                    <GradeBadge grade={stock.grade} />
                     {isLimitUp && (
-                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0">
+                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                             상한가
                         </span>
                     )}
@@ -66,7 +65,12 @@ function StockRow({
                 {stock.themes.length > 0 && (
                     <div className="flex items-center gap-1 mt-0.5">
                         {stock.themes.slice(0, 2).map((theme) => (
-                            <span key={theme} className="text-[11px] text-[var(--text-tertiary)] truncate max-w-[60px]">
+                            <span
+                                key={theme}
+                                role="button"
+                                onClick={(e) => { e.stopPropagation(); onThemeClick(theme); }}
+                                className="text-[11px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
+                            >
                                 {theme}
                             </span>
                         ))}
@@ -82,7 +86,6 @@ function StockRow({
                 )}
             </div>
 
-            {/* 가격 + 등락률 */}
             <div className="text-right flex-shrink-0">
                 <div className="text-xs text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
                 <div className={`text-[11px] font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
@@ -90,14 +93,13 @@ function StockRow({
                 </div>
             </div>
 
-            {/* 거래대금 */}
             <div className="w-12 text-right flex-shrink-0">
                 <div className="text-[11px] text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
             </div>
 
-            {/* 점수 */}
-            <div className="w-8 text-right flex-shrink-0">
+            <div className="w-10 flex items-center gap-1 flex-shrink-0 justify-end">
                 <span className="text-[13px] font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
+                <ScoreMiniGauge score={stock.totalScore} />
             </div>
         </button>
     );
@@ -106,11 +108,10 @@ function StockRow({
 export default function HotStocksView() {
     const router = useRouter();
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['hotStocks'],
         queryFn: () => fetchHotStocks(30),
         refetchInterval: (query) => {
-            // 데이터가 비어있으면 5초마다 재시도, 있으면 60초
             const stocks = query.state.data?.stocks;
             return (!stocks || stocks.length === 0) ? 5000 : 60 * 1000;
         },
@@ -126,10 +127,14 @@ export default function HotStocksView() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>주도주 분석 중...</span>
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <div className="h-4 w-20 bg-[var(--bg-tertiary)] rounded animate-pulse" />
+                </div>
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <SkeletonRow key={i} cols={5} />
+                    ))}
                 </div>
             </div>
         );
@@ -137,8 +142,9 @@ export default function HotStocksView() {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center h-64 text-[13px] text-[var(--text-tertiary)]">
-                데이터를 불러오는데 실패했습니다.
+            <div className="flex flex-col items-center justify-center h-64 gap-2">
+                <p className="text-[13px] text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
+                <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
     }
@@ -147,36 +153,31 @@ export default function HotStocksView() {
     const warmStocks = stocks.filter((s) => s.grade === 'A');
     const otherStocks = stocks.filter((s) => !['S', 'A'].includes(s.grade));
 
-    const formatDataDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return `${date.toLocaleDateString('ko-KR', {
-            month: 'long',
-            day: 'numeric',
-        })} ${date.toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-        })}`;
-    };
-
-    const renderSection = (title: string, description: string, sectionStocks: HotStock[], startRank: number) => {
+    const renderSection = (
+        title: string,
+        description: string,
+        sectionStocks: HotStock[],
+        startRank: number,
+        borderColor: string,
+    ) => {
         if (sectionStocks.length === 0) return null;
         return (
             <section>
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
+                        <div className={`w-[3px] h-3.5 rounded-full`} style={{ background: borderColor }} />
                         <span className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</span>
                         <span className="text-[11px] text-[var(--text-tertiary)]">{description}</span>
                     </div>
                     <span className="text-[11px] text-[var(--text-tertiary)]">{sectionStocks.length}종목</span>
                 </div>
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)]">
-                    {/* 테이블 헤더 */}
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden" style={{ borderLeftColor: borderColor, borderLeftWidth: '3px' }}>
                     <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                         <span className="w-5 text-center">#</span>
                         <span className="flex-1">종목</span>
                         <span className="text-right">현재가</span>
                         <span className="w-12 text-right">거래대금</span>
-                        <span className="w-8 text-right">점수</span>
+                        <span className="w-10 text-right">점수</span>
                     </div>
                     {sectionStocks.map((stock, i) => (
                         <StockRow
@@ -184,6 +185,7 @@ export default function HotStocksView() {
                             stock={stock}
                             rank={startRank + i}
                             onStockClick={handleStockClick}
+                            onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
                         />
                     ))}
                 </div>
@@ -193,7 +195,6 @@ export default function HotStocksView() {
 
     return (
         <div className="space-y-4">
-            {/* 헤더 */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도주 분석</h2>
@@ -206,24 +207,15 @@ export default function HotStocksView() {
                 )}
             </div>
 
-            {renderSection('S등급', '70점 이상', hotStocks, 1)}
-            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1)}
-            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1)}
+            {renderSection('S등급', '70점 이상', hotStocks, 1, 'var(--grade-s)')}
+            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1, 'var(--grade-a)')}
+            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1, 'var(--text-tertiary)')}
 
             {stocks.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-48 text-[var(--text-tertiary)]">
-                    {!data?.lastUpdateTime ? (
-                        <>
-                            <RefreshCw size={24} className="mb-2 opacity-50 animate-spin" />
-                            <p className="text-[13px]">데이터 준비 중... (약 1분)</p>
-                        </>
-                    ) : (
-                        <>
-                            <Activity size={24} className="mb-2 opacity-30" />
-                            <p className="text-[13px]">분석할 종목이 없습니다</p>
-                        </>
-                    )}
-                </div>
+                <EmptyState
+                    icon={Activity}
+                    title={!data?.lastUpdateTime ? '데이터 준비 중... (약 1분)' : '분석할 종목이 없습니다'}
+                />
             )}
         </div>
     );
