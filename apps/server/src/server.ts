@@ -1,4 +1,5 @@
 import express from 'express';
+import axios from 'axios';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -148,6 +149,11 @@ connectDB().then(async () => {
 
     app.listen(PORT, () => {
         console.log(`🚀 Server is running at http://localhost:${PORT}`);
+
+        // 서버 outbound IP 확인 (키움 REST API IP 등록용)
+        axios.get('https://api.ipify.org').then(res => {
+            console.log(`🌐 서버 Outbound IP: ${res.data}`);
+        }).catch(() => {});
 
         // 테마 자동 업데이트 스케줄러 시작 (1일 1회)
         startThemeUpdateScheduler();
