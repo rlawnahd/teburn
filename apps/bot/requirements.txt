@@ -1,7 +1,7 @@
-pymongo==4.10.1
-requests==2.32.3
-websocket-client==1.8.0
-pandas==2.2.3
-pandas-ta==0.3.14b1
-python-dotenv==1.0.1
-schedule==1.2.2
+pymongo
+requests
+websocket-client
+pandas
+pandas-ta
+python-dotenv
+schedule
