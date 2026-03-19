@@ -1,49 +1,59 @@
 /**
  * 수급 데이터 수집 서비스
- * KIS API를 통해 외국인/기관 순매수 데이터 수집
+ * Kiwoom API (외국인) + 네이버 금융 스크래핑 (기관) 통해 투자자별 매매동향 수집
  */
 import axios from 'axios';
 import StockSupplyHistory from '../models/StockSupplyHistory';
 import { themePriceCache } from './themePriceCache';
+import { getKiwoomAccessToken } from './kiwoomApi';
 
-// KIS API 설정
-const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
-const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
-const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
-
-// 토큰 캐시
-let accessToken: string | null = null;
-let tokenExpiry: Date | null = null;
+// Kiwoom API 설정
+const KIWOOM_IS_MOCK = process.env.KIWOOM_IS_MOCK === 'true';
+const KIWOOM_BASE_URL = KIWOOM_IS_MOCK ? 'https://mockapi.kiwoom.com' : 'https://api.kiwoom.com';
 
 /**
- * KIS API 액세스 토큰 발급
+ * Kiwoom API로 외국인 순매수 수량 조회 (ka10008)
  */
-async function getAccessToken(): Promise<string> {
-    // 기존 토큰이 유효하면 재사용
-    if (accessToken && tokenExpiry && new Date() < tokenExpiry) {
-        return accessToken;
-    }
-
+async function getKiwoomForeignNetBuy(stockCode: string): Promise<number | null> {
     try {
-        const response = await axios.post(`${KIS_BASE_URL}/oauth2/tokenP`, {
-            grant_type: 'client_credentials',
-            appkey: KIS_APP_KEY,
-            appsecret: KIS_APP_SECRET,
-        });
+        const token = await getKiwoomAccessToken();
 
-        accessToken = response.data.access_token;
-        // 토큰 만료 1시간 전으로 설정
-        tokenExpiry = new Date(Date.now() + 23 * 60 * 60 * 1000);
+        const response = await axios.post(
+            `${KIWOOM_BASE_URL}/api/dostk/frgnistt`,
+            { stk_cd: stockCode },
+            {
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    'api-id': 'ka10008',
+                    authorization: `Bearer ${token}`,
+                },
+            }
+        );
 
-        return accessToken!;
+        if (response.data.return_code !== 0) {
+            return null;
+        }
+
+        const rows = response.data.stk_frgnr;
+        if (!rows || rows.length === 0) {
+            return null;
+        }
+
+        // 첫 번째 항목이 최신(당일) 데이터
+        const todayRow = rows[0];
+        const foreignNetQty = parseInt(todayRow.chg_qty || '0', 10);
+
+        return foreignNetQty;
     } catch (error) {
-        console.error('❌ KIS 토큰 발급 실패:', error);
-        throw error;
+        return null;
     }
 }
 
 /**
  * 특정 종목의 투자자별 매매동향 조회 (당일)
+ * - 외국인: Kiwoom ka10008 API
+ * - 기관: 네이버 금융 스크래핑
+ * - 개인: -(외국인 + 기관)
  */
 async function getInvestorTrading(stockCode: string): Promise<{
     foreignNet: number;
@@ -51,41 +61,31 @@ async function getInvestorTrading(stockCode: string): Promise<{
     retailNet: number;
 } | null> {
     try {
-        const token = await getAccessToken();
+        const priceData = themePriceCache.getStockPrice(stockCode);
+        const price = priceData?.currentPrice || 0;
 
-        const response = await axios.get(
-            `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-investor`,
-            {
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                    authorization: `Bearer ${token}`,
-                    appkey: KIS_APP_KEY,
-                    appsecret: KIS_APP_SECRET,
-                    tr_id: 'FHKST01010900', // 주식현재가 투자자 API
-                },
-                params: {
-                    FID_COND_MRKT_DIV_CODE: 'J', // 주식
-                    FID_INPUT_ISCD: stockCode,
-                },
-            }
-        );
+        // 외국인 순매수: Kiwoom API
+        const foreignNetQty = await getKiwoomForeignNetBuy(stockCode);
 
-        if (response.data.rt_cd !== '0') {
+        // 기관 순매수: 네이버 금융 스크래핑
+        const naverData = await scrapeNaverInvestorData(stockCode);
+
+        // 외국인 데이터가 있으면 Kiwoom 우선, 없으면 네이버 fallback
+        const foreignNet = foreignNetQty !== null
+            ? foreignNetQty * price
+            : (naverData?.foreignNet ?? 0);
+
+        const instNet = naverData?.instNet ?? 0;
+
+        // 개인 = -(외국인 + 기관)
+        const retailNet = -(foreignNet + instNet);
+
+        if (foreignNetQty === null && !naverData) {
             return null;
         }
 
-        const data = response.data.output;
-
-        // 당일 순매수 금액 (원 단위)
-        // 외국인: prsn_ntby_qty * 현재가 추정 또는 직접 금액 사용
-        // API 응답 필드에 따라 조정 필요
-        const foreignNet = parseInt(data.frgn_ntby_tr_pbmn || '0', 10); // 외국인 순매수 거래대금
-        const instNet = parseInt(data.orgn_ntby_tr_pbmn || '0', 10);    // 기관 순매수 거래대금
-        const retailNet = parseInt(data.prsn_ntby_tr_pbmn || '0', 10);  // 개인 순매수 거래대금
-
         return { foreignNet, instNet, retailNet };
     } catch (error) {
-        // API 호출 실패 시 null 반환
         return null;
     }
 }
@@ -173,13 +173,7 @@ export async function collectDailySupply(): Promise<number> {
         const stockName = stockSet.get(stockCode) || '';
 
         try {
-            // KIS API 먼저 시도
-            let data = await getInvestorTrading(stockCode);
-
-            // KIS API 실패 시 네이버 스크래핑 시도
-            if (!data) {
-                data = await scrapeNaverInvestorData(stockCode);
-            }
+            const data = await getInvestorTrading(stockCode);
 
             if (data) {
                 await StockSupplyHistory.findOneAndUpdate(

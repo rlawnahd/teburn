@@ -1,151 +1,20 @@
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
 import stockCodesData from '../data/stockCodes.json';
+import { getKiwoomAccessToken } from './kiwoomApi';
 
-dotenv.config();
+// 키움 REST API 설정
+const KIWOOM_IS_MOCK = process.env.KIWOOM_IS_MOCK === 'true';
 
-// KIS API 설정
-const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
-const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
-const KIS_ACCOUNT_NO = process.env.KIS_ACCOUNT_NO || '';
-const KIS_IS_MOCK = process.env.KIS_IS_MOCK === 'true';
-
-
-// API Base URL (모의투자 vs 실투자)
-const BASE_URL = KIS_IS_MOCK
-    ? 'https://openapivts.koreainvestment.com:29443'
-    : 'https://openapi.koreainvestment.com:9443';
+const BASE_URL = KIWOOM_IS_MOCK
+    ? 'https://mockapi.kiwoom.com'
+    : 'https://api.kiwoom.com';
 
 // 종목코드 매핑 (JSON 파일에서 로드)
 const STOCK_CODE_MAP: Record<string, string> = stockCodesData as Record<string, string>;
 
-// 토큰 캐시 파일 경로 (.cache 폴더, gitignore 대상)
-const CACHE_DIR = path.join(__dirname, '../../.cache');
-const TOKEN_CACHE_FILE = path.join(CACHE_DIR, 'kis-token.json');
-
-// 메모리 토큰 캐시
-let accessToken: string | null = null;
-let tokenExpireTime: number = 0;
-
-// 토큰 발급 중복 방지 및 실패 cooldown
-let tokenRequestInProgress: Promise<string> | null = null;
-let lastTokenFailTime: number = 0;
-const TOKEN_FAIL_COOLDOWN = 10000; // 토큰 발급 실패 후 10초 대기
-const TOKEN_MAX_RETRIES = 3; // 토큰 발급 최대 재시도 횟수
-
-// 토큰 캐시 파일 구조
-interface TokenCache {
-    accessToken: string;
-    expireTime: number;
-    createdAt: string;
-}
-
-// 파일에서 토큰 로드
-function loadTokenFromFile(): boolean {
-    try {
-        if (!fs.existsSync(TOKEN_CACHE_FILE)) {
-            return false;
-        }
-        const data = JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, 'utf-8')) as TokenCache;
-
-        // 유효한 토큰인지 확인 (만료 1분 전까지 유효)
-        if (data.accessToken && Date.now() < data.expireTime - 60000) {
-            accessToken = data.accessToken;
-            tokenExpireTime = data.expireTime;
-            console.log('✅ 캐시 파일에서 KIS 토큰 로드 완료');
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.log('⚠️ 토큰 캐시 파일 로드 실패, 새로 발급합니다');
-        return false;
-    }
-}
-
-// 파일에 토큰 저장
-function saveTokenToFile(): void {
-    try {
-        // 캐시 디렉토리 생성
-        if (!fs.existsSync(CACHE_DIR)) {
-            fs.mkdirSync(CACHE_DIR, { recursive: true });
-        }
-
-        const cache: TokenCache = {
-            accessToken: accessToken!,
-            expireTime: tokenExpireTime,
-            createdAt: new Date().toISOString(),
-        };
-        fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2));
-        console.log('💾 KIS 토큰 캐시 파일 저장 완료');
-    } catch (error) {
-        console.error('⚠️ 토큰 캐시 파일 저장 실패:', error);
-    }
-}
-
-// OAuth 토큰 발급
+// OAuth 토큰 발급 — kiwoomApi에 위임
 export async function getAccessToken(): Promise<string> {
-    // 1. 메모리 캐시 확인
-    if (accessToken && Date.now() < tokenExpireTime - 60000) {
-        return accessToken;
-    }
-
-    // 2. 파일 캐시 확인 (서버 재시작 후에도 토큰 유지)
-    if (loadTokenFromFile()) {
-        return accessToken!;
-    }
-
-    // 3. 이미 진행 중인 토큰 요청이 있으면 대기
-    if (tokenRequestInProgress) {
-        return tokenRequestInProgress;
-    }
-
-    // 4. 최근 토큰 발급 실패 시 cooldown
-    const timeSinceLastFail = Date.now() - lastTokenFailTime;
-    if (lastTokenFailTime > 0 && timeSinceLastFail < TOKEN_FAIL_COOLDOWN) {
-        throw new Error(`KIS API 토큰 발급 실패 (cooldown ${Math.ceil((TOKEN_FAIL_COOLDOWN - timeSinceLastFail) / 1000)}초 남음)`);
-    }
-
-    // 5. 새 토큰 발급 (중복 요청 방지 + 자동 재시도)
-    tokenRequestInProgress = (async () => {
-        for (let attempt = 1; attempt <= TOKEN_MAX_RETRIES; attempt++) {
-            try {
-                const response = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
-                    grant_type: 'client_credentials',
-                    appkey: KIS_APP_KEY,
-                    appsecret: KIS_APP_SECRET,
-                }, { timeout: 10000 });
-
-                accessToken = response.data.access_token;
-                // 토큰 만료시간 설정 (보통 24시간, 여유를 두고 23시간으로)
-                tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000;
-                lastTokenFailTime = 0;
-
-                // 파일에 저장 (재시작 대비)
-                saveTokenToFile();
-
-                console.log('✅ KIS API 토큰 발급 완료');
-                return accessToken!;
-            } catch (error: any) {
-                const errData = error.response?.data || error.message;
-                console.error(`❌ KIS API 토큰 발급 실패 (시도 ${attempt}/${TOKEN_MAX_RETRIES}):`, errData);
-
-                if (attempt < TOKEN_MAX_RETRIES) {
-                    // 재시도 전 대기 (2초, 4초)
-                    await new Promise(resolve => setTimeout(resolve, attempt * 2000));
-                } else {
-                    lastTokenFailTime = Date.now();
-                    throw new Error('KIS API 토큰 발급 실패');
-                }
-            }
-        }
-        throw new Error('KIS API 토큰 발급 실패');
-    })().finally(() => {
-        tokenRequestInProgress = null;
-    });
-
-    return tokenRequestInProgress;
+    return getKiwoomAccessToken();
 }
 
 // 종목명으로 종목코드 조회
@@ -166,52 +35,47 @@ export interface StockPrice {
     open: number;              // 시가
 }
 
-// 국내주식 현재가 조회 (재시도 로직 포함)
+// 주식기본정보 조회 — 키움 ka10001 (POST /api/dostk/stkinfo)
 export async function getStockPrice(stockCode: string, retries = 2): Promise<StockPrice | null> {
     try {
         const token = await getAccessToken();
 
-        const response = await axios.get(
-            `${BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
+        const response = await axios.post(
+            `${BASE_URL}/api/dostk/stkinfo`,
+            { stk_cd: stockCode },
             {
                 headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    'api-id': 'ka10001',
                     'authorization': `Bearer ${token}`,
-                    'appkey': KIS_APP_KEY,
-                    'appsecret': KIS_APP_SECRET,
-                    'tr_id': KIS_IS_MOCK ? 'FHKST01010100' : 'FHKST01010100',
                 },
-                params: {
-                    FID_COND_MRKT_DIV_CODE: 'J',  // 시장구분 (J: 주식)
-                    FID_INPUT_ISCD: stockCode,    // 종목코드
-                },
-                timeout: 5000,  // 5초 타임아웃
+                timeout: 5000,
             }
         );
 
-        const data = response.data.output;
+        const data = response.data;
 
-        if (!data || response.data.rt_cd !== '0') {
-            console.error(`주가 조회 실패: ${stockCode}`, response.data);
+        if (data.return_code !== 0) {
+            console.error(`주가 조회 실패: ${stockCode}`, data);
             return null;
         }
 
         return {
             stockCode,
-            stockName: data.hts_kor_isnm || '',
-            currentPrice: parseInt(data.stck_prpr) || 0,
-            changePrice: parseInt(data.prdy_vrss) || 0,
-            changeRate: parseFloat(data.prdy_ctrt) || 0,
-            volume: parseInt(data.acml_vol) || 0,
-            high: parseInt(data.stck_hgpr) || 0,
-            low: parseInt(data.stck_lwpr) || 0,
-            open: parseInt(data.stck_oprc) || 0,
+            stockName: data.stk_nm || '',
+            currentPrice: Math.abs(parseInt(data.cur_prc)) || 0,
+            changePrice: parseInt(data.pred_pre) || 0,
+            changeRate: parseFloat(data.flu_rt) || 0,
+            volume: parseInt(data.trde_qty) || 0,
+            high: Math.abs(parseInt(data.high_pric)) || 0,
+            low: Math.abs(parseInt(data.low_pric)) || 0,
+            open: Math.abs(parseInt(data.open_pric)) || 0,
         };
     } catch (error: any) {
         const errMsg = error.response?.data || error.message;
 
-        // socket hang up 등 네트워크 에러 시 재시도
-        if (retries > 0 && (error.code === 'ECONNRESET' || errMsg.includes('socket hang up'))) {
+        // 네트워크 에러 시 재시도
+        if (retries > 0 && (error.code === 'ECONNRESET' || String(errMsg).includes('socket hang up'))) {
             await new Promise(resolve => setTimeout(resolve, 200));
             return getStockPrice(stockCode, retries - 1);
         }
@@ -230,7 +94,7 @@ export async function getMultipleStockPrices(stockCodes: string[]): Promise<Map<
         if (price) {
             results.set(code, price);
         }
-        // API rate limit 방지 (초당 20건 제한, 여유있게 100ms)
+        // API rate limit 방지 (여유있게 100ms)
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
@@ -254,7 +118,7 @@ export async function getStockPricesByNames(stockNames: string[]): Promise<Map<s
             results.set(name, price);
         }
 
-        // API rate limit 방지 (초당 20건 제한, 여유있게 100ms)
+        // API rate limit 방지 (여유있게 100ms)
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
