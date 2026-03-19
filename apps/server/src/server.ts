@@ -17,6 +17,8 @@ import { warmupHotStocks } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
+import tradingRoutes from './routes/trading';
+import { startTradingBot } from './services/tradingBot';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -108,6 +110,7 @@ app.use('/api/stocks', stocksRoutes);
 app.use('/api/leading', leadingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/indices', indicesRoutes);
+app.use('/api/trading', tradingRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
@@ -166,6 +169,7 @@ connectDB().then(async () => {
         themePriceCache.startScheduler()
             .then(() => warmupHotStocks())
             .then(() => startTelegramBot())
+            .then(() => startTradingBot())
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
             });

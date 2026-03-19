@@ -1,17 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Flame, TrendingUp, LayoutGrid, Calendar, BarChart2 } from 'lucide-react';
+import { Flame, TrendingUp, LayoutGrid, Calendar, BarChart2, Bot } from 'lucide-react';
 import HotStocksView from '@/components/leading/HotStocksView';
 import TopTradingView from '@/components/leading/TopTradingView';
 import LeadingSectorView from '@/components/leading/LeadingSectorView';
 import CalendarView from '@/components/leading/CalendarView';
 import IndexView from '@/components/leading/IndexView';
+import TradingView from '@/components/leading/TradingView';
 import IndexWidget from '@/components/home/IndexWidget';
 
-type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index';
+type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index' | 'trading';
 
-const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'index'];
+const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'index', 'trading'];
 
 const TAB_CONFIG: { key: TabType; label: string; icon: typeof Flame }[] = [
     { key: 'hot', label: '주도주', icon: Flame },
@@ -19,6 +20,7 @@ const TAB_CONFIG: { key: TabType; label: string; icon: typeof Flame }[] = [
     { key: 'sectors', label: '섹터', icon: LayoutGrid },
     { key: 'calendar', label: '캘린더', icon: Calendar },
     { key: 'index', label: '지수', icon: BarChart2 },
+    { key: 'trading', label: '자동매매', icon: Bot },
 ];
 
 export default function HomeContent() {
@@ -72,6 +74,7 @@ export default function HomeContent() {
                     {activeTab === 'sectors' && <LeadingSectorView />}
                     {activeTab === 'calendar' && <CalendarView />}
                     {activeTab === 'index' && <IndexView />}
+                    {activeTab === 'trading' && <TradingView />}
                 </div>
             </main>
         </div>
