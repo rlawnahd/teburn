@@ -40,4 +40,8 @@ STRATEGY = {
     'BB_STD': 2.0,                 # 볼린저밴드 표준편차
 }
 
+# Express 서버 URL (hotness API 호출용)
+# Railway 내부: http://server.railway.internal:4000 또는 외부 도메인
+SERVER_API_URL = os.getenv('SERVER_API_URL', 'http://localhost:4000/api')
+
 SCAN_INTERVAL_SEC = 60  # 매수 신호 스캔 주기 (초)

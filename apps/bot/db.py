@@ -208,8 +208,9 @@ def get_hotness_data() -> list[dict]:
     """Node.js 서버가 계산한 hotness 캐시에서 S/A 등급 종목 가져오기
     (Express 서버의 /api/leading/hot 호출)"""
     import requests as req
+    from config import SERVER_API_URL
     try:
-        api_url = 'http://localhost:4000/api/leading/hot?limit=30'
+        api_url = f'{SERVER_API_URL}/leading/hot?limit=30'
         resp = req.get(api_url, timeout=10)
         data = resp.json()
         if data.get('success'):
