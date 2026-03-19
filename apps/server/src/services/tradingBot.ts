@@ -16,6 +16,7 @@ import {
     syncWithKiwoomBalance,
 } from './tradingService';
 import { SellReason } from '../models/Trade';
+import { startKiwoomWebSocket, onRealtimePrice, subscribeStocks, stopKiwoomWebSocket } from './kiwoomWebSocket';
 import mongoose from 'mongoose';
 
 const STRATEGY = {
@@ -161,6 +162,9 @@ async function executeTradingCycle(): Promise<void> {
                         newsCount: stock.newsCount,
                     },
                 });
+
+                // 매수 성공 → 실시간 구독 시작
+                subscribeStocks([stock.stockCode]);
                 break;
             } else {
                 console.error(`❌ 매수 주문 실패: ${stock.stockName} — ${buyResult.message}`);
@@ -192,19 +196,83 @@ export function startTradingBot(): void {
         return;
     }
 
-    console.log('🤖 자동매매 봇 시작 (5분 간격)');
+    console.log('🤖 자동매매 봇 시작 (5분 간격 + 실시간 손절/익절)');
     console.log(`  전략: Hotness S/A + 거래량 ${STRATEGY.MIN_VOLUME_SURGE}배+ + 상승률 ${STRATEGY.MIN_CHANGE_RATE}%+`);
     console.log(`  손절: ${STRATEGY.STOP_LOSS_RATE}% | 익절: +${STRATEGY.TAKE_PROFIT_RATE}% | 시간청산: 15:00`);
     console.log(`  일일 손실 한도: ${STRATEGY.DAILY_LOSS_LIMIT.toLocaleString()}원`);
 
+    // WebSocket 실시간 시세 시작 + 손절/익절 감시
+    startKiwoomWebSocket();
+    onRealtimePrice(handleRealtimePrice);
+
     botInterval = setInterval(executeTradingCycle, 5 * 60 * 1000);
     executeTradingCycle();
+}
+
+/**
+ * 실시간 체결가 수신 시 즉시 손절/익절 판단
+ */
+let isRealtimeSelling = false;
+
+async function handleRealtimePrice(stockCode: string, price: number, changeRate: number): Promise<void> {
+    if (isRealtimeSelling) return; // 중복 실행 방지
+
+    try {
+        const account = await getTodayAccount();
+        const position = account.positions.find(p => p.stockCode === stockCode);
+        if (!position) return;
+
+        const pnlRate = ((price - position.avgBuyPrice) / position.avgBuyPrice) * 100;
+
+        let sellReason: SellReason | null = null;
+        if (pnlRate <= STRATEGY.STOP_LOSS_RATE) sellReason = 'stop_loss';
+        else if (pnlRate >= STRATEGY.TAKE_PROFIT_RATE) sellReason = 'take_profit';
+
+        if (!sellReason) return;
+
+        // 일일 손실 한도 체크
+        const dailyPnl = await getTodayDailyLoss();
+        if (dailyPnl <= STRATEGY.DAILY_LOSS_LIMIT && sellReason !== 'take_profit') {
+            sellReason = 'daily_limit';
+        }
+
+        isRealtimeSelling = true;
+        console.log(`⚡ 실시간 매도 신호: ${position.stockName} @ ${price.toLocaleString()}원 (${pnlRate > 0 ? '+' : ''}${pnlRate.toFixed(2)}%, 사유: ${sellReason})`);
+
+        const sellResult = await placeSellOrder(stockCode, position.quantity);
+        if (sellResult.success) {
+            const amount = price * position.quantity;
+            await recordSell({
+                stockCode: position.stockCode,
+                stockName: position.stockName,
+                filledPrice: price,
+                quantity: position.quantity,
+                fee: Math.round(amount * STRATEGY.FEE_RATE),
+                tax: Math.round(amount * STRATEGY.TAX_RATE),
+                sellReason,
+                buyTradeId: position.buyTradeId,
+                avgBuyPrice: position.avgBuyPrice,
+                kiwoomOrderId: sellResult.orderId,
+            });
+
+            // 매도 후 구독 종목 갱신
+            const updatedAccount = await getTodayAccount();
+            subscribeStocks(updatedAccount.positions.map(p => p.stockCode));
+        } else {
+            console.error(`❌ 실시간 매도 실패: ${position.stockName} — ${sellResult.message}`);
+        }
+    } catch (error) {
+        console.error('❌ 실시간 손절/익절 에러:', error);
+    } finally {
+        isRealtimeSelling = false;
+    }
 }
 
 export function stopTradingBot(): void {
     if (botInterval) {
         clearInterval(botInterval);
         botInterval = null;
-        console.log('🛑 자동매매 봇 중지');
     }
+    stopKiwoomWebSocket();
+    console.log('🛑 자동매매 봇 중지');
 }
