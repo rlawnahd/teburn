@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getDashboardData, getTodayAccount } from '../services/tradingService';
+import { getDashboardData, getTodayAccount, syncWithKiwoomBalance } from '../services/tradingService';
 import { getMarketStatus } from '../utils/marketStatus';
 import Trade from '../models/Trade';
 
@@ -8,6 +8,8 @@ const router = Router();
 // 대시보드 데이터 (수익률, 포트폴리오, 통계)
 router.get('/dashboard', async (req: Request, res: Response) => {
     try {
+        // 대시보드 조회 시 키움 실잔고 동기화
+        await syncWithKiwoomBalance();
         const data = await getDashboardData();
         res.json({
             success: true,
