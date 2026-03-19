@@ -56,4 +56,7 @@ const NewsSchema: Schema = new Schema(
 // 최신순 정렬을 위한 인덱스
 NewsSchema.index({ createdAt: -1 });
 
+// 7일 후 자동 삭제
+NewsSchema.index({ crawledAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
+
 export default mongoose.model<INews>('News', NewsSchema);
