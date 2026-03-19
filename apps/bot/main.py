@@ -178,11 +178,26 @@ def main():
         print('❌ KIWOOM_APP_KEY 미설정. .env 확인 필요.')
         return
 
+    # Outbound IP 확인 (키움 IP 등록용)
+    try:
+        import requests as _req
+        ip = _req.get('https://api.ipify.org', timeout=5).text
+        print(f'🌐 봇 Outbound IP: {ip}')
+    except Exception:
+        pass
+
     # MongoDB 연결
     db.connect()
 
     # 토큰 발급 테스트
-    kiwoom_api.get_token()
+    try:
+        kiwoom_api.get_token()
+    except Exception as e:
+        print(f'⚠️ 토큰 발급 실패 — 키움 IP 등록 확인 필요: {e}')
+        print('  위에 표시된 IP를 키움 openapi.kiwoom.com에서 등록하세요.')
+        print('  등록 후 재배포하면 정상 동작합니다.')
+        print('  장 외 시간에는 토큰 발급이 안 될 수 있습니다. 대기합니다...')
+        # 크래시하지 않고 대기 (장 시작 시 재시도)
 
     # WebSocket 실시간 시세 시작
     kiwoom_ws.on_realtime_price(handle_realtime_price)
