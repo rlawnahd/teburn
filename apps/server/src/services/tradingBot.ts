@@ -196,7 +196,7 @@ export function startTradingBot(): void {
         return;
     }
 
-    console.log('🤖 자동매매 봇 시작 (5분 간격 + 실시간 손절/익절)');
+    console.log('🤖 자동매매 봇 시작 (1분 간격 + 실시간 손절/익절)');
     console.log(`  전략: Hotness S/A + 거래량 ${STRATEGY.MIN_VOLUME_SURGE}배+ + 상승률 ${STRATEGY.MIN_CHANGE_RATE}%+`);
     console.log(`  손절: ${STRATEGY.STOP_LOSS_RATE}% | 익절: +${STRATEGY.TAKE_PROFIT_RATE}% | 시간청산: 15:00`);
     console.log(`  일일 손실 한도: ${STRATEGY.DAILY_LOSS_LIMIT.toLocaleString()}원`);
@@ -205,7 +205,7 @@ export function startTradingBot(): void {
     startKiwoomWebSocket();
     onRealtimePrice(handleRealtimePrice);
 
-    botInterval = setInterval(executeTradingCycle, 5 * 60 * 1000);
+    botInterval = setInterval(executeTradingCycle, 1 * 60 * 1000); // 1분 간격
     executeTradingCycle();
 }
 
