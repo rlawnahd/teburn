@@ -13,6 +13,7 @@ import {
     recordSell,
     updatePositionPrices,
     getTodayDailyLoss,
+    syncWithKiwoomBalance,
 } from './tradingService';
 import { SellReason } from '../models/Trade';
 import mongoose from 'mongoose';
@@ -78,6 +79,9 @@ async function executeTradingCycle(): Promise<void> {
         const timeInMinutes = kstNow.getHours() * 60 + kstNow.getMinutes();
 
         if (timeInMinutes < STRATEGY.TRADE_START_MINUTES) return;
+
+        // 키움 실잔고 동기화
+        await syncWithKiwoomBalance();
 
         const account = await getTodayAccount();
         const hotStocks = await getTopHotStocks(30);

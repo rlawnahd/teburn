@@ -1,8 +1,9 @@
 import Trade, { ITrade, SellReason } from '../models/Trade';
 import TradingAccount, { ITradingAccount, IPosition } from '../models/TradingAccount';
+import { getAccountBalance, getCashBalance, isKiwoomConfigured } from './kiwoomApi';
 import mongoose from 'mongoose';
 
-const INITIAL_CAPITAL = 1000000;
+const DEFAULT_INITIAL_CAPITAL = 1000000;
 
 function getTodayDateKey(): string {
     const now = new Date();
@@ -21,10 +22,10 @@ export async function getTodayAccount(): Promise<ITradingAccount> {
 
     account = await TradingAccount.create({
         dateKey: today,
-        initialCapital: INITIAL_CAPITAL,
-        cash: yesterday ? yesterday.cash : INITIAL_CAPITAL,
+        initialCapital: DEFAULT_INITIAL_CAPITAL,
+        cash: yesterday ? yesterday.cash : DEFAULT_INITIAL_CAPITAL,
         positions: yesterday ? yesterday.positions : [],
-        totalValue: yesterday ? yesterday.totalValue : INITIAL_CAPITAL,
+        totalValue: yesterday ? yesterday.totalValue : DEFAULT_INITIAL_CAPITAL,
         totalPnl: yesterday ? yesterday.totalPnl : 0,
         totalPnlRate: yesterday ? yesterday.totalPnlRate : 0,
         dailyPnl: 0,
@@ -145,7 +146,7 @@ export async function recordSell(params: {
     );
     account.dailyPnl += pnl;
     account.totalPnl += pnl;
-    account.totalPnlRate = ((account.totalValue - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100;
+    account.totalPnlRate = ((account.totalValue - account.initialCapital) / account.initialCapital) * 100;
     account.todayTradeCount += 1;
     if (pnl > 0) account.winCount += 1;
     else account.loseCount += 1;
@@ -174,8 +175,65 @@ export async function updatePositionPrices(priceMap: Map<string, number>): Promi
         account.totalValue = account.cash + account.positions.reduce(
             (sum, p) => sum + p.currentPrice * p.quantity, 0
         );
-        account.totalPnlRate = ((account.totalValue - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100;
+        account.totalPnlRate = ((account.totalValue - account.initialCapital) / account.initialCapital) * 100;
         await account.save();
+    }
+}
+
+/**
+ * 키움 실제 잔고와 동기화
+ */
+export async function syncWithKiwoomBalance(): Promise<void> {
+    if (!isKiwoomConfigured()) return;
+
+    try {
+        const [balance, cash] = await Promise.all([
+            getAccountBalance(),
+            getCashBalance(),
+        ]);
+
+        if (!balance && cash === null) return;
+
+        const account = await getTodayAccount();
+
+        // 예수금 동기화
+        if (cash !== null) {
+            account.cash = cash;
+        }
+
+        // 잔고 동기화
+        if (balance) {
+            account.totalValue = balance.estimatedAsset || (account.cash + balance.totalEvalAmount);
+            account.totalPnl = balance.totalPnl;
+            account.totalPnlRate = balance.totalPnlRate;
+
+            // initialCapital: 첫 동기화 시 추정예탁자산으로 설정
+            if (account.initialCapital === DEFAULT_INITIAL_CAPITAL && balance.estimatedAsset > 0) {
+                account.initialCapital = balance.estimatedAsset;
+            }
+
+            // 보유 종목 동기화
+            if (balance.positions.length > 0) {
+                account.positions = balance.positions
+                    .filter(p => p.quantity > 0)
+                    .map(p => ({
+                        stockCode: p.stockCode,
+                        stockName: p.stockName,
+                        quantity: p.quantity,
+                        avgBuyPrice: p.avgBuyPrice,
+                        currentPrice: p.currentPrice,
+                        pnl: p.pnl,
+                        pnlRate: p.pnlRate,
+                        buyTradeId: new mongoose.Types.ObjectId(),
+                        boughtAt: new Date(),
+                    }));
+            }
+        }
+
+        await account.save();
+        console.log(`🔄 키움 잔고 동기화 완료 — 현금: ${account.cash.toLocaleString()}원, 총평가: ${account.totalValue.toLocaleString()}원`);
+    } catch (error) {
+        console.error('❌ 키움 잔고 동기화 실패:', error);
     }
 }
 
