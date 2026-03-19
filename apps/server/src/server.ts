@@ -175,7 +175,7 @@ connectDB().then(async () => {
         themePriceCache.startScheduler()
             .then(() => warmupHotStocks())
             .then(() => startTelegramBot())
-            .then(() => startTradingBot())
+            // .then(() => startTradingBot())  // Python 봇으로 대체 (apps/bot)
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
             });
