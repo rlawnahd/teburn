@@ -27,7 +27,7 @@ export function SkeletonRow({ cols = 4 }: { cols?: number }) {
 
 export function SkeletonCard() {
     return (
-        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] p-3 space-y-2.5">
+        <div className="card p-3 space-y-2.5">
             <div className="flex items-center justify-between">
                 <Skeleton className="h-4 w-20 rounded-sm" />
                 <Skeleton className="h-4 w-14 rounded-sm" />
@@ -38,6 +38,19 @@ export function SkeletonCard() {
                 <Skeleton className="h-3 w-3 rounded-full" />
                 <Skeleton className="h-3 w-16 rounded-sm" />
             </div>
+        </div>
+    );
+}
+
+export function SkeletonKpi() {
+    return (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded overflow-hidden">
+            {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="bg-[var(--bg-primary)] px-3 py-2.5 flex flex-col items-center gap-1">
+                    <Skeleton className="h-5 w-10 rounded-sm" />
+                    <Skeleton className="h-3 w-12 rounded-sm" />
+                </div>
+            ))}
         </div>
     );
 }
