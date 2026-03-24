@@ -57,8 +57,8 @@ function SearchModal({ onClose }: { onClose: () => void }) {
 
     return (
         <div className="fixed inset-0 z-[100]">
-            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative max-w-lg mx-3 sm:mx-auto mt-12">
+            <div className="absolute inset-0 bg-black/40 animate-backdropIn" onClick={onClose} />
+            <div className="relative max-w-lg mx-3 sm:mx-auto mt-12 animate-scaleIn">
                 <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-lg overflow-hidden">
                     <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-color)]">
                         <Search size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
@@ -225,7 +225,7 @@ export default function Header() {
             {showMobileMenu && (
                 <>
                 <div className="md:hidden fixed inset-0 top-12 z-30" onClick={() => setShowMobileMenu(false)} />
-                <div className="md:hidden fixed inset-x-0 top-12 z-40 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-lg animate-slideUp">
+                <div className="md:hidden fixed inset-x-0 top-12 z-40 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-lg animate-slideDown">
                     <nav className="p-3 space-y-1">
                         {NAV_LINKS.map((link) => (
                             <Link

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import Theme from '../models/Theme';
-import { getThemeHistory } from '../services/themeHistoryService';
+import { getThemeHistory, getRealtimeHistory } from '../services/themeHistoryService';
 import { updateAllThemes } from '../services/themeCrawler';
 import { themePriceCache } from '../services/themePriceCache';
 import { getMarketStatus } from '../utils/marketStatus';
@@ -216,6 +216,61 @@ router.get('/:themeName/history', async (req: Request, res: Response) => {
             success: false,
             message: error.message || '테마 히스토리 조회 중 오류가 발생했습니다.',
         });
+    }
+});
+
+// 테마 흐름 타임라인 — 상위 테마들의 장중 시간대별 활성도
+router.get('/timeline/today', async (_req: Request, res: Response) => {
+    try {
+        // 현재 테마 가격에서 상위 15개 테마 선정
+        const pricesData = themePriceCache.getAllThemePrices();
+        const topThemes = pricesData.themes
+            .sort((a, b) => Math.abs(b.avgChangeRate) - Math.abs(a.avgChangeRate))
+            .slice(0, 15);
+
+        const timeline = topThemes.map(theme => {
+            const history = getRealtimeHistory(theme.themeName);
+
+            // 30분 간격으로 집계
+            const slots: { time: string; avgChangeRate: number; tradingActivity: number }[] = [];
+            const slotMap = new Map<string, { rates: number[]; count: number }>();
+
+            for (const item of history) {
+                const d = new Date(item.timestamp);
+                const hour = d.getHours();
+                const halfHour = d.getMinutes() < 30 ? '00' : '30';
+                const slotKey = `${String(hour).padStart(2, '0')}:${halfHour}`;
+
+                if (!slotMap.has(slotKey)) {
+                    slotMap.set(slotKey, { rates: [], count: 0 });
+                }
+                const slot = slotMap.get(slotKey)!;
+                slot.rates.push(item.avgChangeRate);
+                slot.count++;
+            }
+
+            for (const [time, data] of slotMap) {
+                const avg = data.rates.reduce((a, b) => a + b, 0) / data.rates.length;
+                slots.push({ time, avgChangeRate: avg, tradingActivity: data.count });
+            }
+
+            slots.sort((a, b) => a.time.localeCompare(b.time));
+
+            return {
+                themeName: theme.themeName,
+                currentRate: theme.avgChangeRate,
+                slots,
+            };
+        });
+
+        res.json({
+            success: true,
+            data: timeline,
+            marketStatus: getMarketStatus(),
+        });
+    } catch (error) {
+        console.error('테마 타임라인 조회 에러:', error);
+        res.status(500).json({ success: false, message: '테마 타임라인 조회 중 오류가 발생했습니다.' });
     }
 });
 

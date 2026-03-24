@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useRef, useEffect, useState } from 'react';
 import { Activity } from 'lucide-react';
 import { fetchHotStocks, HotStock } from '@/lib/api/leading';
 import { formatTradingValue, formatDataDate } from '@/lib/utils/format';
@@ -29,28 +30,57 @@ function ScoreMiniGauge({ score }: { score: number }) {
     );
 }
 
+type PriceFlash = 'rise' | 'fall' | null;
+type RankChange = { delta: number; isNew: boolean };
+
 function StockRow({
     stock,
     rank,
+    priceFlash,
+    rankChange,
+    staggerIndex,
     onStockClick,
     onThemeClick,
 }: {
     stock: HotStock;
     rank: number;
+    priceFlash: PriceFlash;
+    rankChange: RankChange | null;
+    staggerIndex: number;
     onStockClick: (stockCode: string) => void;
     onThemeClick: (theme: string) => void;
 }) {
     const isPositive = stock.changeRate > 0;
     const isLimitUp = stock.changeRate >= 29.9;
 
+    const flashClass = priceFlash === 'rise'
+        ? 'animate-flash-rise'
+        : priceFlash === 'fall'
+        ? 'animate-flash-fall'
+        : '';
+
     return (
         <button
             onClick={() => onStockClick(stock.stockCode)}
-            className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left"
+            className={`w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
+            style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                 {rank}
             </span>
+
+            {/* 순위 변동 뱃지 */}
+            <div className="w-6 flex-shrink-0 text-center">
+                {rankChange?.isNew ? (
+                    <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1 py-0.5 rounded-sm">NEW</span>
+                ) : rankChange && rankChange.delta !== 0 ? (
+                    <span className={`text-[10px] font-semibold ${rankChange.delta > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                        {rankChange.delta > 0 ? '▲' : '▼'}{Math.abs(rankChange.delta)}
+                    </span>
+                ) : (
+                    <span className="text-[10px] text-[var(--text-disabled)]">—</span>
+                )}
+            </div>
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -105,6 +135,51 @@ function StockRow({
     );
 }
 
+// 이전 데이터와 비교하여 가격 플래시/순위 변동 계산
+function usePriceFlashAndRank(stocks: HotStock[]) {
+    const prevStocksRef = useRef<HotStock[]>([]);
+    const [flashes, setFlashes] = useState<Record<string, PriceFlash>>({});
+    const [rankChanges, setRankChanges] = useState<Record<string, RankChange>>({});
+
+    useEffect(() => {
+        const prev = prevStocksRef.current;
+        if (prev.length === 0) {
+            prevStocksRef.current = stocks;
+            return;
+        }
+
+        const prevPriceMap = new Map(prev.map(s => [s.stockCode, s.currentPrice]));
+        const prevRankMap = new Map(prev.map((s, i) => [s.stockCode, i]));
+
+        const newFlashes: Record<string, PriceFlash> = {};
+        const newRankChanges: Record<string, RankChange> = {};
+
+        stocks.forEach((stock, i) => {
+            const prevPrice = prevPriceMap.get(stock.stockCode);
+            if (prevPrice !== undefined && prevPrice !== stock.currentPrice) {
+                newFlashes[stock.stockCode] = stock.currentPrice > prevPrice ? 'rise' : 'fall';
+            }
+
+            const prevRank = prevRankMap.get(stock.stockCode);
+            if (prevRank === undefined) {
+                newRankChanges[stock.stockCode] = { delta: 0, isNew: true };
+            } else {
+                newRankChanges[stock.stockCode] = { delta: prevRank - i, isNew: false };
+            }
+        });
+
+        setFlashes(newFlashes);
+        setRankChanges(newRankChanges);
+        prevStocksRef.current = stocks;
+
+        // 1.5초 후 플래시 해제
+        const timer = setTimeout(() => setFlashes({}), 1500);
+        return () => clearTimeout(timer);
+    }, [stocks]);
+
+    return { flashes, rankChanges };
+}
+
 export default function HotStocksView() {
     const router = useRouter();
 
@@ -120,6 +195,7 @@ export default function HotStocksView() {
     });
 
     const stocks = data?.stocks || [];
+    const { flashes, rankChanges } = usePriceFlashAndRank(stocks);
 
     const handleStockClick = (stockCode: string) => {
         router.push(`/stocks/${encodeURIComponent(stockCode)}`);
@@ -174,6 +250,7 @@ export default function HotStocksView() {
                 <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden" style={{ borderLeftColor: borderColor, borderLeftWidth: '3px' }}>
                     <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                         <span className="w-5 text-center">#</span>
+                        <span className="w-6 text-center">변동</span>
                         <span className="flex-1">종목</span>
                         <span className="text-right">현재가</span>
                         <span className="w-12 text-right">거래대금</span>
@@ -184,6 +261,9 @@ export default function HotStocksView() {
                             key={stock.stockCode}
                             stock={stock}
                             rank={startRank + i}
+                            priceFlash={flashes[stock.stockCode] || null}
+                            rankChange={rankChanges[stock.stockCode] || null}
+                            staggerIndex={i}
                             onStockClick={handleStockClick}
                             onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
                         />

@@ -1,10 +1,11 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useRef, useEffect, useState } from 'react';
 import { fetchIndexData, IndexData } from '@/lib/api/indices';
 import { Skeleton } from '@/components/ui/Skeleton';
 
-function IndexCard({ data, label, onClick }: { data: IndexData | null; label: string; onClick: () => void }) {
+function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; label: string; flash: 'rise' | 'fall' | null; onClick: () => void }) {
     if (!data) {
         return (
             <button
@@ -24,10 +25,12 @@ function IndexCard({ data, label, onClick }: { data: IndexData | null; label: st
     const changeColor = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
     const bgTint = isPositive ? 'bg-[var(--rise-bg)]' : isNegative ? 'bg-[var(--fall-bg)]' : 'bg-[var(--bg-primary)]';
 
+    const flashClass = flash === 'rise' ? 'animate-flash-rise' : flash === 'fall' ? 'animate-flash-fall' : '';
+
     return (
         <button
             onClick={onClick}
-            className={`flex items-center justify-between px-2.5 py-1.5 ${bgTint} hover:brightness-95 transition-all cursor-pointer text-left`}
+            className={`flex items-center justify-between px-2.5 py-1.5 ${bgTint} hover:brightness-95 transition-all cursor-pointer text-left ${flashClass}`}
         >
             <div className="min-w-0 flex-1">
                 <div className="text-[12px] text-[var(--text-tertiary)] truncate">{data.name}</div>
@@ -55,6 +58,31 @@ export default function IndexWidget({ onTabChange }: { onTabChange: (tab: string
         retryDelay: (attempt) => Math.min(attempt * 3000, 10000),
     });
 
+    // 지수 가격 플래시
+    const prevDataRef = useRef<typeof data>(null);
+    const [flashes, setFlashes] = useState<Record<string, 'rise' | 'fall' | null>>({});
+
+    useEffect(() => {
+        if (!data || !prevDataRef.current) { prevDataRef.current = data; return; }
+        const prev = prevDataRef.current;
+        const newFlashes: Record<string, 'rise' | 'fall'> = {};
+        const pairs: [string, IndexData | null | undefined, IndexData | null | undefined][] = [
+            ['kospi', prev.kospiIndex, data.kospiIndex],
+            ['kosdaq', prev.kosdaqIndex, data.kosdaqIndex],
+            ['kospiFuture', prev.kospi, data.kospi],
+            ['nasdaq', prev.nasdaq, data.nasdaq],
+        ];
+        pairs.forEach(([key, p, c]) => {
+            if (p && c && p.currentPrice !== c.currentPrice) {
+                newFlashes[key] = c.currentPrice > p.currentPrice ? 'rise' : 'fall';
+            }
+        });
+        setFlashes(newFlashes);
+        prevDataRef.current = data;
+        const timer = setTimeout(() => setFlashes({}), 1500);
+        return () => clearTimeout(timer);
+    }, [data]);
+
     if (isLoading) {
         return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded mb-2 overflow-hidden">
@@ -70,10 +98,10 @@ export default function IndexWidget({ onTabChange }: { onTabChange: (tab: string
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded mb-2 overflow-hidden">
-            <IndexCard data={data?.kospiIndex ?? null} label="코스피" onClick={() => onTabChange('index')} />
-            <IndexCard data={data?.kosdaqIndex ?? null} label="코스닥" onClick={() => onTabChange('index')} />
-            <IndexCard data={data?.kospi ?? null} label="KOSPI 야간선물" onClick={() => onTabChange('index')} />
-            <IndexCard data={data?.nasdaq ?? null} label="NASDAQ 선물" onClick={() => onTabChange('index')} />
+            <IndexCard data={data?.kospiIndex ?? null} label="코스피" flash={flashes['kospi'] || null} onClick={() => onTabChange('index')} />
+            <IndexCard data={data?.kosdaqIndex ?? null} label="코스닥" flash={flashes['kosdaq'] || null} onClick={() => onTabChange('index')} />
+            <IndexCard data={data?.kospi ?? null} label="KOSPI 야간선물" flash={flashes['kospiFuture'] || null} onClick={() => onTabChange('index')} />
+            <IndexCard data={data?.nasdaq ?? null} label="NASDAQ 선물" flash={flashes['nasdaq'] || null} onClick={() => onTabChange('index')} />
         </div>
     );
 }

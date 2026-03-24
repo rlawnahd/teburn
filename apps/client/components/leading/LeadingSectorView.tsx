@@ -6,6 +6,7 @@ import { Crown } from 'lucide-react';
 import { fetchLeadingSectors, LeadingSector } from '@/lib/api/leading';
 import { formatTradingValue, formatDataDate } from '@/lib/utils/format';
 import { SkeletonCard } from '@/components/ui/Skeleton';
+import ThemeTimeline from '@/components/leading/ThemeTimeline';
 
 function getScoreGrade(score: number): { label: string; color: string; bg: string } {
     if (score >= 80) return { label: '급등', color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]' };
@@ -136,6 +137,9 @@ export default function LeadingSectorView() {
 
     return (
         <div className="space-y-4">
+            {/* 테마 흐름 타임라인 */}
+            <ThemeTimeline />
+
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도섹터</h2>

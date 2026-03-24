@@ -116,6 +116,33 @@ export const fetchThemeDetail = async (themeName: string): Promise<ThemeDetail> 
     return data.data;
 };
 
+// 테마 흐름 타임라인
+export interface ThemeTimelineSlot {
+    time: string;
+    avgChangeRate: number;
+    tradingActivity: number;
+}
+
+export interface ThemeTimelineItem {
+    themeName: string;
+    currentRate: number;
+    slots: ThemeTimelineSlot[];
+}
+
+interface TimelineResponse {
+    success: boolean;
+    data: ThemeTimelineItem[];
+    marketStatus: MarketStatusInfo;
+}
+
+export const fetchThemeTimeline = async (): Promise<{
+    timeline: ThemeTimelineItem[];
+    marketStatus: MarketStatusInfo;
+}> => {
+    const { data } = await axios.get<TimelineResponse>(`${API_URL}/themes/timeline/today`);
+    return { timeline: data.data, marketStatus: data.marketStatus };
+};
+
 // 종목명으로 관련 테마 찾기
 export const fetchThemesByStock = async (stockName: string): Promise<string[]> => {
     const { data } = await axios.get<StockThemesResponse>(

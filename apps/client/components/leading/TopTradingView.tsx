@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
 import { fetchLeadingStocks, LeadingStock } from '@/lib/api/leading';
 import { formatTradingValue, formatDataDate } from '@/lib/utils/format';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { SkeletonRow } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 
@@ -13,20 +13,23 @@ function StockRow({
     stock,
     rank,
     maxTradingValue,
+    priceFlash,
     onThemeClick,
     onStockClick,
 }: {
     stock: LeadingStock;
     rank: number;
     maxTradingValue: number;
+    priceFlash: 'rise' | 'fall' | null;
     onThemeClick: (theme: string) => void;
     onStockClick: () => void;
 }) {
     const progressWidth = (stock.tradingValue / maxTradingValue) * 100;
     const isLimitUp = stock.changeRate >= 29.9;
+    const flashClass = priceFlash === 'rise' ? 'animate-flash-rise' : priceFlash === 'fall' ? 'animate-flash-fall' : '';
 
     return (
-        <div onClick={onStockClick} className="relative group border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer">
+        <div onClick={onStockClick} className={`relative group border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer ${flashClass}`}>
             <div className="absolute inset-0 overflow-hidden">
                 <div
                     className="absolute left-0 top-0 h-full bg-[var(--accent-blue)]/[0.08] transition-all"
@@ -102,10 +105,30 @@ export default function TopTradingView() {
     const stocks = data?.stocks || [];
     const maxTradingValue = stocks.length > 0 ? Math.max(...stocks.map((s) => s.tradingValue)) : 1;
 
+    // 가격 틱 플래시
+    const prevStocksRef = useRef<LeadingStock[]>([]);
+    const [flashes, setFlashes] = useState<Record<string, 'rise' | 'fall' | null>>({});
+
+    useEffect(() => {
+        const prev = prevStocksRef.current;
+        if (prev.length === 0) { prevStocksRef.current = stocks; return; }
+        const prevMap = new Map(prev.map(s => [s.stockCode, s.currentPrice]));
+        const newFlashes: Record<string, 'rise' | 'fall'> = {};
+        stocks.forEach(s => {
+            const prevPrice = prevMap.get(s.stockCode);
+            if (prevPrice !== undefined && prevPrice !== s.currentPrice) {
+                newFlashes[s.stockCode] = s.currentPrice > prevPrice ? 'rise' : 'fall';
+            }
+        });
+        setFlashes(newFlashes);
+        prevStocksRef.current = stocks;
+        const timer = setTimeout(() => setFlashes({}), 1500);
+        return () => clearTimeout(timer);
+    }, [stocks]);
+
     const handleThemeClick = (theme: string) => {
         router.push(`/themes/${encodeURIComponent(theme)}`);
     };
-
 
     if (isLoading) {
         return (
@@ -186,6 +209,7 @@ export default function TopTradingView() {
                             stock={stock}
                             rank={index + 1}
                             maxTradingValue={maxTradingValue}
+                            priceFlash={flashes[stock.stockCode] || null}
                             onThemeClick={handleThemeClick}
                             onStockClick={() => router.push(`/stocks/${encodeURIComponent(stock.stockCode)}`)}
                         />

@@ -288,6 +288,21 @@ h1, h2, h3, h4, h5, h6 {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -299,7 +314,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes contentFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -320,7 +335,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .animate-slideUp {
-  animation: slideUp 0.2s ease-out;
+  animation: slideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-slideDown {
+  animation: slideDown 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-backdropIn {
+  animation: backdropIn 0.2s ease-out;
 }
 
 .animate-pulse-soft {
@@ -332,7 +359,36 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .animate-contentFadeIn {
-  animation: contentFadeIn 0.25s ease-out;
+  animation: contentFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 가격 틱 플래시 */
+.animate-flash-rise {
+  animation: flash-rise 1.5s ease-out;
+}
+
+.animate-flash-fall {
+  animation: flash-fall 1.5s ease-out;
+}
+
+/* 순위 변동 진입 */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+/* 리스트 stagger용 */
+@keyframes staggerSlideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-stagger {
+  animation: staggerSlideUp 0.3s ease-out both;
 }
 
 /* ============================
