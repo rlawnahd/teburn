@@ -237,6 +237,56 @@ export async function getCashBalance(): Promise<number | null> {
 }
 
 /**
+ * 계좌별 주문체결내역 상세 조회 (kt00007)
+ * POST /api/dostk/acnt
+ * 수동 매매 + 자동매매 체결 내역 모두 조회
+ */
+export async function getTradeHistory(date?: string): Promise<Array<{
+    orderNo: string;
+    stockCode: string;
+    stockName: string;
+    tradeType: string;
+    orderQty: number;
+    filledQty: number;
+    filledPrice: number;
+    orderTime: string;
+    ioBuySell: string;
+}> | null> {
+    try {
+        const headers = await getHeaders('kt00007');
+        const today = date || new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+        const response = await axios.post(`${BASE_URL}/api/dostk/acnt`, {
+            ord_dt: today,
+            qry_tp: '4',           // 4: 체결내역만
+            stk_bond_tp: '1',      // 1: 주식
+            sell_tp: '0',          // 0: 전체
+            stk_cd: '',            // 전체 종목
+            fr_ord_no: '',         // 전체 주문
+            dmst_stex_tp: '%',     // 전체 거래소
+        }, { headers, timeout: 10000 });
+
+        const data = response.data;
+        if (data.return_code !== 0) return null;
+
+        return (data.acnt_ord_cntr_prps_dtl || []).map((item: any) => ({
+            orderNo: item.ord_no || '',
+            stockCode: (item.stk_cd || '').replace(/^A/, ''),
+            stockName: item.stk_nm || '',
+            tradeType: item.trde_tp || '',
+            orderQty: parseInt(item.ord_qty) || 0,
+            filledQty: parseInt(item.cntr_qty) || 0,
+            filledPrice: parseInt(item.cntr_uv) || 0,
+            orderTime: item.ord_tm || '',
+            ioBuySell: item.io_tp_nm || '',
+        })).filter((t: any) => t.filledQty > 0);
+    } catch (error: any) {
+        console.error('❌ 키움 체결내역 조회 실패:', error.response?.data || error.message);
+        return null;
+    }
+}
+
+/**
  * 주식기본정보 조회 (ka10001) — 현재가 포함
  * POST /api/dostk/stkinfo
  */

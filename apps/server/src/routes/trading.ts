@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getDashboardData, getTodayAccount, syncWithKiwoomBalance } from '../services/tradingService';
 import { getMarketStatus } from '../utils/marketStatus';
+import { getTradeHistory } from '../services/kiwoomApi';
 import Trade from '../models/Trade';
 
 const router = Router();
@@ -68,6 +69,20 @@ router.get('/account', async (req: Request, res: Response) => {
         res.json({
             success: true,
             data: { account, marketStatus: getMarketStatus() },
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 키움 실제 체결내역 (수동 + 자동 포함)
+router.get('/history', async (req: Request, res: Response) => {
+    try {
+        const date = req.query.date as string; // YYYYMMDD (없으면 오늘)
+        const trades = await getTradeHistory(date || undefined);
+        res.json({
+            success: true,
+            data: { trades: trades || [], marketStatus: getMarketStatus() },
         });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
