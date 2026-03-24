@@ -39,7 +39,6 @@ function StockRow({
     priceFlash,
     rankChange,
     staggerIndex,
-    gradeClass,
     onStockClick,
     onThemeClick,
 }: {
@@ -48,7 +47,6 @@ function StockRow({
     priceFlash: PriceFlash;
     rankChange: RankChange | null;
     staggerIndex: number;
-    gradeClass: string;
     onStockClick: (stockCode: string) => void;
     onThemeClick: (theme: string) => void;
 }) {
@@ -64,7 +62,7 @@ function StockRow({
     return (
         <button
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''} ${gradeClass}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -144,7 +142,6 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
     const marketTemp = Math.round(stocks.reduce((sum, s) => sum + s.totalScore, 0) / total);
     const sCount = stocks.filter(s => s.grade === 'S').length;
     const aCount = stocks.filter(s => s.grade === 'A').length;
-    const otherCount = total - sCount - aCount;
     const limitUpCount = stocks.filter(s => s.changeRate >= 29.9).length;
 
     // Most common theme among S-grade stocks
@@ -212,29 +209,6 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
                 </div>
             </div>
 
-            {/* 등급 분포 바 */}
-            <div>
-                <div className="flex justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
-                    <span>등급 분포</span>
-                    <span>{total}종목</span>
-                </div>
-                <div className="flex gap-[2px] h-1.5 rounded-full overflow-hidden">
-                    {sCount > 0 && <div style={{ width: `${(sCount / total) * 100}%`, background: 'var(--grade-s)' }} />}
-                    {aCount > 0 && <div style={{ width: `${(aCount / total) * 100}%`, background: 'var(--grade-a)' }} />}
-                    {otherCount > 0 && <div style={{ width: `${(otherCount / total) * 100}%`, background: 'var(--text-tertiary)' }} />}
-                </div>
-                <div className="flex gap-3 mt-1">
-                    <span className="text-[11px] text-[var(--text-tertiary)] flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'var(--grade-s)' }} />S {sCount}
-                    </span>
-                    <span className="text-[11px] text-[var(--text-tertiary)] flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'var(--grade-a)' }} />A {aCount}
-                    </span>
-                    <span className="text-[11px] text-[var(--text-tertiary)] flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'var(--text-tertiary)' }} />기타 {otherCount}
-                    </span>
-                </div>
-            </div>
         </div>
     );
 }
@@ -338,21 +312,18 @@ export default function HotStocksView() {
         description: string,
         sectionStocks: HotStock[],
         startRank: number,
-        borderColor: string,
-        gradeClass: string,
     ) => {
         if (sectionStocks.length === 0) return null;
         return (
             <section>
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                        <div className={`w-[3px] h-3.5 rounded-full`} style={{ background: borderColor }} />
                         <span className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</span>
                         <span className="text-[11px] text-[var(--text-tertiary)]">{description}</span>
                     </div>
                     <span className="text-[11px] text-[var(--text-tertiary)]">{sectionStocks.length}종목</span>
                 </div>
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden" style={{ borderLeftColor: borderColor, borderLeftWidth: '3px' }}>
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                         <span className="w-5 text-center">#</span>
                         <span className="w-6 text-center">변동</span>
@@ -369,7 +340,6 @@ export default function HotStocksView() {
                             priceFlash={flashes[stock.stockCode] || null}
                             rankChange={rankChanges[stock.stockCode] || null}
                             staggerIndex={i}
-                            gradeClass={gradeClass}
                             onStockClick={handleStockClick}
                             onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
                         />
@@ -395,9 +365,9 @@ export default function HotStocksView() {
 
             {stocks.length > 0 && <MarketKpiStrip stocks={stocks} />}
 
-            {renderSection('S등급', '70점 이상', hotStocks, 1, 'var(--grade-s)', 'row-grade-s')}
-            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1, 'var(--grade-a)', 'row-grade-a')}
-            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1, 'var(--text-tertiary)', '')}
+            {renderSection('S등급', '70점 이상', hotStocks, 1)}
+            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1)}
+            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1)}
 
             {stocks.length === 0 && (
                 <EmptyState
