@@ -25,7 +25,7 @@ function IndexChart({ data, color }: { data: IndexData; color: string }) {
 
     if (chartData.length === 0) {
         return (
-            <div className="h-[180px] flex items-center justify-center text-[13px] text-[var(--text-tertiary)]">
+            <div className="h-[140px] sm:h-[180px] flex items-center justify-center text-[13px] text-[var(--text-tertiary)]">
                 차트 데이터 없음
             </div>
         );
@@ -37,7 +37,7 @@ function IndexChart({ data, color }: { data: IndexData; color: string }) {
     const padding = (maxPrice - minPrice) * 0.1 || 1;
 
     return (
-        <div className="h-[180px]">
+        <div className="h-[140px] sm:h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.4} />
