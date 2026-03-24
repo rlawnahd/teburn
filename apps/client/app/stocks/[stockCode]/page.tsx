@@ -160,8 +160,12 @@ export default function StockDetailPage() {
                 </div>
 
                 {/* 주도주 점수 */}
-                {stock.hotness && (
-                    <div className="card">
+                {stock.hotness && (() => {
+                    const gradeTopBorderColor = stock.hotness.grade === 'S' ? 'var(--grade-s)'
+                        : stock.hotness.grade === 'A' ? 'var(--grade-a)'
+                        : 'var(--border-color)';
+                    return (
+                    <div className="card" style={{ borderTop: `3px solid ${gradeTopBorderColor}` }}>
                         <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                             <div className="flex items-center gap-2">
                                 <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
@@ -176,43 +180,27 @@ export default function StockDetailPage() {
                         </div>
 
                         <div className="px-3 py-2 space-y-1.5">
-                            <ScoreBar
-                                label="거래대금"
-                                score={stock.hotness.tradingValueScore}
-                                maxScore={25}
-                                color="bg-amber-500"
-                            />
-                            <ScoreBar
-                                label="등락률"
-                                score={stock.hotness.momentumScore}
-                                maxScore={25}
-                                detail={`${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%`}
-                                color="bg-[var(--rise-color)]"
-                            />
-                            <ScoreBar
-                                label="거래량"
-                                score={stock.hotness.volumeScore}
-                                maxScore={20}
-                                detail={stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-'}
-                                color="bg-violet-500"
-                            />
-                            <ScoreBar
-                                label="뉴스"
-                                score={stock.hotness.newsScore}
-                                maxScore={15}
-                                detail={`${stock.hotness.newsCount}건`}
-                                color="bg-emerald-500"
-                            />
-                            <ScoreBar
-                                label="대장주"
-                                score={stock.hotness.themeConcentrationScore}
-                                maxScore={15}
-                                detail={`${stock.hotness.themeConcentration}%`}
-                                color="bg-sky-500"
-                            />
+                            {[
+                                { label: '거래대금', score: stock.hotness.tradingValueScore, maxScore: 25, color: 'bg-amber-500', detail: undefined },
+                                { label: '등락률', score: stock.hotness.momentumScore, maxScore: 25, color: 'bg-[var(--rise-color)]', detail: `${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%` },
+                                { label: '거래량', score: stock.hotness.volumeScore, maxScore: 20, color: 'bg-violet-500', detail: stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-' },
+                                { label: '뉴스', score: stock.hotness.newsScore, maxScore: 15, color: 'bg-emerald-500', detail: `${stock.hotness.newsCount}건` },
+                                { label: '대장주', score: stock.hotness.themeConcentrationScore, maxScore: 15, color: 'bg-sky-500', detail: `${stock.hotness.themeConcentration}%` },
+                            ].map((bar, i) => (
+                                <div key={bar.label} className="animate-stagger" style={{ animationDelay: `${i * 50}ms` }}>
+                                    <ScoreBar
+                                        label={bar.label}
+                                        score={bar.score}
+                                        maxScore={bar.maxScore}
+                                        color={bar.color}
+                                        detail={bar.detail}
+                                    />
+                                </div>
+                            ))}
                         </div>
                     </div>
-                )}
+                    );
+                })()}
 
                 {/* 관련 테마 */}
                 {stock.themes.length > 0 && (
