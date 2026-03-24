@@ -204,6 +204,42 @@ def sync_with_kiwoom(balance: dict, cash: int | None):
     db.tradingaccounts.update_one({'dateKey': _today_key()}, {'$set': update})
 
 
+def get_recent_leaders(days: int = 5) -> list[dict]:
+    """최근 N일간 주도주였던 종목 (DailyLeadingTheme 컬렉션에서)"""
+    db = get_db()
+    cutoff = datetime.now(KST) - timedelta(days=days)
+
+    results = db.dailyleadingthemes.find(
+        {'date': {'$gte': cutoff}},
+        {'topStocks': 1, 'date': 1}
+    ).sort('date', -1)
+
+    # 종목별 등장 횟수 + 최고 등락률
+    stock_map: dict[str, dict] = {}
+    for doc in results:
+        for stock in doc.get('topStocks', []):
+            code = stock.get('stockCode', '')
+            if not code:
+                continue
+            if code not in stock_map:
+                stock_map[code] = {
+                    'stockCode': code,
+                    'stockName': stock.get('stockName', ''),
+                    'appearances': 0,
+                    'maxChangeRate': 0,
+                    'themes': stock.get('themes', []),
+                }
+            stock_map[code]['appearances'] += 1
+            rate = stock.get('changeRate', 0)
+            if rate > stock_map[code]['maxChangeRate']:
+                stock_map[code]['maxChangeRate'] = rate
+
+    # 2회 이상 등장한 종목만 (진짜 강했던 종목)
+    leaders = [v for v in stock_map.values() if v['appearances'] >= 2]
+    leaders.sort(key=lambda x: x['appearances'], reverse=True)
+    return leaders
+
+
 def get_hotness_data() -> list[dict]:
     """Node.js 서버가 계산한 hotness 캐시에서 S/A 등급 종목 가져오기
     (Express 서버의 /api/leading/hot 호출)"""

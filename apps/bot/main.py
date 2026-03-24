@@ -9,7 +9,7 @@ from config import STRATEGY, SCAN_INTERVAL_SEC, KIWOOM_APP_KEY
 import db
 import kiwoom_api
 import kiwoom_ws
-from strategy import check_buy_signal, check_sell_signal
+from strategy import check_buy_signal, check_sell_signal, check_pullback_signal
 
 KST = timezone(timedelta(hours=9))
 
@@ -110,59 +110,68 @@ def scan_buy_signals():
     if cash < 100_000:
         return
 
-    # Hotness 데이터 가져오기 (Express 서버에서)
+    # === 전략 1: 모멘텀 브레이크아웃 (Hotness 기반) ===
     hot_stocks = db.get_hotness_data()
-    if not hot_stocks:
-        return
+    if hot_stocks:
+        for stock in hot_stocks:
+            result = check_buy_signal(stock)
+            if not result['signal']:
+                continue
 
-    for stock in hot_stocks:
-        result = check_buy_signal(stock)
+            if _execute_buy(stock.get('stockCode', ''), stock.get('stockName', ''),
+                            stock.get('currentPrice', 0), cash, result, 'momentum'):
+                return  # 매수 성공하면 종료
 
+    # === 전략 2: 눌림목 반등 (최근 강했던 종목이 눌렸을 때) ===
+    leaders = db.get_recent_leaders(days=5)
+    for leader in leaders[:10]:  # 상위 10종목만 체크
+        result = check_pullback_signal(leader)
         if not result['signal']:
             continue
 
-        stock_code = stock.get('stockCode', '')
-        stock_name = stock.get('stockName', '')
-        current_price = stock.get('currentPrice', 0)
-        if current_price <= 0:
-            continue
+        if _execute_buy(leader.get('stockCode', ''), leader.get('stockName', ''),
+                        result.get('current_price', 0), cash, result, 'pullback'):
+            return
 
-        quantity = math.floor(cash / current_price)
-        if quantity <= 0:
-            continue
 
-        print(f'🔔 매수 신호: {stock_name} (점수: {result["score"]}, {", ".join(result["reasons"][:3])})')
+def _execute_buy(stock_code: str, stock_name: str, current_price: int,
+                 cash: int, result: dict, strategy_name: str) -> bool:
+    """매수 실행 공통 함수. 성공하면 True."""
+    if not stock_code or current_price <= 0:
+        return False
 
-        buy_result = kiwoom_api.place_buy_order(stock_code, quantity)
-        if buy_result['success']:
-            # 체결가 확인
-            price_info = kiwoom_api.get_stock_price(stock_code)
-            filled_price = price_info['current_price'] if price_info else current_price
-            amount = filled_price * quantity
+    quantity = math.floor(cash / current_price)
+    if quantity <= 0:
+        return False
 
-            db.record_buy(
-                stock_code=stock_code,
-                stock_name=stock_name,
-                filled_price=filled_price,
-                quantity=quantity,
-                fee=round(amount * STRATEGY['FEE_RATE']),
-                order_id=buy_result.get('order_id'),
-                signal={
-                    'hotnessGrade': stock.get('grade', ''),
-                    'hotnessScore': stock.get('totalScore', 0),
-                    'volumeSurgeRate': stock.get('volumeSurgeRate', 0),
-                    'changeRate': stock.get('changeRate', 0),
-                    'newsCount': stock.get('newsCount', 0),
-                    'techScore': result['score'],
-                    'techReasons': result['reasons'],
-                },
-            )
+    strategy_label = '🔥 모멘텀' if strategy_name == 'momentum' else '📉 눌림목 반등'
+    print(f'🔔 [{strategy_label}] {stock_name} (점수: {result["score"]}, {", ".join(result["reasons"][:3])})')
 
-            # 실시간 구독 시작
-            kiwoom_ws.subscribe_stocks([stock_code])
-            break
-        else:
-            print(f'❌ 매수 실패: {stock_name} — {buy_result["message"]}')
+    buy_result = kiwoom_api.place_buy_order(stock_code, quantity)
+    if buy_result['success']:
+        price_info = kiwoom_api.get_stock_price(stock_code)
+        filled_price = price_info['current_price'] if price_info else current_price
+        amount = filled_price * quantity
+
+        db.record_buy(
+            stock_code=stock_code,
+            stock_name=stock_name,
+            filled_price=filled_price,
+            quantity=quantity,
+            fee=round(amount * STRATEGY['FEE_RATE']),
+            order_id=buy_result.get('order_id'),
+            signal={
+                'strategy': strategy_name,
+                'techScore': result['score'],
+                'techReasons': result['reasons'],
+            },
+        )
+
+        kiwoom_ws.subscribe_stocks([stock_code])
+        return True
+    else:
+        print(f'❌ 매수 실패: {stock_name} — {buy_result["message"]}')
+        return False
 
 
 def main():

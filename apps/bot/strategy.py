@@ -166,6 +166,104 @@ def check_buy_signal(hotness: dict) -> dict:
     }
 
 
+def check_pullback_signal(leader: dict) -> dict:
+    """눌림목 반등 매수 신호 — 최근 강했던 종목이 눌렸을 때 진입
+
+    조건:
+    1. 최근 5일 중 2회 이상 주도주 등장 (강했던 종목)
+    2. 오늘 하락 또는 약보합 (눌림)
+    3. RSI 30~50 (과매도 근접, 반등 여지)
+    4. 5일선 근처 또는 볼린저밴드 하단 접근 (지지선)
+    5. 거래량 유지 (완전히 죽지 않음)
+
+    Returns:
+        {'signal': True/False, 'score': 0~100, 'reasons': [...]}
+    """
+    stock_code = leader.get('stockCode', '')
+    stock_name = leader.get('stockName', '')
+    appearances = leader.get('appearances', 0)
+    reasons = []
+    score = 0
+
+    # 현재가 조회
+    price_data = get_stock_price(stock_code)
+    if not price_data:
+        return {'signal': False, 'score': 0, 'reasons': ['현재가 조회 실패']}
+
+    change_rate = price_data['change_rate']
+    current_price = price_data['current_price']
+
+    # 1. 최근 주도주 이력 (기본 30점)
+    score += min(30, appearances * 10)
+    reasons.append(f'최근 5일 중 {appearances}회 주도주')
+
+    # 2. 눌림 확인: 오늘 -3% ~ +1% (하락 또는 약보합)
+    if change_rate < -3.0:
+        # 너무 많이 빠지면 위험 (패닉셀 가능)
+        return {'signal': False, 'score': 0, 'reasons': [f'하락 {change_rate}% (급락, 진입 위험)']}
+    elif change_rate > 1.0:
+        # 이미 반등 중이면 눌림이 아님
+        return {'signal': False, 'score': 0, 'reasons': [f'상승 {change_rate}% (눌림 아님)']}
+    else:
+        score += 20
+        reasons.append(f'눌림 확인 ({change_rate:+.1f}%)')
+
+    # 3. 기술적 지표
+    indicators = compute_indicators(stock_code)
+    if indicators:
+        rsi = indicators.get('rsi')
+        if rsi is not None:
+            if 30 <= rsi <= 50:
+                score += 25  # 반등 최적 구간
+                reasons.append(f'RSI {rsi} (반등 구간)')
+            elif rsi < 30:
+                score += 15  # 과매도 — 반등 기대하지만 바닥 확인 필요
+                reasons.append(f'RSI {rsi} (과매도, 반등 기대)')
+            elif rsi > 50:
+                score += 5
+                reasons.append(f'RSI {rsi} (보통)')
+
+        # 5일선 지지 확인
+        ma_short = indicators.get('ma_short')
+        if ma_short and current_price:
+            diff = ((current_price - ma_short) / ma_short) * 100
+            if -2.0 <= diff <= 1.0:
+                score += 15
+                reasons.append(f'5일선 지지 (괴리 {diff:+.1f}%)')
+            elif diff < -2.0:
+                score -= 5
+                reasons.append(f'5일선 이탈 ({diff:+.1f}%)')
+
+        # 볼린저밴드 하단 접근
+        bb_lower = indicators.get('bb_lower')
+        bb_upper = indicators.get('bb_upper')
+        if bb_lower and bb_upper and current_price:
+            bb_range = bb_upper - bb_lower
+            if bb_range > 0:
+                position = (current_price - bb_lower) / bb_range
+                if position < 0.3:
+                    score += 15
+                    reasons.append(f'볼린저 하단 접근 ({position:.0%})')
+
+        # 거래량 확인 (완전히 죽으면 안 됨)
+        volume = price_data.get('volume', 0)
+        if volume > 0:
+            score += 5
+            reasons.append(f'거래량 유지')
+    else:
+        reasons.append('기술적 지표 계산 불가')
+
+    # 최종 판단: 65점 이상이면 매수
+    return {
+        'signal': score >= 65,
+        'score': max(0, min(100, score)),
+        'reasons': reasons,
+        'indicators': indicators,
+        'strategy': 'pullback',
+        'current_price': current_price,
+    }
+
+
 def check_sell_signal(position: dict, current_price: int, daily_pnl: int,
                       time_minutes: int) -> str | None:
     """매도 사유 판단
