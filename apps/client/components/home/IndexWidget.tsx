@@ -5,6 +5,25 @@ import { useRef, useEffect, useState } from 'react';
 import { fetchIndexData, IndexData } from '@/lib/api/indices';
 import { Skeleton } from '@/components/ui/Skeleton';
 
+function MiniSparkline({ data, isPositive }: { data: { price: number }[]; isPositive: boolean }) {
+    if (!data || data.length < 2) return null;
+    const prices = data.map(d => d.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const range = max - min || 1;
+    const w = 56, h = 18;
+    const points = prices.map((p, i) =>
+        `${(i / (prices.length - 1)) * w},${h - ((p - min) / range) * h}`
+    ).join(' ');
+    return (
+        <svg width={w} height={h} className="flex-shrink-0">
+            <polyline points={points} fill="none"
+                stroke={isPositive ? 'var(--rise-color)' : 'var(--fall-color)'}
+                strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    );
+}
+
 function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; label: string; flash: 'rise' | 'fall' | null; onClick: () => void }) {
     if (!data) {
         return (
@@ -39,11 +58,14 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
                         {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                     </span>
                     <span className={`text-[12px] font-medium ${changeColor} flex items-center gap-0.5`}>
-                        <span className="text-[8px]">{isPositive ? '▲' : isNegative ? '▼' : ''}</span>
+                        <span className="text-[10px]">{isPositive ? '▲' : isNegative ? '▼' : ''}</span>
                         {isPositive ? '+' : ''}{data.changePercent.toFixed(2)}%
                     </span>
                 </div>
             </div>
+            {data.chartData && data.chartData.length >= 2 && (
+                <MiniSparkline data={data.chartData} isPositive={isPositive} />
+            )}
         </button>
     );
 }
