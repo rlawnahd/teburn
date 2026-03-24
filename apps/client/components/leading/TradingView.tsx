@@ -4,6 +4,64 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchTradingDashboard } from '@/lib/api/trading';
 import DailyPnlChart from '@/components/trading/DailyPnlChart';
 
+function WinRateGauge({ winRate, winCount, loseCount }: { winRate: number; winCount: number; loseCount: number }) {
+    const radius = 45;
+    const circumference = 2 * Math.PI * radius;
+    const filled = (winRate / 100) * circumference;
+
+    return (
+        <div className="flex items-center justify-center">
+            <div className="relative w-[110px] h-[110px]">
+                <svg width="110" height="110" viewBox="0 0 110 110" className="-rotate-90">
+                    <circle cx="55" cy="55" r={radius} fill="none" stroke="var(--bg-tertiary)" strokeWidth="7" />
+                    <circle cx="55" cy="55" r={radius} fill="none" stroke="var(--rise-color)" strokeWidth="7"
+                        strokeDasharray={`${filled} ${circumference - filled}`} strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xl font-bold text-[var(--text-primary)]">{winRate}%</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">{winCount}승 {loseCount}패</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function TradeStreak({ trades }: { trades: { pnl: number | null }[] }) {
+    const completedTrades = trades.filter(t => t.pnl !== null).slice(0, 14);
+    if (completedTrades.length === 0) return null;
+
+    // Calculate max streak
+    let maxWinStreak = 0, maxLoseStreak = 0, currentStreak = 0, lastWin = true;
+    completedTrades.forEach(t => {
+        const isWin = (t.pnl || 0) >= 0;
+        if (isWin === lastWin) { currentStreak++; }
+        else { currentStreak = 1; lastWin = isWin; }
+        if (isWin) maxWinStreak = Math.max(maxWinStreak, currentStreak);
+        else maxLoseStreak = Math.max(maxLoseStreak, currentStreak);
+    });
+
+    return (
+        <div>
+            <div className="flex gap-[3px] flex-wrap">
+                {completedTrades.map((t, i) => {
+                    const isWin = (t.pnl || 0) >= 0;
+                    return (
+                        <div key={i} className={`w-5 h-5 rounded-sm flex items-center justify-center text-[9px] font-bold text-white ${
+                            isWin ? 'bg-[var(--rise-color)]/60' : 'bg-[var(--fall-color)]/60'
+                        }`}>
+                            {isWin ? 'W' : 'L'}
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="flex gap-4 mt-2 text-[11px]">
+                <span className="text-[var(--text-tertiary)]">최대 연승 <span className="text-[var(--rise-color)] font-semibold">{maxWinStreak}</span></span>
+                <span className="text-[var(--text-tertiary)]">최대 연패 <span className="text-[var(--fall-color)] font-semibold">{maxLoseStreak}</span></span>
+            </div>
+        </div>
+    );
+}
+
 export default function TradingView() {
     const { data, isLoading } = useQuery({
         queryKey: ['tradingDashboard'],
@@ -68,6 +126,20 @@ export default function TradingView() {
                     </div>
                 </div>
             </div>
+
+            {/* 승률 게이지 + 최근 매매 결과 */}
+            {stats.totalTrades > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="card rounded p-4">
+                        <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">승률</h3>
+                        <WinRateGauge winRate={winRate} winCount={account.winCount} loseCount={account.loseCount} />
+                    </div>
+                    <div className="card rounded p-4">
+                        <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">최근 매매 결과</h3>
+                        <TradeStreak trades={data.recentTrades} />
+                    </div>
+                </div>
+            )}
 
             {/* 일별 수익률 차트 */}
             <DailyPnlChart
