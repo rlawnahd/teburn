@@ -7,7 +7,7 @@ const FOOTER_LINK = "block py-1.5 text-[12px] text-[var(--text-tertiary)] hover:
 
 export default function Footer() {
     return (
-        <footer className="border-t border-[var(--border-color)] bg-[var(--bg-primary)] py-8 px-4">
+        <footer className="border-t border-[var(--border-color)] bg-[var(--bg-primary)] py-5 px-4">
             <div className="max-w-screen-xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
                     {/* 좌측: 로고 + 설명 */}

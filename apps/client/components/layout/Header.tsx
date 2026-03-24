@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, X, Menu } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { searchStocks, SearchStockResult } from '@/lib/api/stocks';
@@ -128,6 +128,7 @@ const NAV_LINKS = [
 ];
 
 export default function Header() {
+    const pathname = usePathname();
     const [showSearch, setShowSearch] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -173,15 +174,24 @@ export default function Header() {
                     </Link>
                     {/* 데스크톱 네비 */}
                     <nav className="hidden md:flex items-center gap-1 ml-2">
-                        {NAV_LINKS.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className="px-2.5 py-1.5 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded"
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
+                        {NAV_LINKS.map((link) => {
+                            const isActive = link.href === '/'
+                                ? pathname === '/'
+                                : pathname.startsWith(link.href);
+                            return (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className={`px-2.5 py-1.5 text-[13px] transition-colors rounded ${
+                                        isActive
+                                            ? 'text-[var(--text-primary)] font-medium'
+                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+                                    }`}
+                                >
+                                    {link.label}
+                                </Link>
+                            );
+                        })}
                     </nav>
                 </div>
 
