@@ -32,8 +32,8 @@ function StockRow({
         <div onClick={onStockClick} className={`relative group border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer ${flashClass}`}>
             <div className="absolute inset-0 overflow-hidden">
                 <div
-                    className="absolute left-0 top-0 h-full bg-[var(--accent-blue)]/[0.08] transition-all"
-                    style={{ width: `${progressWidth}%` }}
+                    className="absolute left-0 top-0 h-full transition-all"
+                    style={{ width: `${progressWidth}%`, background: 'linear-gradient(90deg, var(--accent-blue), transparent)', opacity: 0.12 }}
                 />
             </div>
 
