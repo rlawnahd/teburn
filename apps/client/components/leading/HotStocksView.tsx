@@ -12,7 +12,7 @@ import EmptyState from '@/components/ui/EmptyState';
 
 function ScoreMiniGauge({ score }: { score: number }) {
     return (
-        <div className="w-8 flex items-center gap-1">
+        <div className="w-12 flex items-center gap-1">
             <div className="flex-1 h-[3px] bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                 <div
                     className="h-full rounded-full transition-all"
@@ -39,6 +39,7 @@ function StockRow({
     priceFlash,
     rankChange,
     staggerIndex,
+    gradeClass,
     onStockClick,
     onThemeClick,
 }: {
@@ -47,6 +48,7 @@ function StockRow({
     priceFlash: PriceFlash;
     rankChange: RankChange | null;
     staggerIndex: number;
+    gradeClass: string;
     onStockClick: (stockCode: string) => void;
     onThemeClick: (theme: string) => void;
 }) {
@@ -62,7 +64,7 @@ function StockRow({
     return (
         <button
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''} ${gradeClass}`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -123,11 +125,11 @@ function StockRow({
                 </div>
             </div>
 
-            <div className="w-12 text-right flex-shrink-0">
+            <div className="hidden sm:block w-12 text-right flex-shrink-0">
                 <div className="text-[11px] text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
             </div>
 
-            <div className="w-10 flex items-center gap-1 flex-shrink-0 justify-end">
+            <div className="hidden sm:flex w-10 items-center gap-1 flex-shrink-0 justify-end">
                 <span className="text-[13px] font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
                 <ScoreMiniGauge score={stock.totalScore} />
             </div>
@@ -235,6 +237,7 @@ export default function HotStocksView() {
         sectionStocks: HotStock[],
         startRank: number,
         borderColor: string,
+        gradeClass: string,
     ) => {
         if (sectionStocks.length === 0) return null;
         return (
@@ -253,8 +256,8 @@ export default function HotStocksView() {
                         <span className="w-6 text-center">변동</span>
                         <span className="flex-1">종목</span>
                         <span className="text-right">현재가</span>
-                        <span className="w-12 text-right">거래대금</span>
-                        <span className="w-10 text-right">점수</span>
+                        <span className="hidden sm:block w-12 text-right">거래대금</span>
+                        <span className="hidden sm:block w-10 text-right">점수</span>
                     </div>
                     {sectionStocks.map((stock, i) => (
                         <StockRow
@@ -264,6 +267,7 @@ export default function HotStocksView() {
                             priceFlash={flashes[stock.stockCode] || null}
                             rankChange={rankChanges[stock.stockCode] || null}
                             staggerIndex={i}
+                            gradeClass={gradeClass}
                             onStockClick={handleStockClick}
                             onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
                         />
@@ -287,9 +291,9 @@ export default function HotStocksView() {
                 )}
             </div>
 
-            {renderSection('S등급', '70점 이상', hotStocks, 1, 'var(--grade-s)')}
-            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1, 'var(--grade-a)')}
-            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1, 'var(--text-tertiary)')}
+            {renderSection('S등급', '70점 이상', hotStocks, 1, 'var(--grade-s)', 'row-grade-s')}
+            {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1, 'var(--grade-a)', 'row-grade-a')}
+            {renderSection('기타', '50점 미만', otherStocks, hotStocks.length + warmStocks.length + 1, 'var(--text-tertiary)', '')}
 
             {stocks.length === 0 && (
                 <EmptyState
