@@ -52,7 +52,7 @@ export default function HomeContent() {
                                         onClick={() => handleTabChange(tab.key)}
                                         className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium transition-all rounded-md whitespace-nowrap ${
                                             isActive
-                                                ? 'bg-[var(--text-primary)] text-[var(--bg-primary)]'
+                                                ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] tab-active'
                                                 : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
                                         }`}
                                     >
