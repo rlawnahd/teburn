@@ -99,7 +99,7 @@ export default function TopTradingView() {
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['leadingStocks', minRate],
         queryFn: () => fetchLeadingStocks(minRate, 30),
-        refetchInterval: 60 * 1000,
+        refetchInterval: 5 * 60 * 1000,
     });
 
     const stocks = data?.stocks || [];

@@ -266,7 +266,7 @@ export default function HotStocksView() {
         queryFn: () => fetchHotStocks(30),
         refetchInterval: (query) => {
             const stocks = query.state.data?.stocks;
-            return (!stocks || stocks.length === 0) ? 5000 : 60 * 1000;
+            return (!stocks || stocks.length === 0) ? 5000 : 5 * 60 * 1000;
         },
         retry: 3,
         retryDelay: (attempt) => Math.min(attempt * 3000, 10000),

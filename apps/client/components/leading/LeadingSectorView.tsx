@@ -103,7 +103,7 @@ export default function LeadingSectorView() {
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['leadingSectors'],
         queryFn: () => fetchLeadingSectors(20),
-        refetchInterval: 60 * 1000,
+        refetchInterval: 5 * 60 * 1000,
     });
 
     const sectors = data?.sectors || [];
