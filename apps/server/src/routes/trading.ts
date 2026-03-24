@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { getDashboardData, getTodayAccount, syncWithKiwoomBalance } from '../services/tradingService';
 import { getMarketStatus } from '../utils/marketStatus';
 import { getTradeHistory } from '../services/kiwoomApi';
@@ -6,10 +6,23 @@ import Trade from '../models/Trade';
 
 const router = Router();
 
-// 대시보드 데이터 (수익률, 포트폴리오, 통계)
+const TRADING_PASSWORD = process.env.TRADING_PASSWORD || '';
+
+// 비밀번호 인증 미들웨어 (상세 매매일지용)
+function requirePassword(req: Request, res: Response, next: NextFunction) {
+    const password = req.headers['x-trading-password'] as string || req.query.password as string;
+    if (!TRADING_PASSWORD || password === TRADING_PASSWORD) {
+        next();
+    } else {
+        res.status(401).json({ success: false, message: '비밀번호가 필요합니다.' });
+    }
+}
+
+// === 공개 API (수익률/통계만) ===
+
+// 대시보드 데이터 (수익률, 통계 — 종목 상세 제외)
 router.get('/dashboard', async (req: Request, res: Response) => {
     try {
-        // 대시보드 조회 시 키움 실잔고 동기화
         await syncWithKiwoomBalance();
         const data = await getDashboardData();
         res.json({
@@ -28,8 +41,33 @@ router.get('/dashboard', async (req: Request, res: Response) => {
     }
 });
 
-// 매매 이력 (페이지네이션)
-router.get('/trades', async (req: Request, res: Response) => {
+// === 비밀번호 보호 API (상세 매매일지) ===
+
+// 비밀번호 검증
+router.post('/auth', (req: Request, res: Response) => {
+    const { password } = req.body;
+    if (!TRADING_PASSWORD || password === TRADING_PASSWORD) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: '비밀번호가 틀렸습니다.' });
+    }
+});
+
+// 현재 계좌 상태 (보유종목 포함)
+router.get('/account', requirePassword, async (req: Request, res: Response) => {
+    try {
+        const account = await getTodayAccount();
+        res.json({
+            success: true,
+            data: { account, marketStatus: getMarketStatus() },
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 매매 이력 상세 (페이지네이션)
+router.get('/trades', requirePassword, async (req: Request, res: Response) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 20;
@@ -49,12 +87,7 @@ router.get('/trades', async (req: Request, res: Response) => {
             success: true,
             data: {
                 trades,
-                pagination: {
-                    page,
-                    limit,
-                    total,
-                    totalPages: Math.ceil(total / limit),
-                },
+                pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
             },
         });
     } catch (error: any) {
@@ -62,23 +95,10 @@ router.get('/trades', async (req: Request, res: Response) => {
     }
 });
 
-// 현재 계좌 상태
-router.get('/account', async (req: Request, res: Response) => {
-    try {
-        const account = await getTodayAccount();
-        res.json({
-            success: true,
-            data: { account, marketStatus: getMarketStatus() },
-        });
-    } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
 // 키움 실제 체결내역 (수동 + 자동 포함)
-router.get('/history', async (req: Request, res: Response) => {
+router.get('/history', requirePassword, async (req: Request, res: Response) => {
     try {
-        const date = req.query.date as string; // YYYYMMDD (없으면 오늘)
+        const date = req.query.date as string;
         const trades = await getTradeHistory(date || undefined);
         res.json({
             success: true,
