@@ -137,6 +137,108 @@ function StockRow({
     );
 }
 
+function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
+    const total = stocks.length;
+    if (total === 0) return null;
+
+    const marketTemp = Math.round(stocks.reduce((sum, s) => sum + s.totalScore, 0) / total);
+    const sCount = stocks.filter(s => s.grade === 'S').length;
+    const aCount = stocks.filter(s => s.grade === 'A').length;
+    const otherCount = total - sCount - aCount;
+    const limitUpCount = stocks.filter(s => s.changeRate >= 29.9).length;
+
+    // Most common theme among S-grade stocks
+    const sStocks = stocks.filter(s => s.grade === 'S');
+    const themeMap = new Map<string, { count: number; totalChange: number }>();
+    sStocks.forEach(s => {
+        s.themes.forEach(theme => {
+            const entry = themeMap.get(theme) ?? { count: 0, totalChange: 0 };
+            themeMap.set(theme, { count: entry.count + 1, totalChange: entry.totalChange + s.changeRate });
+        });
+    });
+    let topTheme: string | null = null;
+    let topThemeCount = 0;
+    let topThemeAvgChange = 0;
+    themeMap.forEach((val, key) => {
+        if (val.count > topThemeCount) {
+            topThemeCount = val.count;
+            topTheme = key;
+            topThemeAvgChange = val.totalChange / val.count;
+        }
+    });
+
+    const tempColor = marketTemp >= 60 ? 'var(--rise-color)' : marketTemp >= 40 ? 'var(--text-primary)' : 'var(--fall-color)';
+
+    return (
+        <div className="mb-4">
+            {/* KPI 5-column grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded overflow-hidden mb-3">
+                {/* 시장 온도 */}
+                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                    <div className="text-lg font-bold" style={{ color: tempColor }}>{marketTemp}</div>
+                    <div className="text-[11px] text-[var(--text-tertiary)]">시장 온도</div>
+                </div>
+                {/* S등급 */}
+                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                    <div className="text-lg font-bold" style={{ color: 'var(--grade-s)' }}>{sCount}</div>
+                    <div className="text-[11px] text-[var(--text-tertiary)]">S등급</div>
+                </div>
+                {/* A등급 */}
+                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                    <div className="text-lg font-bold" style={{ color: 'var(--grade-a)' }}>{aCount}</div>
+                    <div className="text-[11px] text-[var(--text-tertiary)]">A등급</div>
+                </div>
+                {/* 상한가 */}
+                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                    <div className="text-lg font-bold" style={{ color: limitUpCount > 0 ? 'var(--rise-color)' : 'var(--text-primary)' }}>{limitUpCount}</div>
+                    <div className="text-[11px] text-[var(--text-tertiary)]">상한가</div>
+                </div>
+                {/* 오늘의 테마 */}
+                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center col-span-2 sm:col-span-1">
+                    {topTheme ? (
+                        <>
+                            <div className="text-[13px] font-bold text-[var(--text-primary)] truncate">{topTheme}</div>
+                            <div className="text-[11px]" style={{ color: topThemeAvgChange >= 0 ? 'var(--rise-color)' : 'var(--fall-color)' }}>
+                                {topThemeAvgChange >= 0 ? '+' : ''}{topThemeAvgChange.toFixed(1)}% avg
+                            </div>
+                            <div className="text-[11px] text-[var(--text-tertiary)]">오늘의 테마</div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="text-lg font-bold text-[var(--text-tertiary)]">—</div>
+                            <div className="text-[11px] text-[var(--text-tertiary)]">오늘의 테마</div>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* 등급 분포 바 */}
+            <div>
+                <div className="flex justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+                    <span>등급 분포</span>
+                    <span>{total}종목</span>
+                </div>
+                <div className="flex gap-[2px] h-1.5 rounded-full overflow-hidden">
+                    {sCount > 0 && <div style={{ width: `${(sCount / total) * 100}%`, background: 'var(--grade-s)' }} />}
+                    {aCount > 0 && <div style={{ width: `${(aCount / total) * 100}%`, background: 'var(--grade-a)' }} />}
+                    {otherCount > 0 && <div style={{ width: `${(otherCount / total) * 100}%`, background: 'var(--text-tertiary)' }} />}
+                </div>
+                <div className="flex gap-3 mt-1">
+                    <span className="text-[11px] text-[var(--text-tertiary)] flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'var(--grade-s)' }} />S {sCount}
+                    </span>
+                    <span className="text-[11px] text-[var(--text-tertiary)] flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'var(--grade-a)' }} />A {aCount}
+                    </span>
+                    <span className="text-[11px] text-[var(--text-tertiary)] flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'var(--text-tertiary)' }} />기타 {otherCount}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // 이전 데이터와 비교하여 가격 플래시/순위 변동 계산
 function usePriceFlashAndRank(stocks: HotStock[]) {
     const prevStocksRef = useRef<HotStock[]>([]);
@@ -290,6 +392,8 @@ export default function HotStocksView() {
                     </span>
                 )}
             </div>
+
+            {stocks.length > 0 && <MarketKpiStrip stocks={stocks} />}
 
             {renderSection('S등급', '70점 이상', hotStocks, 1, 'var(--grade-s)', 'row-grade-s')}
             {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1, 'var(--grade-a)', 'row-grade-a')}
