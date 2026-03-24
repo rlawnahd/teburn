@@ -32,7 +32,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
     return (
         <div
             onClick={onClick}
-            className="border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors rounded overflow-hidden"
+            className="border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors rounded overflow-hidden min-h-[140px] flex flex-col"
         >
             {/* 컬러 악센트 스트라이프 */}
             <div className="h-[3px]" style={{ background: accentColor }} />
@@ -55,7 +55,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                 </div>
             </div>
 
-            <div className="px-3 py-2">
+            <div className="px-3 py-2 flex-1 flex flex-col">
                 <div className="flex items-center gap-3 text-xs mb-2">
                     <span className="text-[var(--text-tertiary)]">
                         종목 <span className="text-[var(--text-secondary)] font-medium">{sector.stockCount}</span>
@@ -83,7 +83,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                 </div>
 
                 {sector.topStock && (
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-[var(--border-color)] text-xs">
+                    <div className="flex items-center gap-1.5 pt-2 border-t border-[var(--border-color)] text-xs mt-auto">
                         <Crown size={10} className="text-amber-500 flex-shrink-0" />
                         <span className="text-[var(--text-secondary)] truncate flex-1">{sector.topStock.name}</span>
                         <span className={`font-medium flex-shrink-0 ${
@@ -161,7 +161,9 @@ export default function LeadingSectorView() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                         {risingSectors.map((sector, index) => (
-                            <SectorCard key={sector.themeName} sector={sector} rank={index + 1} onClick={() => router.push(`/themes/${encodeURIComponent(sector.themeName)}`)} />
+                            <div key={sector.themeName} className="animate-stagger" style={{ animationDelay: `${index * 40}ms` }}>
+                                <SectorCard sector={sector} rank={index + 1} onClick={() => router.push(`/themes/${encodeURIComponent(sector.themeName)}`)} />
+                            </div>
                         ))}
                     </div>
                 </section>
@@ -176,7 +178,9 @@ export default function LeadingSectorView() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                         {fallingSectors.map((sector, index) => (
-                            <SectorCard key={sector.themeName} sector={sector} rank={risingSectors.length + index + 1} onClick={() => router.push(`/themes/${encodeURIComponent(sector.themeName)}`)} />
+                            <div key={sector.themeName} className="animate-stagger" style={{ animationDelay: `${index * 40}ms` }}>
+                                <SectorCard sector={sector} rank={risingSectors.length + index + 1} onClick={() => router.push(`/themes/${encodeURIComponent(sector.themeName)}`)} />
+                            </div>
                         ))}
                     </div>
                 </section>
