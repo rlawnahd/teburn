@@ -27,12 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.8,
         },
         {
-            url: 'https://teburn.com/news',
-            lastModified: new Date(),
-            changeFrequency: 'always',
-            priority: 0.7,
-        },
-        {
             url: 'https://teburn.com/terms',
             lastModified: new Date(),
             changeFrequency: 'monthly',
