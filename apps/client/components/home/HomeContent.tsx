@@ -9,6 +9,7 @@ import CalendarView from '@/components/leading/CalendarView';
 import IndexView from '@/components/leading/IndexView';
 import TradingView from '@/components/leading/TradingView';
 import IndexWidget from '@/components/home/IndexWidget';
+import TickerStrip from '@/components/home/TickerStrip';
 
 type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index' | 'trading';
 
@@ -36,6 +37,9 @@ export default function HomeContent() {
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
+            {/* 티커 스트립 */}
+            <TickerStrip />
+
             {/* 지수 위젯 + 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
                 <div className="max-w-[1280px] mx-auto px-3 pt-2 pb-0">

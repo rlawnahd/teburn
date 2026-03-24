@@ -429,6 +429,20 @@ h1, h2, h3, h4, h5, h6 {
   animation: tabSlideIn 0.2s ease-out;
 }
 
+/* 티커 스트립 무한 스크롤 */
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-scroll {
+  animation: tickerScroll 30s linear infinite;
+}
+
+.ticker-scroll:hover {
+  animation-play-state: paused;
+}
+
 /* ============================
    선택 스타일
    ============================ */
