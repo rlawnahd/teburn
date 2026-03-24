@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { fetchTradeHistory, KiwoomTrade } from '@/lib/api/trading';
+import { KiwoomTrade } from '@/lib/api/trading';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 export default function TradingPage() {
     const [password, setPassword] = useState('');
     const [authenticated, setAuthenticated] = useState(false);
+    const [savedPassword, setSavedPassword] = useState('');
     const [error, setError] = useState('');
 
     const handleLogin = async () => {
@@ -17,6 +19,7 @@ export default function TradingPage() {
             const { data } = await axios.post(`${API_URL}/trading/auth`, { password });
             if (data.success) {
                 setAuthenticated(true);
+                setSavedPassword(password);
                 setError('');
             }
         } catch {
@@ -50,26 +53,42 @@ export default function TradingPage() {
         );
     }
 
-    return <TradingJournal password={password} />;
+    return <TradingJournal password={savedPassword} />;
+}
+
+function formatDate(d: Date): string {
+    return d.toISOString().split('T')[0];
+}
+
+function formatDateKR(d: Date): string {
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+function toYYYYMMDD(d: Date): string {
+    return d.toISOString().split('T')[0].replace(/-/g, '');
 }
 
 function TradingJournal({ password }: { password: string }) {
+    const [selectedDate, setSelectedDate] = useState(new Date());
+
+    const headers = { 'x-trading-password': password };
+    const dateStr = toYYYYMMDD(selectedDate);
+
     const { data: accountData } = useQuery({
         queryKey: ['tradingAccount', password],
         queryFn: async () => {
-            const { data } = await axios.get(`${API_URL}/trading/account`, {
-                headers: { 'x-trading-password': password },
-            });
+            const { data } = await axios.get(`${API_URL}/trading/account`, { headers });
             return data.data;
         },
         refetchInterval: 60 * 1000,
     });
 
     const { data: historyData } = useQuery({
-        queryKey: ['tradeHistory', password],
+        queryKey: ['tradeHistory', password, dateStr],
         queryFn: async () => {
             const { data } = await axios.get(`${API_URL}/trading/history`, {
-                headers: { 'x-trading-password': password },
+                headers,
+                params: { date: dateStr },
             });
             return data.data;
         },
@@ -79,10 +98,46 @@ function TradingJournal({ password }: { password: string }) {
     const account = accountData?.account;
     const trades: KiwoomTrade[] = historyData?.trades || [];
 
+    const prevDay = () => {
+        const d = new Date(selectedDate);
+        d.setDate(d.getDate() - 1);
+        if (d.getDay() === 0) d.setDate(d.getDate() - 2); // 일→금
+        if (d.getDay() === 6) d.setDate(d.getDate() - 1); // 토→금
+        setSelectedDate(d);
+    };
+
+    const nextDay = () => {
+        const d = new Date(selectedDate);
+        d.setDate(d.getDate() + 1);
+        if (d.getDay() === 0) d.setDate(d.getDate() + 1); // 일→월
+        if (d.getDay() === 6) d.setDate(d.getDate() + 2); // 토→월
+        if (d > new Date()) return;
+        setSelectedDate(d);
+    };
+
+    const isToday = formatDate(selectedDate) === formatDate(new Date());
+
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <div className="max-w-[1280px] mx-auto p-3 space-y-3">
-                <h1 className="text-[var(--text-primary)] text-lg font-bold">매매일지</h1>
+
+                {/* 날짜 네비게이션 */}
+                <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] px-4 py-3 flex items-center justify-between">
+                    <button onClick={prevDay} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <div className="text-center">
+                        <p className="text-[var(--text-primary)] text-sm font-medium">{formatDateKR(selectedDate)}</p>
+                        {isToday && <p className="text-[var(--text-tertiary)] text-xs">오늘</p>}
+                    </div>
+                    <button
+                        onClick={nextDay}
+                        disabled={isToday}
+                        className={`p-1 transition-colors ${isToday ? 'text-[var(--border-color)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
 
                 {/* 계좌 현황 */}
                 {account && (
@@ -139,11 +194,11 @@ function TradingJournal({ password }: { password: string }) {
                     </div>
                 )}
 
-                {/* 오늘 체결 내역 */}
+                {/* 체결 내역 */}
                 <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
-                    <h2 className="text-[var(--text-primary)] text-sm font-medium mb-3">오늘 체결 내역</h2>
+                    <h2 className="text-[var(--text-primary)] text-sm font-medium mb-3">체결 내역</h2>
                     {trades.length === 0 ? (
-                        <p className="text-[var(--text-tertiary)] text-sm">오늘 체결 내역이 없습니다.</p>
+                        <p className="text-[var(--text-tertiary)] text-sm">이 날 체결 내역이 없습니다.</p>
                     ) : (
                         <div className="space-y-1">
                             {trades.map((trade) => {
