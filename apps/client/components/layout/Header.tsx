@@ -158,7 +158,7 @@ export default function Header() {
     return (
         <>
             <header
-                className={`h-12 border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-[var(--bg-primary)] sticky top-0 z-50 transition-shadow duration-200 ${
+                className={`${scrolled ? 'h-10' : 'h-12'} border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-[var(--bg-primary)] sticky top-0 z-50 transition-all duration-200 ${
                     scrolled ? 'shadow-[var(--shadow-header)]' : ''
                 }`}
             >
@@ -167,8 +167,8 @@ export default function Header() {
                         <Image
                             src="/teburn-text-logo.svg"
                             alt="TEBURN"
-                            width={90}
-                            height={24}
+                            width={scrolled ? 75 : 90}
+                            height={scrolled ? 20 : 24}
                             priority
                         />
                     </Link>
