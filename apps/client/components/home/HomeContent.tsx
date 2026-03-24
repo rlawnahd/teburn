@@ -20,7 +20,7 @@ const TAB_CONFIG: { key: TabType; label: string; icon: typeof Flame }[] = [
     { key: 'sectors', label: '섹터', icon: LayoutGrid },
     { key: 'calendar', label: '캘린더', icon: Calendar },
     { key: 'index', label: '지수', icon: BarChart2 },
-    { key: 'trading', label: '자동매매', icon: Bot },
+    { key: 'trading', label: '매매일지', icon: Bot },
 ];
 
 export default function HomeContent() {

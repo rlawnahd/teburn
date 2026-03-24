@@ -97,6 +97,37 @@ export const fetchTradingDashboard = async (): Promise<TradingDashboard> => {
     return data.data;
 };
 
+// 키움 실제 체결내역 (수동 + 자동)
+export interface KiwoomTrade {
+    orderNo: string;
+    stockCode: string;
+    stockName: string;
+    tradeType: string;
+    orderQty: number;
+    filledQty: number;
+    filledPrice: number;
+    orderTime: string;
+    ioBuySell: string;
+}
+
+interface HistoryResponse {
+    success: boolean;
+    data: {
+        trades: KiwoomTrade[];
+        marketStatus: MarketStatusInfo;
+    };
+}
+
+export const fetchTradeHistory = async (date?: string): Promise<{
+    trades: KiwoomTrade[];
+    marketStatus: MarketStatusInfo;
+}> => {
+    const { data } = await axios.get<HistoryResponse>(`${API_URL}/trading/history`, {
+        params: date ? { date } : {},
+    });
+    return data.data;
+};
+
 export const fetchTrades = async (
     page: number = 1,
     limit: number = 20,
