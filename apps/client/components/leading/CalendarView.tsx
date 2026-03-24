@@ -33,7 +33,7 @@ function DateCell({
     return (
         <div
             onClick={hasData ? onClick : undefined}
-            className={`relative min-h-[64px] md:min-h-[88px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] ${
+            className={`relative min-h-[80px] md:min-h-[100px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] ${
                 isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]'
             } ${isToday ? 'ring-1 ring-inset ring-[var(--accent-blue)]' : ''} ${
                 hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''
@@ -71,7 +71,7 @@ function DateCell({
                                         </span>
                                     </div>
                                     {themeTag && (
-                                        <div className="text-[8px] md:text-[9px] text-[var(--text-tertiary)] truncate">
+                                        <div className="text-[11px] text-[var(--text-tertiary)] truncate">
                                             {themeTag}
                                         </div>
                                     )}
@@ -84,11 +84,11 @@ function DateCell({
                                 key={`${stock.stockCode || stock.stockName}-${idx}`}
                                 className="flex items-baseline gap-1"
                             >
-                                <span className={`text-[9px] md:text-[10px] truncate opacity-50 ${colorClass}`}>
+                                <span className={`text-[11px] truncate opacity-50 ${colorClass}`}>
                                     {stock.stockName}
                                 </span>
                                 {themeTag && (
-                                    <span className="text-[7px] md:text-[8px] text-[var(--text-disabled)] truncate flex-shrink-0">
+                                    <span className="text-[11px] text-[var(--text-disabled)] truncate flex-shrink-0">
                                         {themeTag}
                                     </span>
                                 )}
@@ -244,7 +244,7 @@ export default function CalendarView() {
                 {isLoading ? (
                     <div className="grid grid-cols-5">
                         {Array.from({ length: 25 }).map((_, i) => (
-                            <div key={i} className="min-h-[64px] md:min-h-[88px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+                            <div key={i} className="min-h-[80px] md:min-h-[100px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
                                 <Skeleton className="h-3 w-4 rounded-sm mb-2" />
                                 <Skeleton className="h-3 w-full rounded-sm mb-1" />
                                 <Skeleton className="h-2 w-2/3 rounded-sm" />
