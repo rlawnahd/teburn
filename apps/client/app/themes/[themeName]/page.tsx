@@ -116,8 +116,20 @@ export default function ThemeDetailPage() {
             </div>
 
             <main className="max-w-[1280px] mx-auto p-3 space-y-3">
+                {/* 히어로 섹션 */}
+                <div
+                    className="card py-4 text-center"
+                    style={{ borderTop: `3px solid ${isPositive ? 'var(--rise-color)' : isNegative ? 'var(--fall-color)' : 'var(--border-color)'}` }}
+                >
+                    <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-1">{theme.themeName}</div>
+                    <div className={`text-2xl font-bold ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
+                        {isPositive ? '+' : ''}{theme.avgChangeRate.toFixed(2)}%
+                    </div>
+                    <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">평균 등락률</div>
+                </div>
+
                 {/* 요약 정보 */}
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
+                <div className="card">
                     <div className="grid grid-cols-3 gap-px bg-[var(--border-color)]">
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
                             <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">평균 등락률</div>
@@ -150,7 +162,7 @@ export default function ThemeDetailPage() {
                             <span className="text-xs font-medium text-[var(--text-primary)]">상승</span>
                             <span className="text-[11px] text-[var(--text-tertiary)]">{risingStocks.length}</span>
                         </div>
-                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
+                        <div className="card">
                             <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                                 <span className="w-5 text-center">#</span>
                                 <span className="flex-1">종목</span>
@@ -158,7 +170,9 @@ export default function ThemeDetailPage() {
                                 <span className="w-12 text-right hidden sm:block">거래량</span>
                             </div>
                             {risingStocks.map((stock, i) => (
-                                <StockRow key={stock.stockCode} stock={stock} rank={i + 1} onClick={() => handleStockClick(stock.stockCode)} />
+                                <div key={stock.stockCode} className="animate-stagger" style={{ animationDelay: `${i * 25}ms` }}>
+                                    <StockRow stock={stock} rank={i + 1} onClick={() => handleStockClick(stock.stockCode)} />
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -172,7 +186,7 @@ export default function ThemeDetailPage() {
                             <span className="text-xs font-medium text-[var(--text-primary)]">하락</span>
                             <span className="text-[11px] text-[var(--text-tertiary)]">{fallingStocks.length}</span>
                         </div>
-                        <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
+                        <div className="card">
                             <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                                 <span className="w-5 text-center">#</span>
                                 <span className="flex-1">종목</span>
@@ -180,7 +194,9 @@ export default function ThemeDetailPage() {
                                 <span className="w-12 text-right hidden sm:block">거래량</span>
                             </div>
                             {fallingStocks.map((stock, i) => (
-                                <StockRow key={stock.stockCode} stock={stock} rank={i + 1} onClick={() => handleStockClick(stock.stockCode)} />
+                                <div key={stock.stockCode} className="animate-stagger" style={{ animationDelay: `${i * 25}ms` }}>
+                                    <StockRow stock={stock} rank={i + 1} onClick={() => handleStockClick(stock.stockCode)} />
+                                </div>
                             ))}
                         </div>
                     </div>
