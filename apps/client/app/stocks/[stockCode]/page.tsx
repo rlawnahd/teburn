@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 import { fetchStockDetail } from '@/lib/api/stocks';
 import { formatTradingValue, formatVolume, formatRelativeTime } from '@/lib/utils/format';
+import GradeBadge from '@/components/ui/GradeBadge';
 
 function getGradeStyle(grade: string): { color: string; bg: string; label: string } {
     switch (grade) {
@@ -41,8 +42,8 @@ function ScoreBar({
 
     return (
         <div className="flex items-center gap-1.5">
-            <div className="w-12 text-xs text-[var(--text-tertiary)]">{label}</div>
-            <div className="flex-1 h-[3px] bg-[var(--bg-tertiary)] overflow-hidden">
+            <div className="w-14 text-xs text-[var(--text-tertiary)]">{label}</div>
+            <div className="flex-1 h-[4px] bg-[var(--bg-tertiary)] overflow-hidden">
                 <div className={`h-full ${color}`} style={{ width: `${percentage}%` }} />
             </div>
             <div className="w-6 text-right text-xs font-medium text-[var(--text-secondary)]">{score.toFixed(0)}</div>
@@ -137,7 +138,7 @@ export default function StockDetailPage() {
             {/* 컨텐츠 */}
             <main className="max-w-[1280px] mx-auto p-3 space-y-3">
                 {/* 요약 정보 — 테이블 스타일 */}
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
+                <div className="card">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border-color)]">
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
                             <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래대금</div>
@@ -160,7 +161,7 @@ export default function StockDetailPage() {
 
                 {/* 주도주 점수 */}
                 {stock.hotness && (
-                    <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
+                    <div className="card">
                         <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                             <div className="flex items-center gap-2">
                                 <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
@@ -170,9 +171,7 @@ export default function StockDetailPage() {
                                 <span className={`text-sm font-bold ${getGradeStyle(stock.hotness.grade).color}`}>
                                     {stock.hotness.totalScore.toFixed(0)}
                                 </span>
-                                <span className={`px-1 py-0.5 text-[9px] font-bold text-white ${getGradeStyle(stock.hotness.grade).bg}`}>
-                                    {getGradeStyle(stock.hotness.grade).label}
-                                </span>
+                                <GradeBadge grade={stock.hotness.grade} />
                             </div>
                         </div>
 
@@ -217,7 +216,7 @@ export default function StockDetailPage() {
 
                 {/* 관련 테마 */}
                 {stock.themes.length > 0 && (
-                    <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded">
+                    <div className="card">
                         <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)]">
                             <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 테마</span>
                             <span className="text-[11px] text-[var(--text-tertiary)]">{stock.themes.length}개</span>
@@ -237,7 +236,7 @@ export default function StockDetailPage() {
                 )}
 
                 {/* 관련 뉴스 */}
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden">
+                <div className="card overflow-hidden">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                         <div className="flex items-center gap-2">
                             <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 뉴스</span>
@@ -273,7 +272,7 @@ export default function StockDetailPage() {
                                     </div>
                                     <ExternalLink
                                         size={12}
-                                        className="text-[var(--text-tertiary)] group-hover:text-[var(--accent-blue)] shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="text-[var(--text-tertiary)] group-hover:text-[var(--accent-blue)] shrink-0 mt-0.5 opacity-30 group-hover:opacity-100 transition-opacity"
                                     />
                                 </a>
                             ))}
