@@ -56,16 +56,17 @@ export default function TradingPage() {
     return <TradingJournal password={savedPassword} />;
 }
 
-function formatDate(d: Date): string {
-    return d.toISOString().split('T')[0];
-}
-
 function formatDateKR(d: Date): string {
-    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
 }
 
 function toYYYYMMDD(d: Date): string {
     return d.toISOString().split('T')[0].replace(/-/g, '');
+}
+
+function formatDate(d: Date): string {
+    return d.toISOString().split('T')[0];
 }
 
 function TradingJournal({ password }: { password: string }) {
@@ -92,25 +93,30 @@ function TradingJournal({ password }: { password: string }) {
             });
             return data.data;
         },
-        refetchInterval: 60 * 1000,
     });
 
     const account = accountData?.account;
     const trades: KiwoomTrade[] = historyData?.trades || [];
 
+    // 체결 통계 계산
+    const buyTrades = trades.filter(t => t.ioBuySell.includes('매수'));
+    const sellTrades = trades.filter(t => t.ioBuySell.includes('매도'));
+    const totalBuyAmount = buyTrades.reduce((sum, t) => sum + t.filledPrice * t.filledQty, 0);
+    const totalSellAmount = sellTrades.reduce((sum, t) => sum + t.filledPrice * t.filledQty, 0);
+
     const prevDay = () => {
         const d = new Date(selectedDate);
         d.setDate(d.getDate() - 1);
-        if (d.getDay() === 0) d.setDate(d.getDate() - 2); // 일→금
-        if (d.getDay() === 6) d.setDate(d.getDate() - 1); // 토→금
+        if (d.getDay() === 0) d.setDate(d.getDate() - 2);
+        if (d.getDay() === 6) d.setDate(d.getDate() - 1);
         setSelectedDate(d);
     };
 
     const nextDay = () => {
         const d = new Date(selectedDate);
         d.setDate(d.getDate() + 1);
-        if (d.getDay() === 0) d.setDate(d.getDate() + 1); // 일→월
-        if (d.getDay() === 6) d.setDate(d.getDate() + 2); // 토→월
+        if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+        if (d.getDay() === 6) d.setDate(d.getDate() + 2);
         if (d > new Date()) return;
         setSelectedDate(d);
     };
@@ -139,8 +145,8 @@ function TradingJournal({ password }: { password: string }) {
                     </button>
                 </div>
 
-                {/* 계좌 현황 */}
-                {account && (
+                {/* 계좌 현황 (오늘만) */}
+                {isToday && account && (
                     <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
                         <h2 className="text-[var(--text-primary)] text-sm font-medium mb-3">계좌 현황</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -168,18 +174,21 @@ function TradingJournal({ password }: { password: string }) {
                     </div>
                 )}
 
-                {/* 보유 종목 */}
-                {account?.positions && account.positions.length > 0 && (
+                {/* 보유 종목 (오늘만) */}
+                {isToday && account?.positions && account.positions.length > 0 && (
                     <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
                         <h2 className="text-[var(--text-primary)] text-sm font-medium mb-3">보유 종목</h2>
                         <div className="space-y-2">
                             {account.positions.map((pos: any) => {
                                 const isProfit = (pos.pnl || 0) >= 0;
+                                const evalAmount = (pos.currentPrice || 0) * (pos.quantity || 0);
                                 return (
                                     <div key={pos.stockCode} className="flex items-center justify-between py-2 border-b border-[var(--border-color)] last:border-0">
                                         <div>
                                             <p className="text-[var(--text-primary)] text-sm font-medium">{pos.stockName}</p>
-                                            <p className="text-[var(--text-tertiary)] text-xs">{pos.quantity}주 · 평단 {pos.avgBuyPrice?.toLocaleString()}원</p>
+                                            <p className="text-[var(--text-tertiary)] text-xs">
+                                                {pos.quantity}주 · 평단 {pos.avgBuyPrice?.toLocaleString()}원 · 평가 {evalAmount.toLocaleString()}원
+                                            </p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[var(--text-primary)] text-sm">{pos.currentPrice?.toLocaleString()}원</p>
@@ -194,7 +203,36 @@ function TradingJournal({ password }: { password: string }) {
                     </div>
                 )}
 
-                {/* 체결 내역 */}
+                {/* 당일 매매 요약 */}
+                {trades.length > 0 && (
+                    <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+                        <h2 className="text-[var(--text-primary)] text-sm font-medium mb-3">매매 요약</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <p className="text-[var(--text-tertiary)] text-xs">총 체결</p>
+                                <p className="text-[var(--text-primary)] text-sm font-medium">{trades.length}건</p>
+                            </div>
+                            <div>
+                                <p className="text-[var(--text-tertiary)] text-xs">매수 / 매도</p>
+                                <p className="text-[var(--text-primary)] text-sm font-medium">
+                                    <span className="text-[var(--rise-color)]">{buyTrades.length}</span>
+                                    {' / '}
+                                    <span className="text-[var(--fall-color)]">{sellTrades.length}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-[var(--text-tertiary)] text-xs">총 매수금액</p>
+                                <p className="text-[var(--rise-color)] text-sm font-medium">{totalBuyAmount.toLocaleString()}원</p>
+                            </div>
+                            <div>
+                                <p className="text-[var(--text-tertiary)] text-xs">총 매도금액</p>
+                                <p className="text-[var(--fall-color)] text-sm font-medium">{totalSellAmount.toLocaleString()}원</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 체결 내역 상세 */}
                 <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
                     <h2 className="text-[var(--text-primary)] text-sm font-medium mb-3">체결 내역</h2>
                     {trades.length === 0 ? (
@@ -206,23 +244,29 @@ function TradingJournal({ password }: { password: string }) {
                                 const time = trade.orderTime
                                     ? `${trade.orderTime.slice(0, 2)}:${trade.orderTime.slice(2, 4)}:${trade.orderTime.slice(4, 6)}`
                                     : '';
+                                const amount = trade.filledPrice * trade.filledQty;
+
                                 return (
-                                    <div key={trade.orderNo} className="flex items-center justify-between py-2 border-b border-[var(--border-color)] last:border-0">
-                                        <div className="flex items-center gap-2">
+                                    <div key={trade.orderNo} className="flex items-center justify-between py-2.5 border-b border-[var(--border-color)] last:border-0">
+                                        <div className="flex items-center gap-2.5">
                                             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
                                                 isBuy ? 'bg-[var(--rise-color)]/10 text-[var(--rise-color)]' : 'bg-[var(--fall-color)]/10 text-[var(--fall-color)]'
                                             }`}>
                                                 {isBuy ? '매수' : '매도'}
                                             </span>
                                             <div>
-                                                <p className="text-[var(--text-primary)] text-sm">{trade.stockName}</p>
-                                                <p className="text-[var(--text-tertiary)] text-xs">{time}</p>
+                                                <p className="text-[var(--text-primary)] text-sm font-medium">{trade.stockName}</p>
+                                                <p className="text-[var(--text-tertiary)] text-xs">
+                                                    {time} · {trade.tradeType} · 주문번호 {trade.orderNo}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[var(--text-primary)] text-sm">{trade.filledPrice.toLocaleString()}원</p>
+                                            <p className="text-[var(--text-primary)] text-sm font-medium">
+                                                {trade.filledPrice.toLocaleString()}원 × {trade.filledQty}주
+                                            </p>
                                             <p className="text-[var(--text-tertiary)] text-xs">
-                                                {trade.filledQty}주 · {(trade.filledPrice * trade.filledQty).toLocaleString()}원
+                                                체결금액 {amount.toLocaleString()}원
                                             </p>
                                         </div>
                                     </div>

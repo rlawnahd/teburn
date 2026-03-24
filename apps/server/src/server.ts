@@ -212,6 +212,15 @@ connectDB().then(async () => {
                     } catch (error) {
                         console.error('❌ 거래량 히스토리 저장 실패:', error);
                     }
+
+                    // 장 마감 잔고 동기화 (당일 최종 데이터 기록)
+                    try {
+                        const { syncWithKiwoomBalance } = require('./services/tradingService');
+                        await syncWithKiwoomBalance();
+                        console.log('✅ 장 마감 잔고 동기화 완료');
+                    } catch (error) {
+                        console.error('❌ 장 마감 잔고 동기화 실패:', error);
+                    }
                 }
             }
         };
