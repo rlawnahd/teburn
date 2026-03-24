@@ -161,11 +161,8 @@ export default function StockDetailPage() {
 
                 {/* 주도주 점수 */}
                 {stock.hotness && (() => {
-                    const gradeTopBorderColor = stock.hotness.grade === 'S' ? 'var(--grade-s)'
-                        : stock.hotness.grade === 'A' ? 'var(--grade-a)'
-                        : 'var(--border-color)';
                     return (
-                    <div className="card" style={{ borderTop: `3px solid ${gradeTopBorderColor}` }}>
+                    <div className="card">
                         <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                             <div className="flex items-center gap-2">
                                 <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>

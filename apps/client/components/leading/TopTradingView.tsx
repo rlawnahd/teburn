@@ -154,7 +154,7 @@ export default function TopTradingView() {
 
     return (
         <div className="space-y-3">
-            <div className="px-2 py-1.5 border-l-2 border-[var(--accent-blue)] bg-[var(--bg-tertiary)] rounded-r">
+            <div className="px-2 py-1.5 bg-[var(--bg-tertiary)] rounded-r">
                 <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
                     <span className="text-[var(--text-secondary)] font-medium">테마주</span> 중 거래대금 상위.
                     대형주 제외, <span className="text-[var(--rise-color)]">오늘 돈이 몰리는 테마</span>에 집중.

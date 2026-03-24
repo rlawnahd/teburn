@@ -119,7 +119,6 @@ export default function ThemeDetailPage() {
                 {/* 히어로 섹션 */}
                 <div
                     className="card py-4 text-center"
-                    style={{ borderTop: `3px solid ${isPositive ? 'var(--rise-color)' : isNegative ? 'var(--fall-color)' : 'var(--border-color)'}` }}
                 >
                     <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-1">{theme.themeName}</div>
                     <div className={`text-2xl font-bold ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>

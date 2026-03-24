@@ -41,7 +41,6 @@ export default function TradingPage() {
             <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
                 <div
                     className="card p-6 w-full max-w-sm rounded"
-                    style={{ borderTop: '3px solid', borderImage: 'var(--brand-gradient) 1' }}
                 >
                     <h1 className="text-[var(--text-primary)] text-lg font-bold mb-4">매매일지</h1>
                     <p className="text-[var(--text-tertiary)] text-sm mb-4">비밀번호를 입력하세요.</p>
@@ -178,10 +177,6 @@ function TradingJournal({ password }: { password: string }) {
                     return (
                         <div
                             className="card p-4 rounded"
-                            style={{
-                                borderTop: '3px solid',
-                                borderColor: isPnlPositive ? 'var(--rise-color)' : 'var(--fall-color)',
-                            }}
                         >
                             <h2 className="text-[var(--text-primary)] text-sm font-medium mb-4">계좌 현황</h2>
                             {/* Hero: 수익률 */}
