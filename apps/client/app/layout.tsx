@@ -5,9 +5,7 @@ import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 import AuthProvider from '@/lib/auth/AuthProvider';
 import RealtimeProvider from '@/components/provider/RealtimeProvider';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import KakaoAdFit from '@/components/ad/KakaoAdFit';
+import AuthLayout from '@/components/layout/AuthLayout';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
@@ -57,17 +55,9 @@ export default function RootLayout({
                     <AuthProvider>
                     <QueryProvider>
                     <RealtimeProvider>
-                        <Header />
-                        {children}
-                        {/* 데스크톱: 오른쪽 여백에 고정 광고 (콘텐츠 중앙 정렬 유지) */}
-                        <aside className="hidden xl:block fixed right-4 top-16 z-10">
-                            <KakaoAdFit adUnit="DAN-wGcNGCgZbNV7h6Oa" width={160} height={600} />
-                        </aside>
-                        {/* 모바일 하단 광고 */}
-                        <div className="xl:hidden flex justify-center py-4">
-                            <KakaoAdFit adUnit="DAN-2f3e80wfJpcTWx5H" width={320} height={100} />
-                        </div>
-                        <Footer />
+                        <AuthLayout>
+                            {children}
+                        </AuthLayout>
                     </RealtimeProvider>
                     </QueryProvider>
                     </AuthProvider>

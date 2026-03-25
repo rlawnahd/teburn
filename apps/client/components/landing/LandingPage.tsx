@@ -4,7 +4,7 @@ import PreviewSection from './PreviewSection';
 
 export default function LandingPage() {
     return (
-        <main>
+        <main className="min-h-screen">
             <HeroSection />
             <FeaturesSection />
             <PreviewSection />
