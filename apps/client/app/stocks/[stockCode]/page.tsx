@@ -2,11 +2,14 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 import { fetchStockDetail } from '@/lib/api/stocks';
 import { formatTradingValue, formatVolume, formatRelativeTime } from '@/lib/utils/format';
 import GradeBadge from '@/components/ui/GradeBadge';
+import TradingViewChart from '@/components/stock/TradingViewChart';
+import HotnessHistoryChart from '@/components/stock/HotnessHistoryChart';
 
 function getGradeStyle(grade: string): { color: string; bg: string; label: string } {
     switch (grade) {
@@ -66,6 +69,18 @@ export default function StockDetailPage() {
         enabled: !!stockCode,
         refetchInterval: 60 * 1000,
     });
+
+    const originalTitle = useRef<string>('');
+    useEffect(() => {
+        originalTitle.current = document.title;
+        return () => { document.title = originalTitle.current; };
+    }, []);
+
+    useEffect(() => {
+        if (!stock) return;
+        const sign = stock.changeRate > 0 ? '+' : '';
+        document.title = `${stock.stockName} ${stock.currentPrice.toLocaleString()} (${sign}${stock.changeRate.toFixed(2)}%)`;
+    }, [stock]);
 
     if (isLoading) {
         return (
@@ -159,6 +174,9 @@ export default function StockDetailPage() {
                     </div>
                 </div>
 
+                {/* 차트 */}
+                <TradingViewChart stockCode={stockCode} />
+
                 {/* 주도주 점수 */}
                 {stock.hotness && (() => {
                     return (
@@ -174,6 +192,10 @@ export default function StockDetailPage() {
                                 </span>
                                 <GradeBadge grade={stock.hotness.grade} />
                             </div>
+                        </div>
+
+                        <div className="px-3 py-2 border-b border-[var(--border-color)]">
+                            <HotnessHistoryChart stockCode={stockCode} />
                         </div>
 
                         <div className="px-3 py-2 space-y-1.5">

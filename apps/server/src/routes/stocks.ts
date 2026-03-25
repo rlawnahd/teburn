@@ -4,6 +4,7 @@ import { themePriceCache } from '../services/themePriceCache';
 import { calculateBatchHotness } from '../services/hotnessService';
 import Theme from '../models/Theme';
 import News from '../models/News';
+import HotnessHistory from '../models/HotnessHistory';
 
 const router = Router();
 
@@ -133,6 +134,35 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
             success: false,
             message: error.message || '테마 가격 조회 중 오류가 발생했습니다.',
         });
+    }
+});
+
+// 종목 주도주 점수 히스토리 조회
+router.get('/:stockCode/hotness-history', async (req: Request, res: Response) => {
+    try {
+        const { stockCode } = req.params;
+        const days = Math.min(Number(req.query.days) || 30, 90);
+
+        const history = await HotnessHistory.find({ stockCode })
+            .sort({ date: -1 })
+            .limit(days)
+            .lean();
+
+        res.json({
+            success: true,
+            data: history.reverse().map(h => ({
+                date: h.date,
+                totalScore: h.totalScore,
+                grade: h.grade,
+                tradingValueScore: h.tradingValueScore,
+                momentumScore: h.momentumScore,
+                volumeScore: h.volumeScore,
+                newsScore: h.newsScore,
+                themeConcentrationScore: h.themeConcentrationScore,
+            })),
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

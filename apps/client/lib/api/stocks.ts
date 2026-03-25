@@ -135,6 +135,26 @@ export const searchStocks = async (query: string): Promise<SearchStockResult[]> 
     return data.data;
 };
 
+// 주도주 점수 히스토리
+export interface HotnessHistoryItem {
+    date: string;
+    totalScore: number;
+    grade: string;
+    tradingValueScore: number;
+    momentumScore: number;
+    volumeScore: number;
+    newsScore: number;
+    themeConcentrationScore: number;
+}
+
+export const fetchHotnessHistory = async (stockCode: string, days = 30): Promise<HotnessHistoryItem[]> => {
+    const { data } = await axios.get<{ success: boolean; data: HotnessHistoryItem[] }>(
+        `${API_URL}/stocks/${encodeURIComponent(stockCode)}/hotness-history`,
+        { params: { days } }
+    );
+    return data.data;
+};
+
 // 종목 상세 조회 (종목코드로)
 export const fetchStockDetail = async (stockCode: string): Promise<StockDetail> => {
     const { data } = await axios.get<StockDetailResponse>(

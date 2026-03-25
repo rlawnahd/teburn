@@ -14,7 +14,7 @@ import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
 import { saveDailyLeadingThemes } from './services/leadingStockService';
-import { warmupHotStocks } from './services/hotnessService';
+import { warmupHotStocks, saveDailyHotnessHistory } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
@@ -211,6 +211,14 @@ connectDB().then(async () => {
                         console.log('✅ 거래량 히스토리 저장 완료');
                     } catch (error) {
                         console.error('❌ 거래량 히스토리 저장 실패:', error);
+                    }
+
+                    // 주도주 점수 히스토리 저장
+                    try {
+                        await saveDailyHotnessHistory();
+                        console.log('주도주 히스토리 저장 완료');
+                    } catch (error) {
+                        console.error('주도주 히스토리 저장 실패:', error);
                     }
 
                     // 장 마감 잔고 동기화 (당일 최종 데이터 기록)

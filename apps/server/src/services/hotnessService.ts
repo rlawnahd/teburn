@@ -4,6 +4,7 @@
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
 import { getBatchStockNewsCountFromApi } from './naverApi';
+import HotnessHistory from '../models/HotnessHistory';
 
 export interface HotnessScore {
     stockCode: string;
@@ -283,6 +284,47 @@ export async function warmupHotStocks(): Promise<void> {
     console.log('🔥 주도주 점수 사전 계산 시작...');
     await refreshHotStocks();
     console.log('🔥 주도주 점수 사전 계산 완료');
+}
+
+/**
+ * 당일 주도주 점수를 DB에 스냅샷 저장 (장 마감 시 1회 호출)
+ */
+export async function saveDailyHotnessHistory(): Promise<void> {
+    if (!hotStocksCache || hotStocksCache.data.length === 0) {
+        console.log('주도주 히스토리: 캐시 데이터 없음, 스킵');
+        return;
+    }
+
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstDate = new Date(now.getTime() + kstOffset);
+    const dateStr = kstDate.toISOString().split('T')[0];
+
+    let saved = 0;
+    for (const stock of hotStocksCache.data) {
+        try {
+            await HotnessHistory.findOneAndUpdate(
+                { stockCode: stock.stockCode, date: dateStr },
+                {
+                    stockCode: stock.stockCode,
+                    stockName: stock.stockName,
+                    totalScore: stock.totalScore,
+                    grade: stock.grade,
+                    tradingValueScore: stock.tradingValueScore,
+                    momentumScore: stock.momentumScore,
+                    volumeScore: stock.volumeScore,
+                    newsScore: stock.newsScore,
+                    themeConcentrationScore: stock.themeConcentrationScore,
+                    date: dateStr,
+                },
+                { upsert: true }
+            );
+            saved++;
+        } catch (err) {
+            // unique index 충돌은 무시
+        }
+    }
+    console.log(`주도주 히스토리 저장 완료: ${saved}개 (${dateStr})`);
 }
 
 /**
