@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, X, Menu } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LoginModal from '@/components/auth/LoginModal';
+import { useAuth } from '@/hooks/useAuth';
 import { searchStocks, SearchStockResult } from '@/lib/api/stocks';
 
 function SearchModal({ onClose }: { onClose: () => void }) {
@@ -122,15 +124,17 @@ function SearchModal({ onClose }: { onClose: () => void }) {
 }
 
 const NAV_LINKS = [
-    { href: '/', label: '홈' },
-    { href: '/trading', label: '매매일지' },
-    { href: '/guide', label: '가이드' },
+    { href: '/', label: '홈', authRequired: false },
+    { href: '/trading', label: '매매일지', authRequired: true },
+    { href: '/guide', label: '가이드', authRequired: false },
 ];
 
 export default function Header() {
     const pathname = usePathname();
+    const { user, isLoggedIn, logout } = useAuth();
     const [showSearch, setShowSearch] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -174,7 +178,7 @@ export default function Header() {
                     </Link>
                     {/* 데스크톱 네비 */}
                     <nav className="hidden md:flex items-center gap-1 ml-2">
-                        {NAV_LINKS.map((link) => {
+                        {NAV_LINKS.filter((link) => !link.authRequired || isLoggedIn).map((link) => {
                             const isActive = link.href === '/'
                                 ? pathname === '/'
                                 : pathname.startsWith(link.href);
@@ -220,6 +224,32 @@ export default function Header() {
                         <kbd className="text-[11px] hidden sm:inline opacity-40 ml-1">⌘K</kbd>
                     </button>
 
+                    {/* 로그인/로그아웃 */}
+                    {isLoggedIn ? (
+                        <div className="hidden sm:flex items-center gap-1.5">
+                            {user?.profileImage && (
+                                <img
+                                    src={user.profileImage}
+                                    alt={user.name}
+                                    className="w-6 h-6 rounded-full"
+                                />
+                            )}
+                            <button
+                                onClick={logout}
+                                className="h-8 px-2.5 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded"
+                            >
+                                로그아웃
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => setShowLoginModal(true)}
+                            className="hidden sm:flex items-center h-8 px-3 text-[12px] font-medium bg-[var(--accent-color)] text-white rounded hover:opacity-90 transition-opacity"
+                        >
+                            로그인
+                        </button>
+                    )}
+
                     <ThemeToggle />
 
                     {/* 모바일 햄버거 */}
@@ -238,7 +268,7 @@ export default function Header() {
                 <div className="md:hidden fixed inset-0 top-12 z-30" onClick={() => setShowMobileMenu(false)} />
                 <div className="md:hidden fixed inset-x-0 top-12 z-40 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-lg animate-slideDown">
                     <nav className="p-3 space-y-1">
-                        {NAV_LINKS.map((link) => (
+                        {NAV_LINKS.filter((link) => !link.authRequired || isLoggedIn).map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}
@@ -260,12 +290,28 @@ export default function Header() {
                             </svg>
                             텔레그램 알림봇
                         </a>
+                        {isLoggedIn ? (
+                            <button
+                                onClick={() => { logout(); setShowMobileMenu(false); }}
+                                className="w-full text-left px-3 py-2.5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                            >
+                                로그아웃
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => { setShowLoginModal(true); setShowMobileMenu(false); }}
+                                className="w-full text-left px-3 py-2.5 text-[14px] font-medium text-[var(--accent-color)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                            >
+                                로그인
+                            </button>
+                        )}
                     </nav>
                 </div>
                 </>
             )}
 
             {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
         </>
     );
 }

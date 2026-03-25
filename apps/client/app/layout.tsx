@@ -3,6 +3,7 @@ import Script from 'next/script';
 import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
+import AuthProvider from '@/lib/auth/AuthProvider';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import KakaoAdFit from '@/components/ad/KakaoAdFit';
@@ -52,6 +53,7 @@ export default function RootLayout({
                     />
                 </noscript>
                 <ThemeProvider>
+                    <AuthProvider>
                     <QueryProvider>
                         <Header />
                         {children}
@@ -65,6 +67,7 @@ export default function RootLayout({
                         </div>
                         <Footer />
                     </QueryProvider>
+                    </AuthProvider>
                 </ThemeProvider>
                 <Script id="gtm" strategy="afterInteractive">
                     {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
