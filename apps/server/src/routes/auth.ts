@@ -55,15 +55,27 @@ if (process.env.KAKAO_CLIENT_ID) {
 
     router.get('/kakao', passport.authenticate('kakao', { session: false }));
 
-    router.get('/kakao/callback',
-        passport.authenticate('kakao', { session: false, failureRedirect: `${CLIENT_URL}?auth=failed` }),
-        (req: Request, res: Response) => {
-            const user = req.user as any;
-            const token = generateToken(user._id.toString(), user.provider);
-            res.cookie('token', token, cookieOptions);
-            res.redirect(CLIENT_URL);
-        }
-    );
+    router.get('/kakao/callback', (req: Request, res: Response, next: any) => {
+        passport.authenticate('kakao', { session: false }, (err: any, user: any) => {
+            if (err) {
+                console.error('❌ 카카오 로그인 에러:', err);
+                return res.redirect(`${CLIENT_URL}?auth=failed&reason=error`);
+            }
+            if (!user) {
+                console.error('❌ 카카오 로그인: 유저 없음');
+                return res.redirect(`${CLIENT_URL}?auth=failed&reason=no-user`);
+            }
+            try {
+                const token = generateToken(user._id.toString(), user.provider);
+                res.cookie('token', token, cookieOptions);
+                console.log('✅ 카카오 로그인 성공:', user.name);
+                res.redirect(CLIENT_URL);
+            } catch (tokenErr) {
+                console.error('❌ 토큰 생성 에러:', tokenErr);
+                res.redirect(`${CLIENT_URL}?auth=failed&reason=token`);
+            }
+        })(req, res, next);
+    });
 }
 
 if (process.env.GOOGLE_CLIENT_ID) {
