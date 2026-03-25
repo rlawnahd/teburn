@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import axios from 'axios';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
@@ -23,6 +24,7 @@ import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
 import { startTradingBot } from './services/tradingBot';
+import { initWebSocketServer, closeAllConnections } from './services/wsServer';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -153,7 +155,10 @@ connectDB().then(async () => {
         console.log(`🗑️ 레거시 테마 ${deleted.deletedCount}개 삭제됨`);
     }
 
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    initWebSocketServer(server);
+
+    server.listen(PORT, () => {
         console.log(`🚀 Server is running at http://localhost:${PORT}`);
 
         // 서버 outbound IP 확인 (키움 REST API IP 등록용)
@@ -235,6 +240,9 @@ connectDB().then(async () => {
                     } catch (error) {
                         console.error('❌ 장 마감 잔고 동기화 실패:', error);
                     }
+
+                    // WebSocket 클라이언트 연결 종료
+                    closeAllConnections();
                 }
             }
         };
