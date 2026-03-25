@@ -3,12 +3,15 @@ import axios from 'axios';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import passport from 'passport';
 import newsRoutes from './routes/news';
 import themesRoutes from './routes/themes';
 import stocksRoutes from './routes/stocks';
 import leadingRoutes from './routes/leading';
 import adminRoutes from './routes/admin';
 import indicesRoutes from './routes/indices';
+import authRoutes from './routes/auth';
 import { crawlNaverFinanceNews } from './services/crawler';
 import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
@@ -43,6 +46,8 @@ app.use(cors({
     ],
     credentials: true,
 }));
+app.use(cookieParser());
+app.use(passport.initialize());
 
 // 3. MongoDB 연결 함수
 const connectDB = async () => {
@@ -112,6 +117,7 @@ app.use('/api/leading', leadingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/indices', indicesRoutes);
 app.use('/api/trading', tradingRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
