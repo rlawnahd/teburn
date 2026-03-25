@@ -24,7 +24,8 @@ import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
 import { startTradingBot } from './services/tradingBot';
-import { initWebSocketServer, closeAllConnections } from './services/wsServer';
+import { initWebSocketServer, closeAllConnections, broadcastToSubscribers } from './services/wsServer';
+import { onRealtimePrice } from './services/kiwoomWebSocket';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -190,6 +191,18 @@ connectDB().then(async () => {
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
             });
+
+        // 키움 실시간 체결 -> 클라이언트 WebSocket 브릿지
+        onRealtimePrice((stockCode, price, changeRate, volume) => {
+            broadcastToSubscribers(stockCode, JSON.stringify({
+                type: 'price',
+                stockCode,
+                price,
+                changeRate,
+                volume,
+                timestamp: Date.now(),
+            }));
+        });
 
         // 일별 주도테마 저장 (30분마다 업데이트)
         setInterval(async () => {

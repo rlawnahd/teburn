@@ -5,6 +5,7 @@ import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
 import { getBatchStockNewsCountFromApi } from './naverApi';
 import HotnessHistory from '../models/HotnessHistory';
+import { updateGlobalSubscriptions } from './wsServer';
 
 export interface HotnessScore {
     stockCode: string;
@@ -240,6 +241,10 @@ async function doRefresh(): Promise<void> {
         const scored = await calculateBatchHotness(candidates);
 
         hotStocksCache = { data: scored, timestamp: Date.now() };
+
+        // 글로벌 구독 종목 업데이트 (WebSocket)
+        updateGlobalSubscriptions(scored.map(s => s.stockCode));
+
         console.log(`주도주 점수 계산 완료: ${scored.length}개 (${((Date.now() - startTime) / 1000).toFixed(1)}초)`);
     } catch (error) {
         console.error('주도주 점수 계산 실패:', error);
