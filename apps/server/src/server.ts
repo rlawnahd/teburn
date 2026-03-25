@@ -18,14 +18,15 @@ import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
 import { saveDailyLeadingThemes } from './services/leadingStockService';
-import { warmupHotStocks, saveDailyHotnessHistory } from './services/hotnessService';
+import { warmupHotStocks, saveDailyHotnessHistory, getTopHotStocks } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
 import { startTradingBot } from './services/tradingBot';
-import { initWebSocketServer, closeAllConnections, broadcastToSubscribers } from './services/wsServer';
+import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice } from './services/kiwoomWebSocket';
+import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -186,6 +187,8 @@ connectDB().then(async () => {
         // DB에서 캐시 복원 후 백그라운드 갱신 → 완료 후 주도주 점수 사전 계산
         themePriceCache.startScheduler()
             .then(() => warmupHotStocks())
+            .then(() => getTopHotStocks(100))
+            .then((scores) => initRealtimeScores(scores))
             .then(() => startTelegramBot())
             // .then(() => startTradingBot())  // Python 봇으로 대체 (apps/bot)
             .catch(err => {
@@ -194,6 +197,7 @@ connectDB().then(async () => {
 
         // 키움 실시간 체결 -> 클라이언트 WebSocket 브릿지
         onRealtimePrice((stockCode, price, changeRate, volume) => {
+            // 실시간 체결가 전송
             broadcastToSubscribers(stockCode, JSON.stringify({
                 type: 'price',
                 stockCode,
@@ -202,6 +206,17 @@ connectDB().then(async () => {
                 volume,
                 timestamp: Date.now(),
             }));
+
+            // 실시간 주도주 점수 재계산
+            const updated = realtimeHotnessUpdate(stockCode, price, changeRate, volume);
+            if (updated) {
+                broadcastAll(JSON.stringify({
+                    type: 'hotness',
+                    stockCode,
+                    ...updated,
+                    timestamp: Date.now(),
+                }));
+            }
         });
 
         // 일별 주도테마 저장 (30분마다 업데이트)

@@ -6,6 +6,7 @@ import { getBatchVolumeSurgeRates } from './volumeSurgeService';
 import { getBatchStockNewsCountFromApi } from './naverApi';
 import HotnessHistory from '../models/HotnessHistory';
 import { updateGlobalSubscriptions } from './wsServer';
+import { mergeBatchScores } from './realtimeHotness';
 
 export interface HotnessScore {
     stockCode: string;
@@ -34,7 +35,7 @@ export interface HotnessScore {
 }
 
 // 등급 기준 (100점 만점 기준)
-function getGrade(score: number): HotnessScore['grade'] {
+export function getGrade(score: number): HotnessScore['grade'] {
     if (score >= 70) return 'S';
     if (score >= 50) return 'A';
     if (score >= 35) return 'B';
@@ -48,7 +49,7 @@ const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
 // 거래대금 점수 (0~25)
-function calculateTradingValueScore(tradingValue: number): number {
+export function calculateTradingValueScore(tradingValue: number): number {
     const billion = tradingValue / 100000000; // 억 단위
     if (billion >= 1000) return 25;  // 1000억 이상
     if (billion >= 500) return 21;   // 500억 이상
@@ -60,7 +61,7 @@ function calculateTradingValueScore(tradingValue: number): number {
 }
 
 // 등락률 점수 (0~25)
-function calculateMomentumScore(changeRate: number): number {
+export function calculateMomentumScore(changeRate: number): number {
     if (changeRate >= 20) return 25;  // 상한가 근접
     if (changeRate >= 15) return 21;
     if (changeRate >= 10) return 17;
@@ -244,6 +245,9 @@ async function doRefresh(): Promise<void> {
 
         // 글로벌 구독 종목 업데이트 (WebSocket)
         updateGlobalSubscriptions(scored.map(s => s.stockCode));
+
+        // 실시간 점수 배치 병합
+        mergeBatchScores(scored);
 
         console.log(`주도주 점수 계산 완료: ${scored.length}개 (${((Date.now() - startTime) / 1000).toFixed(1)}초)`);
     } catch (error) {
