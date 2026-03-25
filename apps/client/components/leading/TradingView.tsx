@@ -19,7 +19,7 @@ function WinRateGauge({ winRate, winCount, loseCount }: { winRate: number; winCo
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-xl font-bold text-[var(--text-primary)]">{winRate}%</span>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">{winCount}승 {loseCount}패</span>
+                    <span className="text-xs text-[var(--text-tertiary)]">{winCount}승 {loseCount}패</span>
                 </div>
             </div>
         </div>
@@ -46,7 +46,7 @@ function TradeStreak({ trades }: { trades: { pnl: number | null }[] }) {
                 {completedTrades.map((t, i) => {
                     const isWin = (t.pnl || 0) >= 0;
                     return (
-                        <div key={i} className={`w-5 h-5 rounded-sm flex items-center justify-center text-[9px] font-bold text-white ${
+                        <div key={i} className={`w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-bold text-white ${
                             isWin ? 'bg-[var(--rise-color)]/60' : 'bg-[var(--fall-color)]/60'
                         }`}>
                             {isWin ? 'W' : 'L'}
@@ -54,7 +54,7 @@ function TradeStreak({ trades }: { trades: { pnl: number | null }[] }) {
                     );
                 })}
             </div>
-            <div className="flex gap-4 mt-2 text-[11px]">
+            <div className="flex gap-4 mt-2 text-xs">
                 <span className="text-[var(--text-tertiary)]">최대 연승 <span className="text-[var(--rise-color)] font-semibold">{maxWinStreak}</span></span>
                 <span className="text-[var(--text-tertiary)]">최대 연패 <span className="text-[var(--fall-color)] font-semibold">{maxLoseStreak}</span></span>
             </div>

@@ -38,7 +38,7 @@ function StockRow({
             </div>
 
             <div className="relative flex items-center py-1.5 px-2 md:px-3 gap-2 md:gap-3">
-                <div className={`w-5 text-right text-[13px] font-medium flex-shrink-0 ${
+                <div className={`w-5 text-right text-sm font-medium flex-shrink-0 ${
                     rank <= 3 ? 'text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-tertiary)]'
                 }`}>
                     {rank}
@@ -46,9 +46,9 @@ function StockRow({
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                        <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                         {isLimitUp && (
-                            <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
+                            <span className="px-1 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                                 상한가
                             </span>
                         )}
@@ -62,24 +62,24 @@ function StockRow({
                                         e.stopPropagation();
                                         onThemeClick(theme);
                                     }}
-                                    className="text-[11px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
+                                    className="text-xs text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
                                 >
                                     {theme}
                                 </button>
                             ))}
                             {stock.themes.length > 2 && (
-                                <span className="text-[11px] text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                                <span className="text-xs text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
                             )}
                         </div>
                     )}
                 </div>
 
                 <div className="text-right hidden sm:block w-20">
-                    <span className="text-[13px] text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}</span>
+                    <span className="text-sm text-[var(--text-secondary)]">{stock.currentPrice.toLocaleString()}</span>
                 </div>
 
                 <div className="w-16 md:w-18 text-right flex-shrink-0">
-                    <span className={`text-[13px] font-semibold ${stock.changeRate > 0 ? 'text-[var(--rise-color)]' : stock.changeRate < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
+                    <span className={`text-sm font-semibold ${stock.changeRate > 0 ? 'text-[var(--rise-color)]' : stock.changeRate < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
                         {stock.changeRate > 0 ? '+' : ''}{stock.changeRate.toFixed(2)}%
                     </span>
                 </div>
@@ -146,7 +146,7 @@ export default function TopTradingView() {
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
-                <p className="text-[13px] text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
+                <p className="text-sm text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
                 <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
@@ -164,11 +164,11 @@ export default function TopTradingView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">거래대금 TOP</h2>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">
+                    <span className="text-xs text-[var(--text-tertiary)]">
                         {stocks.length}종목
                     </span>
                     {data?.lastUpdateTime && (
-                        <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)]">
+                        <span className="hidden sm:inline text-xs text-[var(--text-tertiary)]">
                             · {formatDataDate(data.lastUpdateTime)}
                         </span>
                     )}
@@ -179,7 +179,7 @@ export default function TopTradingView() {
                         <button
                             key={rate}
                             onClick={() => setMinRate(rate)}
-                            className={`px-2 py-1 text-[11px] font-medium transition-colors border-r border-[var(--border-color)] last:border-r-0 ${
+                            className={`px-2 py-1 text-xs font-medium transition-colors border-r border-[var(--border-color)] last:border-r-0 ${
                                 minRate === rate
                                     ? 'bg-[var(--accent-blue)] text-white'
                                     : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'
@@ -192,7 +192,7 @@ export default function TopTradingView() {
             </div>
 
             <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
-                <div className="flex items-center py-1 px-2 md:px-3 text-[11px] text-[var(--text-tertiary)] border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="flex items-center py-1.5 px-2 md:px-3 text-xs text-[var(--text-tertiary)] border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
                     <div className="w-5 text-right">#</div>
                     <div className="flex-1 ml-2 md:ml-3">종목</div>
                     <div className="w-20 text-right hidden sm:block">현재가</div>

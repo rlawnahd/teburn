@@ -40,13 +40,13 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
             {/* 헤더 */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-1.5 min-w-0">
-                    <span className={`text-[11px] font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                    <span className={`text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                         {rank}
                     </span>
-                    <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{sector.themeName}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{sector.themeName}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`px-1 py-0.5 text-[9px] font-bold text-white rounded-sm ${grade.bg}`}>
+                    <span className={`px-1 py-0.5 text-[10px] font-bold text-white rounded-sm ${grade.bg}`}>
                         {grade.label}
                     </span>
                     <span className={`text-sm font-bold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
@@ -67,7 +67,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
 
                 {/* 주도점수 바 — 그래디언트 */}
                 <div className="mb-2">
-                    <div className="flex items-center justify-between text-[11px] mb-0.5">
+                    <div className="flex items-center justify-between text-xs mb-0.5">
                         <span className="text-[var(--text-tertiary)]">주도점수</span>
                         <span className={`font-semibold ${grade.color}`}>{sector.leadingScore.toFixed(0)}</span>
                     </div>
@@ -129,7 +129,7 @@ export default function LeadingSectorView() {
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
-                <p className="text-[13px] text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
+                <p className="text-sm text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
                 <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
@@ -143,10 +143,10 @@ export default function LeadingSectorView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도섹터</h2>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 상승률 기반</span>
+                    <span className="text-xs text-[var(--text-tertiary)]">거래대금 + 상승률 기반</span>
                 </div>
                 {data?.lastUpdateTime && (
-                    <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)]">
+                    <span className="hidden sm:inline text-xs text-[var(--text-tertiary)]">
                         {formatDataDate(data.lastUpdateTime)}
                     </span>
                 )}
@@ -157,7 +157,7 @@ export default function LeadingSectorView() {
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-0.5 h-3 bg-[var(--rise-color)] rounded-full" />
                         <span className="text-xs font-medium text-[var(--text-primary)]">상승 섹터</span>
-                        <span className="text-[11px] text-[var(--text-tertiary)]">{risingSectors.length}</span>
+                        <span className="text-xs text-[var(--text-tertiary)]">{risingSectors.length}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                         {risingSectors.map((sector, index) => (
@@ -174,7 +174,7 @@ export default function LeadingSectorView() {
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-0.5 h-3 bg-[var(--fall-color)] rounded-full" />
                         <span className="text-xs font-medium text-[var(--text-primary)]">하락 섹터</span>
-                        <span className="text-[11px] text-[var(--text-tertiary)]">{fallingSectors.length}</span>
+                        <span className="text-xs text-[var(--text-tertiary)]">{fallingSectors.length}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                         {fallingSectors.map((sector, index) => (

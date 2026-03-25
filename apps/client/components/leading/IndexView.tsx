@@ -25,7 +25,7 @@ function IndexChart({ data, color }: { data: IndexData; color: string }) {
 
     if (chartData.length === 0) {
         return (
-            <div className="h-[140px] sm:h-[180px] flex items-center justify-center text-[13px] text-[var(--text-tertiary)]">
+            <div className="h-[140px] sm:h-[180px] flex items-center justify-center text-sm text-[var(--text-tertiary)]">
                 차트 데이터 없음
             </div>
         );
@@ -96,7 +96,7 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
     if (!data) {
         return (
             <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-3">
-                <div className="text-[13px] text-[var(--text-tertiary)]">데이터를 불러올 수 없습니다</div>
+                <div className="text-sm text-[var(--text-tertiary)]">데이터를 불러올 수 없습니다</div>
             </div>
         );
     }
@@ -111,21 +111,21 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
                 <div className="flex items-center justify-between">
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{data.name}</span>
+                            <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{data.name}</span>
                         </div>
                     </div>
                     <div className="text-right flex-shrink-0">
                         <span className="text-base font-semibold text-[var(--text-primary)]">
                             {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </span>
-                        <span className={`text-[13px] font-medium ${changeColor} ml-2`}>
+                        <span className={`text-sm font-medium ${changeColor} ml-2`}>
                             {isPositive ? '+' : ''}{data.change.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                             {' '}({isPositive ? '+' : ''}{data.changePercent.toFixed(2)}%)
                         </span>
                     </div>
                 </div>
                 <div className="mt-1">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">
+                    <span className="text-xs text-[var(--text-tertiary)]">
                         {data.tradingHours}
                     </span>
                 </div>
@@ -140,19 +140,19 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
             <div className="px-3 pb-2">
                 <div className="grid grid-cols-3 border-t border-[var(--border-color)]">
                     <div className="py-1.5 pr-2 border-r border-[var(--border-color)]">
-                        <div className="text-[11px] text-[var(--text-tertiary)]">전일종가</div>
+                        <div className="text-xs text-[var(--text-tertiary)]">전일종가</div>
                         <div className="text-xs font-medium text-[var(--text-primary)]">
                             {data.previousClose.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </div>
                     </div>
                     <div className="py-1.5 px-2 border-r border-[var(--border-color)]">
-                        <div className="text-[11px] text-[var(--text-tertiary)]">고가</div>
+                        <div className="text-xs text-[var(--text-tertiary)]">고가</div>
                         <div className="text-xs font-medium text-[var(--rise-color)]">
                             {data.high > 0 ? data.high.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}
                         </div>
                     </div>
                     <div className="py-1.5 pl-2">
-                        <div className="text-[11px] text-[var(--text-tertiary)]">저가</div>
+                        <div className="text-xs text-[var(--text-tertiary)]">저가</div>
                         <div className="text-xs font-medium text-[var(--fall-color)]">
                             {data.low > 0 ? data.low.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}
                         </div>
@@ -184,7 +184,7 @@ export default function IndexView() {
                 <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">지수 현황</h2>
                     {updatedTime && (
-                        <span className="text-[11px] text-[var(--text-tertiary)]">
+                        <span className="text-xs text-[var(--text-tertiary)]">
                             {updatedTime}
                         </span>
                     )}
