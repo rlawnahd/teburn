@@ -10,6 +10,8 @@ import IndexView from '@/components/leading/IndexView';
 import TradingView from '@/components/leading/TradingView';
 import IndexWidget from '@/components/home/IndexWidget';
 import TickerStrip from '@/components/home/TickerStrip';
+import LandingPage from '@/components/landing/LandingPage';
+import { useAuth } from '@/hooks/useAuth';
 
 type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index' | 'trading';
 
@@ -27,6 +29,7 @@ const TAB_CONFIG: { key: TabType; label: string; icon: typeof Flame }[] = [
 export default function HomeContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { isLoggedIn, isLoading } = useAuth();
 
     const tabParam = searchParams.get('tab') as TabType | null;
     const activeTab: TabType = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'hot';
@@ -34,6 +37,18 @@ export default function HomeContent() {
     const handleTabChange = (tab: TabType) => {
         router.push(`/?tab=${tab}`, { scroll: false });
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
+                <div className="text-[13px] text-[var(--text-tertiary)]">로딩 중...</div>
+            </div>
+        );
+    }
+
+    if (!isLoggedIn) {
+        return <LandingPage />;
+    }
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">

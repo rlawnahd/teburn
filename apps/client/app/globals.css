@@ -491,3 +491,16 @@ input::placeholder, textarea::placeholder {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ============================
+   랜딩 페이지 애니메이션
+   ============================ */
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes featureFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}

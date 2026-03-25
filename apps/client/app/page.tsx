@@ -47,8 +47,8 @@ export default function HomePage() {
                             description="S등급 주도주가 새로 등장하면 텔레그램으로 실시간 알림을 받고, 매일 장 마감 후 일일 요약을 받아볼 수 있습니다."
                         />
                         <FeatureCard
-                            title="무료 · 회원가입 불필요"
-                            description="TEBURN의 모든 기능은 완전 무료이며, 별도의 회원가입 없이 웹 브라우저에서 바로 이용할 수 있습니다."
+                            title="무료 · 간편 로그인"
+                            description="TEBURN의 모든 기능은 완전 무료이며, 카카오 또는 Google 계정으로 10초 만에 시작할 수 있습니다."
                         />
                     </div>
 
