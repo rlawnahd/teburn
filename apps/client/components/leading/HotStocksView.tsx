@@ -1,14 +1,16 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Activity } from 'lucide-react';
 import { fetchHotStocks, HotStock } from '@/lib/api/leading';
 import { formatTradingValue, formatDataDate } from '@/lib/utils/format';
 import GradeBadge from '@/components/ui/GradeBadge';
 import { SkeletonRow } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
+import { useOnPriceUpdate, useOnHotnessUpdate } from '@/hooks/useRealtimePrice';
+import { useAuth } from '@/hooks/useAuth';
 
 function ScoreMiniGauge({ score }: { score: number }) {
     return (
@@ -260,17 +262,48 @@ function usePriceFlashAndRank(stocks: HotStock[]) {
 
 export default function HotStocksView() {
     const router = useRouter();
+    const { isLoggedIn } = useAuth();
+    const queryClient = useQueryClient();
 
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['hotStocks'],
         queryFn: () => fetchHotStocks(30),
         refetchInterval: (query) => {
             const stocks = query.state.data?.stocks;
-            return (!stocks || stocks.length === 0) ? 5000 : 5 * 60 * 1000;
+            if (!stocks || stocks.length === 0) return 5000;
+            return isLoggedIn ? 5 * 60 * 1000 : 5 * 60 * 1000;
         },
         retry: 3,
         retryDelay: (attempt) => Math.min(attempt * 3000, 10000),
     });
+
+    useOnPriceUpdate(useCallback((update) => {
+        queryClient.setQueryData(['hotStocks'], (old: any) => {
+            if (!old?.stocks) return old;
+            return {
+                ...old,
+                stocks: old.stocks.map((s: any) =>
+                    s.stockCode === update.stockCode
+                        ? { ...s, currentPrice: update.price, changeRate: update.changeRate }
+                        : s
+                ),
+            };
+        });
+    }, [queryClient]));
+
+    useOnHotnessUpdate(useCallback((update) => {
+        queryClient.setQueryData(['hotStocks'], (old: any) => {
+            if (!old?.stocks) return old;
+            return {
+                ...old,
+                stocks: old.stocks.map((s: any) =>
+                    s.stockCode === update.stockCode
+                        ? { ...s, totalScore: update.totalScore, grade: update.grade }
+                        : s
+                ),
+            };
+        });
+    }, [queryClient]));
 
     const stocks = data?.stocks || [];
     const { flashes, rankChanges } = usePriceFlashAndRank(stocks);

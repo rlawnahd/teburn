@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 import { fetchStockDetail } from '@/lib/api/stocks';
@@ -10,6 +10,8 @@ import { formatTradingValue, formatVolume, formatRelativeTime } from '@/lib/util
 import GradeBadge from '@/components/ui/GradeBadge';
 import TradingViewChart from '@/components/stock/TradingViewChart';
 import HotnessHistoryChart from '@/components/stock/HotnessHistoryChart';
+import { useStockSubscription, useOnPriceUpdate } from '@/hooks/useRealtimePrice';
+import { useAuth } from '@/hooks/useAuth';
 
 function getGradeStyle(grade: string): { color: string; bg: string; label: string } {
     switch (grade) {
@@ -62,13 +64,25 @@ export default function StockDetailPage() {
     const params = useParams();
     const router = useRouter();
     const stockCode = params.stockCode as string;
+    const { isLoggedIn } = useAuth();
+    const queryClient = useQueryClient();
+
+    useStockSubscription(stockCode);
 
     const { data: stock, isLoading, error } = useQuery({
         queryKey: ['stockDetail', stockCode],
         queryFn: () => fetchStockDetail(stockCode),
         enabled: !!stockCode,
-        refetchInterval: 60 * 1000,
+        refetchInterval: isLoggedIn ? 5 * 60 * 1000 : 60 * 1000,
     });
+
+    useOnPriceUpdate(useCallback((update) => {
+        if (update.stockCode !== stockCode) return;
+        queryClient.setQueryData(['stockDetail', stockCode], (old: any) => {
+            if (!old) return old;
+            return { ...old, currentPrice: update.price, changeRate: update.changeRate };
+        });
+    }, [stockCode, queryClient]));
 
     const originalTitle = useRef<string>('');
     useEffect(() => {

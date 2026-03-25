@@ -4,6 +4,7 @@ import './globals.css';
 import QueryProvider from '@/components/provider/QueryProvider';
 import ThemeProvider from '@/components/ui/ThemeProvider';
 import AuthProvider from '@/lib/auth/AuthProvider';
+import RealtimeProvider from '@/components/provider/RealtimeProvider';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import KakaoAdFit from '@/components/ad/KakaoAdFit';
@@ -55,6 +56,7 @@ export default function RootLayout({
                 <ThemeProvider>
                     <AuthProvider>
                     <QueryProvider>
+                    <RealtimeProvider>
                         <Header />
                         {children}
                         {/* 데스크톱: 오른쪽 여백에 고정 광고 (콘텐츠 중앙 정렬 유지) */}
@@ -66,6 +68,7 @@ export default function RootLayout({
                             <KakaoAdFit adUnit="DAN-2f3e80wfJpcTWx5H" width={320} height={100} />
                         </div>
                         <Footer />
+                    </RealtimeProvider>
                     </QueryProvider>
                     </AuthProvider>
                 </ThemeProvider>

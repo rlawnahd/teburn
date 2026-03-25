@@ -1,17 +1,37 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 import { fetchHotStocks } from '@/lib/api/leading';
+import { useOnPriceUpdate } from '@/hooks/useRealtimePrice';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function TickerStrip() {
     const router = useRouter();
+    const { isLoggedIn } = useAuth();
+    const queryClient = useQueryClient();
+
     const { data } = useQuery({
         queryKey: ['hotStocks'],
         queryFn: () => fetchHotStocks(30),
-        refetchInterval: 60 * 1000,
+        refetchInterval: isLoggedIn ? 5 * 60 * 1000 : 60 * 1000,
         staleTime: 30 * 1000,
     });
+
+    useOnPriceUpdate(useCallback((update) => {
+        queryClient.setQueryData(['hotStocks'], (old: any) => {
+            if (!old?.stocks) return old;
+            return {
+                ...old,
+                stocks: old.stocks.map((s: any) =>
+                    s.stockCode === update.stockCode
+                        ? { ...s, currentPrice: update.price, changeRate: update.changeRate }
+                        : s
+                ),
+            };
+        });
+    }, [queryClient]));
 
     const stocks = data?.stocks || [];
     if (stocks.length === 0) return null;
