@@ -4,7 +4,7 @@ import { Server as HTTPServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import { verifyToken } from '../middleware/auth';
-import { subscribeStocks } from './kiwoomWebSocket';
+import { subscribeStocks } from './kisWebSocket';
 
 const AUTH_TIMEOUT_MS = 5000;
 const PING_INTERVAL_MS = 30000;

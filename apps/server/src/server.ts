@@ -25,7 +25,7 @@ import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
 import { startTradingBot } from './services/tradingBot';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
-import { onRealtimePrice, startKiwoomWebSocket } from './services/kiwoomWebSocket';
+import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
 import News from './models/News';
 
@@ -190,7 +190,7 @@ connectDB().then(async () => {
             .then(() => getTopHotStocks(100))
             .then((scores) => initRealtimeScores(scores))
             .then(() => {
-                startKiwoomWebSocket();
+                startKisWebSocket();
                 return startTelegramBot();
             })
             // .then(() => startTradingBot())  // Python 봇으로 대체 (apps/bot)

@@ -125,7 +125,6 @@ function SearchModal({ onClose }: { onClose: () => void }) {
 
 const NAV_LINKS = [
     { href: '/', label: '홈', authRequired: false },
-    { href: '/trading', label: '매매일지', authRequired: true },
     { href: '/guide', label: '가이드', authRequired: false },
 ];
 
