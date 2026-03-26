@@ -42,21 +42,35 @@ async function connect(): Promise<void> {
             },
         });
 
+        let authenticated = false;
+        let authTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const tryRegister = () => {
+            if (authenticated) return;
+            authenticated = true;
+            if (authTimer) { clearTimeout(authTimer); authTimer = null; }
+            if (subscribedStocks.size > 0) {
+                registerStocks([...subscribedStocks]);
+            }
+        };
+
         ws.on('open', () => {
             isConnecting = false;
             console.log('🔌 키움 WebSocket 연결 성공');
 
-            // 키움 서버 인증 처리 대기 후 구독 종목 등록
-            setTimeout(() => {
-                if (subscribedStocks.size > 0) {
-                    registerStocks([...subscribedStocks]);
-                }
-            }, 1000);
+            // 3초 후 fallback (첫 메시지가 안 오는 경우 대비)
+            authTimer = setTimeout(tryRegister, 3000);
         });
 
         ws.on('message', (rawData: WebSocket.Data) => {
             try {
                 const msg = JSON.parse(rawData.toString());
+
+                // 첫 메시지 수신 = 인증 완료로 간주, 종목 등록 시작
+                if (!authenticated) {
+                    console.log('🔌 키움 WebSocket 인증 완료, 종목 등록 시작');
+                    tryRegister();
+                }
 
                 // 실시간 체결 데이터 수신
                 if (msg.trnm === 'REAL' && msg.data) {
