@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getStockPrice, getStockCode, StockPrice } from '../services/kisApi';
 import { themePriceCache } from '../services/themePriceCache';
 import { calculateBatchHotness } from '../services/hotnessService';
-import { getDailyChart } from '../services/kisRestApi';
+import { getDailyChart, getMinuteChart, getPeriodChart } from '../services/kisRestApi';
 import Theme from '../models/Theme';
 import News from '../models/News';
 import HotnessHistory from '../models/HotnessHistory';
@@ -138,12 +138,22 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
     }
 });
 
-// 종목 일봉 차트 데이터
+// 종목 차트 데이터 (분봉/일봉/주봉/월봉)
 router.get('/:stockCode/chart', async (req: Request, res: Response) => {
     try {
         const { stockCode } = req.params;
-        const days = Math.min(Number(req.query.days) || 60, 120);
-        const candles = await getDailyChart(stockCode, days);
+        const period = (req.query.period as string) || 'D';
+        const days = Math.min(Number(req.query.days) || 60, 200);
+
+        let candles;
+        if (period === '1' || period === '5' || period === '15' || period === '30' || period === '60') {
+            candles = await getMinuteChart(stockCode, parseInt(period));
+        } else if (period === 'W' || period === 'M') {
+            candles = await getPeriodChart(stockCode, period, days);
+        } else {
+            candles = await getDailyChart(stockCode, days);
+        }
+
         res.json({ success: true, data: candles });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });

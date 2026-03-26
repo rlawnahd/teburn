@@ -1,24 +1,44 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { createChart, CandlestickSeries, HistogramSeries, ColorType, CrosshairMode } from 'lightweight-charts';
-import { fetchDailyChart } from '@/lib/api/stocks';
+import { fetchChart, ChartPeriod } from '@/lib/api/stocks';
 import { useTheme } from '@/components/ui/ThemeProvider';
 
 interface ChartProps {
     stockCode: string;
 }
 
+const PERIOD_TABS: { key: ChartPeriod; label: string }[] = [
+    { key: '1', label: '1분' },
+    { key: '5', label: '5분' },
+    { key: '15', label: '15분' },
+    { key: 'D', label: '일' },
+    { key: 'W', label: '주' },
+    { key: 'M', label: '월' },
+];
+
+function formatTime(dateStr: string, period: ChartPeriod): string {
+    if (['1', '5', '15', '30', '60'].includes(period)) {
+        // 분봉: YYYYMMDDHHMMSS → YYYY-MM-DD
+        return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+    }
+    return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+}
+
 export default function StockChart({ stockCode }: ChartProps) {
+    const [period, setPeriod] = useState<ChartPeriod>('D');
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
     const { theme } = useTheme();
 
+    const days = period === 'M' ? 200 : period === 'W' ? 120 : 90;
+
     const { data: candles, isLoading } = useQuery({
-        queryKey: ['dailyChart', stockCode],
-        queryFn: () => fetchDailyChart(stockCode, 90),
-        staleTime: 5 * 60 * 1000,
+        queryKey: ['chart', stockCode, period],
+        queryFn: () => fetchChart(stockCode, period, days),
+        staleTime: period === 'D' ? 5 * 60 * 1000 : 60 * 1000,
     });
 
     useEffect(() => {
@@ -26,8 +46,8 @@ export default function StockChart({ stockCode }: ChartProps) {
 
         const container = chartContainerRef.current;
         const isDark = theme === 'dark';
+        const isMinute = ['1', '5', '15', '30', '60'].includes(period);
 
-        // Clear previous chart
         if (chartRef.current) {
             chartRef.current.remove();
             chartRef.current = null;
@@ -63,14 +83,13 @@ export default function StockChart({ stockCode }: ChartProps) {
             },
             timeScale: {
                 borderVisible: false,
-                timeVisible: false,
+                timeVisible: isMinute,
             },
             handleScroll: { vertTouchDrag: false },
         });
 
         chartRef.current = chart;
 
-        // Candlestick series — 한국 주식 컨벤션: 상승=빨강, 하락=파랑
         const candleSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#ef4444',
             downColor: '#3b82f6',
@@ -81,7 +100,7 @@ export default function StockChart({ stockCode }: ChartProps) {
         });
 
         const candleData = candles.map(c => ({
-            time: `${c.date.slice(0, 4)}-${c.date.slice(4, 6)}-${c.date.slice(6, 8)}` as any,
+            time: formatTime(c.date, period) as any,
             open: c.open,
             high: c.high,
             low: c.low,
@@ -90,7 +109,6 @@ export default function StockChart({ stockCode }: ChartProps) {
 
         candleSeries.setData(candleData);
 
-        // Volume series
         const volumeSeries = chart.addSeries(HistogramSeries, {
             priceFormat: { type: 'volume' },
             priceScaleId: 'volume',
@@ -101,7 +119,7 @@ export default function StockChart({ stockCode }: ChartProps) {
         });
 
         const volumeData = candles.map(c => ({
-            time: `${c.date.slice(0, 4)}-${c.date.slice(4, 6)}-${c.date.slice(6, 8)}` as any,
+            time: formatTime(c.date, period) as any,
             value: c.volume,
             color: c.close >= c.open
                 ? (isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)')
@@ -109,11 +127,8 @@ export default function StockChart({ stockCode }: ChartProps) {
         }));
 
         volumeSeries.setData(volumeData);
-
-        // Fit content
         chart.timeScale().fitContent();
 
-        // Resize observer
         const resizeObserver = new ResizeObserver(entries => {
             for (const entry of entries) {
                 const { width, height } = entry.contentRect;
@@ -127,32 +142,39 @@ export default function StockChart({ stockCode }: ChartProps) {
             chart.remove();
             chartRef.current = null;
         };
-    }, [candles, theme]);
-
-    if (isLoading) {
-        return (
-            <div className="card overflow-hidden">
-                <div className="h-[300px] sm:h-[400px] flex items-center justify-center">
-                    <div className="text-base text-[var(--text-tertiary)]">차트 로딩 중...</div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!candles || candles.length === 0) {
-        return (
-            <div className="card overflow-hidden">
-                <div className="h-[200px] flex items-center justify-center">
-                    <div className="text-base text-[var(--text-tertiary)]">차트 데이터가 없습니다</div>
-                </div>
-            </div>
-        );
-    }
+    }, [candles, theme, period]);
 
     return (
         <div className="card overflow-hidden">
+            {/* Period tabs */}
+            <div className="flex items-center gap-1 px-3 py-2 border-b border-[var(--border-color)]">
+                {PERIOD_TABS.map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setPeriod(tab.key)}
+                        className={`px-2.5 py-1 text-sm rounded transition-colors ${
+                            period === tab.key
+                                ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] font-medium'
+                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                        }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
             <div className="h-[300px] sm:h-[400px]">
-                <div ref={chartContainerRef} className="w-full h-full" />
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-base text-[var(--text-tertiary)]">차트 로딩 중...</div>
+                    </div>
+                ) : !candles || candles.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-base text-[var(--text-tertiary)]">차트 데이터가 없습니다</div>
+                    </div>
+                ) : (
+                    <div ref={chartContainerRef} className="w-full h-full" />
+                )}
             </div>
         </div>
     );

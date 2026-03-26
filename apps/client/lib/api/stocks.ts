@@ -165,13 +165,18 @@ export interface DailyCandle {
     volume: number;
 }
 
-export const fetchDailyChart = async (stockCode: string, days = 60): Promise<DailyCandle[]> => {
+export type ChartPeriod = '1' | '5' | '15' | '30' | '60' | 'D' | 'W' | 'M';
+
+export const fetchChart = async (stockCode: string, period: ChartPeriod = 'D', days = 60): Promise<DailyCandle[]> => {
     const { data } = await axios.get<{ success: boolean; data: DailyCandle[] }>(
         `${API_URL}/stocks/${encodeURIComponent(stockCode)}/chart`,
-        { params: { days } }
+        { params: { period, days } }
     );
     return data.data;
 };
+
+// backward compat
+export const fetchDailyChart = (stockCode: string, days = 60) => fetchChart(stockCode, 'D', days);
 
 // 종목 상세 조회 (종목코드로)
 export const fetchStockDetail = async (stockCode: string): Promise<StockDetail> => {
