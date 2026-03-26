@@ -1,20 +1,21 @@
 import axios from 'axios';
 import stockCodesData from '../data/stockCodes.json';
-import { getKiwoomAccessToken } from './kiwoomApi';
+import { getKisToken } from './kisRestApi';
 
-// 키움 REST API 설정
-const KIWOOM_IS_MOCK = process.env.KIWOOM_IS_MOCK === 'true';
-
-const BASE_URL = KIWOOM_IS_MOCK
-    ? 'https://mockapi.kiwoom.com'
-    : 'https://api.kiwoom.com';
+// KIS REST API 설정
+const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
+const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
+const KIS_IS_MOCK = process.env.KIS_IS_MOCK === 'true';
+const BASE_URL = KIS_IS_MOCK
+    ? 'https://openapivts.koreainvestment.com:29443'
+    : 'https://openapi.koreainvestment.com:9443';
 
 // 종목코드 매핑 (JSON 파일에서 로드)
 const STOCK_CODE_MAP: Record<string, string> = stockCodesData as Record<string, string>;
 
-// OAuth 토큰 발급 — kiwoomApi에 위임
+// OAuth 토큰 발급 — kisRestApi의 캐시된 토큰 사용
 export async function getAccessToken(): Promise<string> {
-    return getKiwoomAccessToken();
+    return getKisToken();
 }
 
 // 종목명으로 종목코드 조회
@@ -35,19 +36,24 @@ export interface StockPrice {
     open: number;              // 시가
 }
 
-// 주식기본정보 조회 — 키움 ka10001 (POST /api/dostk/stkinfo)
+// 주식현재가 조회 — KIS REST API (FHKST01010100)
 export async function getStockPrice(stockCode: string, retries = 2): Promise<StockPrice | null> {
     try {
         const token = await getAccessToken();
 
-        const response = await axios.post(
-            `${BASE_URL}/api/dostk/stkinfo`,
-            { stk_cd: stockCode },
+        const response = await axios.get(
+            `${BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
             {
                 headers: {
-                    'Content-Type': 'application/json;charset=UTF-8',
-                    'api-id': 'ka10001',
-                    'authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json; charset=utf-8',
+                    authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHKST01010100',
+                },
+                params: {
+                    FID_COND_MRKT_DIV_CODE: 'J',
+                    FID_INPUT_ISCD: stockCode,
                 },
                 timeout: 5000,
             }
@@ -55,21 +61,23 @@ export async function getStockPrice(stockCode: string, retries = 2): Promise<Sto
 
         const data = response.data;
 
-        if (data.return_code !== 0) {
-            console.error(`주가 조회 실패: ${stockCode}`, data);
+        if (data.rt_cd !== '0') {
+            console.error(`주가 조회 실패: ${stockCode}`, data.msg1);
             return null;
         }
 
+        const output = data.output;
+
         return {
             stockCode,
-            stockName: data.stk_nm || '',
-            currentPrice: Math.abs(parseInt(data.cur_prc)) || 0,
-            changePrice: parseInt(data.pred_pre) || 0,
-            changeRate: parseFloat(data.flu_rt) || 0,
-            volume: parseInt(data.trde_qty) || 0,
-            high: Math.abs(parseInt(data.high_pric)) || 0,
-            low: Math.abs(parseInt(data.low_pric)) || 0,
-            open: Math.abs(parseInt(data.open_pric)) || 0,
+            stockName: output.hts_kor_isnm || '',
+            currentPrice: Math.abs(parseInt(output.stck_prpr)) || 0,
+            changePrice: parseInt(output.prdy_vrss) || 0,
+            changeRate: parseFloat(output.prdy_ctrt) || 0,
+            volume: parseInt(output.acml_vol) || 0,
+            high: Math.abs(parseInt(output.stck_hgpr)) || 0,
+            low: Math.abs(parseInt(output.stck_lwpr)) || 0,
+            open: Math.abs(parseInt(output.stck_oprc)) || 0,
         };
     } catch (error: any) {
         const errMsg = error.response?.data || error.message;

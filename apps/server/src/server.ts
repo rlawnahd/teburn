@@ -23,7 +23,6 @@ import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
-import { startTradingBot } from './services/tradingBot';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
@@ -193,7 +192,6 @@ connectDB().then(async () => {
                 startKisWebSocket();
                 return startTelegramBot();
             })
-            // .then(() => startTradingBot())  // Python 봇으로 대체 (apps/bot)
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
             });
@@ -261,15 +259,6 @@ connectDB().then(async () => {
                         console.log('주도주 히스토리 저장 완료');
                     } catch (error) {
                         console.error('주도주 히스토리 저장 실패:', error);
-                    }
-
-                    // 장 마감 잔고 동기화 (당일 최종 데이터 기록)
-                    try {
-                        const { syncWithKiwoomBalance } = require('./services/tradingService');
-                        await syncWithKiwoomBalance();
-                        console.log('✅ 장 마감 잔고 동기화 완료');
-                    } catch (error) {
-                        console.error('❌ 장 마감 잔고 동기화 실패:', error);
                     }
 
                     // WebSocket 클라이언트 연결 종료

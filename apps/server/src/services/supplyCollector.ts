@@ -1,52 +1,16 @@
 /**
  * 수급 데이터 수집 서비스
- * Kiwoom API (외국인) + 네이버 금융 스크래핑 (기관) 통해 투자자별 매매동향 수집
+ * 네이버 금융 스크래핑을 통해 투자자별 매매동향 수집
  */
 import axios from 'axios';
 import StockSupplyHistory from '../models/StockSupplyHistory';
 import { themePriceCache } from './themePriceCache';
-import { getKiwoomAccessToken } from './kiwoomApi';
-
-// Kiwoom API 설정
-const KIWOOM_IS_MOCK = process.env.KIWOOM_IS_MOCK === 'true';
-const KIWOOM_BASE_URL = KIWOOM_IS_MOCK ? 'https://mockapi.kiwoom.com' : 'https://api.kiwoom.com';
 
 /**
- * Kiwoom API로 외국인 순매수 수량 조회 (ka10008)
+ * 외국인 순매수 수량 조회 (Kiwoom API 제거됨 — 네이버 fallback 사용)
  */
-async function getKiwoomForeignNetBuy(stockCode: string): Promise<number | null> {
-    try {
-        const token = await getKiwoomAccessToken();
-
-        const response = await axios.post(
-            `${KIWOOM_BASE_URL}/api/dostk/frgnistt`,
-            { stk_cd: stockCode },
-            {
-                headers: {
-                    'Content-Type': 'application/json;charset=UTF-8',
-                    'api-id': 'ka10008',
-                    authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
-        if (response.data.return_code !== 0) {
-            return null;
-        }
-
-        const rows = response.data.stk_frgnr;
-        if (!rows || rows.length === 0) {
-            return null;
-        }
-
-        // 첫 번째 항목이 최신(당일) 데이터
-        const todayRow = rows[0];
-        const foreignNetQty = parseInt(todayRow.chg_qty || '0', 10);
-
-        return foreignNetQty;
-    } catch (error) {
-        return null;
-    }
+async function getKiwoomForeignNetBuy(_stockCode: string): Promise<number | null> {
+    return null;
 }
 
 /**

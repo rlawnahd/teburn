@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getKiwoomAccessToken } from './kiwoomApi';
+import { getKisToken } from './kisRestApi';
 
 // 인터페이스 정의
 export interface IndexChartPoint {
@@ -76,14 +76,17 @@ function addChartPoint(cacheKey: string, price: number): IndexChartPoint[] {
     return downsampleChart(history);
 }
 
-// Kiwoom API 설정
-const KIWOOM_IS_MOCK = process.env.KIWOOM_IS_MOCK === 'true';
-const KIWOOM_BASE_URL = KIWOOM_IS_MOCK ? 'https://mockapi.kiwoom.com' : 'https://api.kiwoom.com';
+// KIS REST API 설정
+const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
+const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
+const KIS_IS_MOCK = process.env.KIS_IS_MOCK === 'true';
+const KIS_BASE_URL = KIS_IS_MOCK
+    ? 'https://openapivts.koreainvestment.com:29443'
+    : 'https://openapi.koreainvestment.com:9443';
 
-// Kiwoom API 업종 지수 공통 함수 (ka20001 - 업종현재가요청)
-async function getKiwoomIndexData(
-    mrktTp: string,
-    indsCd: string,
+// KIS API 업종현재가 조회 (FHPUP02100000)
+async function getKisIndexData(
+    indexCode: string,
     cacheKey: string,
     name: string,
     tradingHours: string,
@@ -94,52 +97,44 @@ async function getKiwoomIndexData(
     }
 
     try {
-        let token: string;
-        try {
-            token = await getKiwoomAccessToken();
-        } catch {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            token = await getKiwoomAccessToken();
-        }
+        const token = await getKisToken();
 
-        const response = await axios.post(
-            `${KIWOOM_BASE_URL}/api/dostk/sect`,
-            {
-                mrkt_tp: mrktTp,
-                inds_cd: indsCd,
-            },
+        const response = await axios.get(
+            `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-index-price`,
             {
                 headers: {
-                    'Content-Type': 'application/json;charset=UTF-8',
-                    'api-id': 'ka20001',
+                    'Content-Type': 'application/json; charset=utf-8',
                     authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHPUP02100000',
+                },
+                params: {
+                    FID_COND_MRKT_DIV_CODE: 'U',
+                    FID_INPUT_ISCD: indexCode,
                 },
                 timeout: 5000,
             }
         );
 
-        if (response.data.return_code !== 0) {
-            console.error(`${name} 지수 조회 실패:`, response.data);
+        if (response.data.rt_cd !== '0') {
+            console.error(`${name} 지수 조회 실패:`, response.data.msg1);
             return null;
         }
 
-        const output = response.data;
-        const currentPrice = parseFloat(output.cur_prc) || 0;
-        const priceChange = parseFloat(output.pred_pre) || 0;
-        const predPreSig = output.pred_pre_sig;
-        // pred_pre_sig: 부호 판별 (2=상승, 5=하락)
-        const signedChange = (predPreSig === '5' || predPreSig === '4') ? -Math.abs(priceChange) : priceChange;
-        const pctChange = parseFloat(output.flu_rt) || 0;
-        const signedPct = (predPreSig === '5' || predPreSig === '4') ? -Math.abs(pctChange) : pctChange;
+        const output = response.data.output;
+        const currentPrice = parseFloat(output.bstp_nmix_prpr) || 0;
+        const signedChange = parseFloat(output.bstp_nmix_prdy_vrss) || 0;
+        const signedPct = parseFloat(output.bstp_nmix_prdy_ctrt) || 0;
         const previousClose = currentPrice - signedChange;
-        const high = parseFloat(output.high_pric) || 0;
-        const low = parseFloat(output.low_pric) || 0;
+        const high = parseFloat(output.bstp_nmix_hgpr) || 0;
+        const low = parseFloat(output.bstp_nmix_lwpr) || 0;
 
         // 차트 데이터: 매 조회마다 가격 기록
         const chartData = addChartPoint(cacheKey, currentPrice);
 
         const result: IndexData = {
-            symbol: indsCd,
+            symbol: indexCode,
             name,
             category: 'index',
             currentPrice,
@@ -162,14 +157,14 @@ async function getKiwoomIndexData(
     }
 }
 
-// KOSPI 지수 조회 (Kiwoom API)
+// KOSPI 지수 조회 (KIS API)
 async function getKospiIndexData(): Promise<IndexData | null> {
-    return getKiwoomIndexData('0', '001', 'kospi-index', '코스피', '09:00 ~ 15:30');
+    return getKisIndexData('0001', 'kospi-index', '코스피', '09:00 ~ 15:30');
 }
 
-// KOSDAQ 지수 조회 (Kiwoom API)
+// KOSDAQ 지수 조회 (KIS API)
 async function getKosdaqIndexData(): Promise<IndexData | null> {
-    return getKiwoomIndexData('1', '101', 'kosdaq-index', '코스닥', '09:00 ~ 15:30');
+    return getKisIndexData('1001', 'kosdaq-index', '코스닥', '09:00 ~ 15:30');
 }
 
 // KOSPI 200 선물 데이터 조회 (Yahoo Finance)

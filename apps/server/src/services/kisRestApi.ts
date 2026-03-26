@@ -9,7 +9,7 @@ const BASE_URL = KIS_IS_MOCK
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
-async function getKisToken(): Promise<string> {
+export async function getKisToken(): Promise<string> {
     if (cachedToken && Date.now() < cachedToken.expiresAt) {
         return cachedToken.token;
     }

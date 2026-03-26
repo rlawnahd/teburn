@@ -61,10 +61,14 @@ function StockRow({
         ? 'animate-flash-fall'
         : '';
 
+    const rankFlashClass = rankChange && rankChange.delta !== 0 && !rankChange.isNew
+        ? (rankChange.delta > 0 ? 'animate-flash-rise' : 'animate-flash-fall')
+        : '';
+
     return (
         <button
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
+            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass || rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <span className={`w-5 text-center text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
