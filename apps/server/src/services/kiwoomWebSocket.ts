@@ -14,6 +14,8 @@ let subscribedStocks = new Set<string>();
 let priceCallbacks: PriceCallback[] = [];
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let isConnecting = false;
+let isAuthenticated = false;
+let pendingStocks: string[] = [];
 
 /**
  * 실시간 체결가 콜백 등록
@@ -42,13 +44,18 @@ async function connect(): Promise<void> {
             },
         });
 
-        let authenticated = false;
+        let authDone = false;
         let authTimer: ReturnType<typeof setTimeout> | null = null;
+        isAuthenticated = false;
 
         const tryRegister = () => {
-            if (authenticated) return;
-            authenticated = true;
+            if (authDone) return;
+            authDone = true;
+            isAuthenticated = true;
             if (authTimer) { clearTimeout(authTimer); authTimer = null; }
+            // 대기 중이던 종목 등록
+            flushPendingStocks();
+            // 기존 구독 종목도 등록
             if (subscribedStocks.size > 0) {
                 registerStocks([...subscribedStocks]);
             }
@@ -67,7 +74,7 @@ async function connect(): Promise<void> {
                 const msg = JSON.parse(rawData.toString());
 
                 // 첫 메시지 수신 = 인증 완료로 간주, 종목 등록 시작
-                if (!authenticated) {
+                if (!authDone) {
                     console.log('🔌 키움 WebSocket 인증 완료, 종목 등록 시작');
                     tryRegister();
                 }
@@ -105,6 +112,7 @@ async function connect(): Promise<void> {
 
         ws.on('close', () => {
             isConnecting = false;
+            isAuthenticated = false;
             console.log('🔌 키움 WebSocket 연결 종료');
             ws = null;
 
@@ -142,6 +150,12 @@ function registerStocks(stockCodes: string[]): void {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     if (stockCodes.length === 0) return;
 
+    // 인증 전이면 대기열에 추가
+    if (!isAuthenticated) {
+        pendingStocks.push(...stockCodes);
+        return;
+    }
+
     const msg = {
         trnm: 'REG',
         grp_no: '1',
@@ -153,7 +167,15 @@ function registerStocks(stockCodes: string[]): void {
     };
 
     ws.send(JSON.stringify(msg));
-    console.log(`📡 실시간 종목 등록: ${stockCodes.join(', ')}`);
+    console.log(`📡 실시간 종목 등록: ${stockCodes.length}개 종목`);
+}
+
+function flushPendingStocks(): void {
+    if (pendingStocks.length > 0) {
+        const codes = [...new Set(pendingStocks)];
+        pendingStocks = [];
+        registerStocks(codes);
+    }
 }
 
 /**
