@@ -46,9 +46,9 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                 {/* 헤더 */}
                 <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
                     <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{dateLabel}</span>
-                        <span className="text-[11px] text-[var(--text-tertiary)]">{dayName}요일</span>
-                        <span className="text-[11px] text-[var(--text-tertiary)]">주도주</span>
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">{dateLabel}</span>
+                        <span className="text-xs text-[var(--text-tertiary)]">{dayName}요일</span>
+                        <span className="text-xs text-[var(--text-tertiary)]">주도주</span>
                     </div>
                     <button
                         onClick={onClose}
@@ -70,14 +70,14 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                 <div className="max-h-[70vh] overflow-y-auto">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
+                            <div className="flex items-center gap-2 text-sm text-[var(--text-tertiary)]">
                                 <RefreshCw size={14} className="animate-spin" />
                                 <span>로딩 중...</span>
                             </div>
                         </div>
                     ) : !stocks || stocks.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-[var(--text-tertiary)]">
-                            <p className="text-[13px]">데이터가 없습니다</p>
+                            <p className="text-sm">데이터가 없습니다</p>
                         </div>
                     ) : (
                         stocks.map((stock) => {
@@ -89,14 +89,14 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                     className={`px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors ${stock.stockCode ? 'cursor-pointer' : ''}`}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-[11px] font-semibold w-5 text-center flex-shrink-0 ${
+                                        <span className={`text-xs font-semibold w-5 text-center flex-shrink-0 ${
                                             stock.rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'
                                         }`}>
                                             {stock.rank}
                                         </span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                                                <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                                                 {stock.changeRate >= 29.9 && (
                                                     <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                                                         상한가
@@ -120,10 +120,10 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-[11px] text-[var(--text-tertiary)] w-14 text-right flex-shrink-0">
+                                        <span className="text-xs text-[var(--text-tertiary)] w-14 text-right flex-shrink-0">
                                             {formatTradingValue(stock.tradingValue)}
                                         </span>
-                                        <span className={`text-sm font-bold w-16 text-right flex-shrink-0 ${
+                                        <span className={`text-base font-bold w-16 text-right flex-shrink-0 ${
                                             isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'
                                         }`}>
                                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%

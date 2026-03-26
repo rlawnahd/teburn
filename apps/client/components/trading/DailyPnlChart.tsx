@@ -11,8 +11,8 @@ export default function DailyPnlChart({ dailyHistory, initialCapital }: Props) {
     if (dailyHistory.length === 0) {
         return (
             <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
-                <h3 className="text-[var(--text-primary)] text-sm font-medium mb-2">일별 수익률</h3>
-                <p className="text-[var(--text-tertiary)] text-sm">아직 매매 기록이 없습니다.</p>
+                <h3 className="text-[var(--text-primary)] text-base font-medium mb-2">일별 수익률</h3>
+                <p className="text-[var(--text-tertiary)] text-base">아직 매매 기록이 없습니다.</p>
             </div>
         );
     }
@@ -23,7 +23,7 @@ export default function DailyPnlChart({ dailyHistory, initialCapital }: Props) {
 
     return (
         <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
-            <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">일별 자산 추이</h3>
+            <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">일별 자산 추이</h3>
 
             <div className="flex items-end gap-[2px] h-[120px]">
                 {dailyHistory.map((day) => {
@@ -35,7 +35,7 @@ export default function DailyPnlChart({ dailyHistory, initialCapital }: Props) {
                                 className={`w-full rounded-t-sm ${isProfit ? 'bg-[var(--rise-color)]' : 'bg-[var(--fall-color)]'} opacity-70 group-hover:opacity-100 transition-opacity`}
                                 style={{ height: `${Math.max(height, 4)}%` }}
                             />
-                            <div className="absolute bottom-full mb-1 hidden group-hover:block bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded px-2 py-1 text-xs whitespace-nowrap z-10">
+                            <div className="absolute bottom-full mb-1 hidden group-hover:block bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded px-2 py-1 text-sm whitespace-nowrap z-10">
                                 <p className="text-[var(--text-primary)]">{day.date}</p>
                                 <p className={isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}>
                                     {day.totalPnlRate >= 0 ? '+' : ''}{day.totalPnlRate}%
@@ -48,10 +48,10 @@ export default function DailyPnlChart({ dailyHistory, initialCapital }: Props) {
             </div>
 
             <div className="flex justify-between mt-1">
-                <span className="text-xs text-[var(--text-tertiary)]">
+                <span className="text-sm text-[var(--text-tertiary)]">
                     {dailyHistory[0]?.date.slice(5)}
                 </span>
-                <span className="text-xs text-[var(--text-tertiary)]">
+                <span className="text-sm text-[var(--text-tertiary)]">
                     {dailyHistory[dailyHistory.length - 1]?.date.slice(5)}
                 </span>
             </div>

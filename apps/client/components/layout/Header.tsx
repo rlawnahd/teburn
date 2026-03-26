@@ -84,10 +84,10 @@ function SearchModal({ onClose }: { onClose: () => void }) {
 
                     <div className="max-h-[300px] overflow-y-auto">
                         {isSearching && (
-                            <div className="px-4 py-4 text-center text-[13px] text-[var(--text-tertiary)]">검색 중...</div>
+                            <div className="px-4 py-4 text-center text-sm text-[var(--text-tertiary)]">검색 중...</div>
                         )}
                         {!isSearching && query && results.length === 0 && (
-                            <div className="px-4 py-4 text-center text-[13px] text-[var(--text-tertiary)]">검색 결과가 없습니다</div>
+                            <div className="px-4 py-4 text-center text-sm text-[var(--text-tertiary)]">검색 결과가 없습니다</div>
                         )}
                         {results.map((stock) => {
                             const isPositive = stock.changeRate > 0;
@@ -113,7 +113,7 @@ function SearchModal({ onClose }: { onClose: () => void }) {
                     </div>
 
                     {!query && (
-                        <div className="px-4 py-3 text-center text-[13px] text-[var(--text-tertiary)]">
+                        <div className="px-4 py-3 text-center text-sm text-[var(--text-tertiary)]">
                             종목명(삼성전자) 또는 종목코드(005930)로 검색
                         </div>
                     )}
@@ -185,7 +185,7 @@ export default function Header() {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className={`px-2.5 py-1.5 text-[13px] transition-colors rounded ${
+                                    className={`px-2.5 py-1.5 text-sm transition-colors rounded ${
                                         isActive
                                             ? 'text-[var(--text-primary)] font-medium'
                                             : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
@@ -220,7 +220,7 @@ export default function Header() {
                     >
                         <Search size={14} />
                         <span className="text-[12px] hidden sm:inline">검색</span>
-                        <kbd className="text-[11px] hidden sm:inline opacity-40 ml-1">⌘K</kbd>
+                        <kbd className="text-xs hidden sm:inline opacity-40 ml-1">⌘K</kbd>
                     </button>
 
                     {/* 로그인/로그아웃 */}

@@ -19,7 +19,7 @@ function WinRateGauge({ winRate, winCount, loseCount }: { winRate: number; winCo
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-xl font-bold text-[var(--text-primary)]">{winRate}%</span>
-                    <span className="text-xs text-[var(--text-tertiary)]">{winCount}승 {loseCount}패</span>
+                    <span className="text-sm text-[var(--text-tertiary)]">{winCount}승 {loseCount}패</span>
                 </div>
             </div>
         </div>
@@ -54,7 +54,7 @@ function TradeStreak({ trades }: { trades: { pnl: number | null }[] }) {
                     );
                 })}
             </div>
-            <div className="flex gap-4 mt-2 text-xs">
+            <div className="flex gap-4 mt-2 text-sm">
                 <span className="text-[var(--text-tertiary)]">최대 연승 <span className="text-[var(--rise-color)] font-semibold">{maxWinStreak}</span></span>
                 <span className="text-[var(--text-tertiary)]">최대 연패 <span className="text-[var(--fall-color)] font-semibold">{maxLoseStreak}</span></span>
             </div>
@@ -85,7 +85,7 @@ export default function TradingView() {
     if (!data?.account) {
         return (
             <div className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-6 text-center">
-                <p className="text-[var(--text-tertiary)] text-sm">아직 매매 기록이 없습니다.</p>
+                <p className="text-[var(--text-tertiary)] text-base">아직 매매 기록이 없습니다.</p>
             </div>
         );
     }
@@ -99,28 +99,28 @@ export default function TradingView() {
         <div className="space-y-3">
             {/* 운용 현황 요약 */}
             <div className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-4">
-                <p className="text-[var(--text-tertiary)] text-xs mb-1">실계좌 운용 수익률</p>
+                <p className="text-[var(--text-tertiary)] text-sm mb-1">실계좌 운용 수익률</p>
                 <p className={`text-3xl font-bold ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                     {isProfit ? '+' : ''}{account.totalPnlRate.toFixed(2)}%
                 </p>
-                <p className={`text-sm mt-1 ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                <p className={`text-base mt-1 ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                     {isProfit ? '+' : ''}{account.totalPnl.toLocaleString()}원
                 </p>
 
                 <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-[var(--border-color)]">
                     <div>
-                        <p className="text-[var(--text-tertiary)] text-xs">총 매매</p>
-                        <p className="text-[var(--text-primary)] text-sm font-medium">{stats.totalTrades}회</p>
+                        <p className="text-[var(--text-tertiary)] text-sm">총 매매</p>
+                        <p className="text-[var(--text-primary)] text-base font-medium">{stats.totalTrades}회</p>
                     </div>
                     <div>
-                        <p className="text-[var(--text-tertiary)] text-xs">승률</p>
-                        <p className="text-[var(--text-primary)] text-sm font-medium">
+                        <p className="text-[var(--text-tertiary)] text-sm">승률</p>
+                        <p className="text-[var(--text-primary)] text-base font-medium">
                             {winRate}%
                         </p>
                     </div>
                     <div>
-                        <p className="text-[var(--text-tertiary)] text-xs">오늘 손익</p>
-                        <p className={`text-sm font-medium ${account.dailyPnl >= 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                        <p className="text-[var(--text-tertiary)] text-sm">오늘 손익</p>
+                        <p className={`text-base font-medium ${account.dailyPnl >= 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                             {account.dailyPnl >= 0 ? '+' : ''}{account.dailyPnl.toLocaleString()}원
                         </p>
                     </div>
@@ -131,11 +131,11 @@ export default function TradingView() {
             {stats.totalTrades > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="card rounded p-4">
-                        <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">승률</h3>
+                        <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">승률</h3>
                         <WinRateGauge winRate={winRate} winCount={account.winCount} loseCount={account.loseCount} />
                     </div>
                     <div className="card rounded p-4">
-                        <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">최근 매매 결과</h3>
+                        <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">최근 매매 결과</h3>
                         <TradeStreak trades={data.recentTrades} />
                     </div>
                 </div>
@@ -150,29 +150,29 @@ export default function TradingView() {
             {/* 매매 통계 */}
             {stats.totalTrades > 0 && (
                 <div className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-4">
-                    <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">매매 통계</h3>
+                    <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">매매 통계</h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <p className="text-[var(--text-tertiary)] text-xs">평균 손익</p>
-                            <p className={`text-sm font-medium ${stats.avgPnl >= 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                            <p className="text-[var(--text-tertiary)] text-sm">평균 손익</p>
+                            <p className={`text-base font-medium ${stats.avgPnl >= 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                                 {stats.avgPnl >= 0 ? '+' : ''}{stats.avgPnl.toLocaleString()}원
                             </p>
                         </div>
                         <div>
-                            <p className="text-[var(--text-tertiary)] text-xs">승패</p>
-                            <p className="text-[var(--text-primary)] text-sm font-medium">
+                            <p className="text-[var(--text-tertiary)] text-sm">승패</p>
+                            <p className="text-[var(--text-primary)] text-base font-medium">
                                 {account.winCount}승 {account.loseCount}패
                             </p>
                         </div>
                         <div>
-                            <p className="text-[var(--text-tertiary)] text-xs">최대 수익</p>
-                            <p className="text-[var(--rise-color)] text-sm font-medium">
+                            <p className="text-[var(--text-tertiary)] text-sm">최대 수익</p>
+                            <p className="text-[var(--rise-color)] text-base font-medium">
                                 +{stats.maxWin.toLocaleString()}원
                             </p>
                         </div>
                         <div>
-                            <p className="text-[var(--text-tertiary)] text-xs">최대 손실</p>
-                            <p className="text-[var(--fall-color)] text-sm font-medium">
+                            <p className="text-[var(--text-tertiary)] text-sm">최대 손실</p>
+                            <p className="text-[var(--fall-color)] text-base font-medium">
                                 {stats.maxLoss.toLocaleString()}원
                             </p>
                         </div>
@@ -180,7 +180,7 @@ export default function TradingView() {
                 </div>
             )}
 
-            <p className="text-[var(--text-tertiary)] text-xs text-center py-2">
+            <p className="text-[var(--text-tertiary)] text-sm text-center py-2">
                 실계좌 연동 · teburn 지표 기반 운용 · 과거 수익이 미래 수익을 보장하지 않습니다
             </p>
         </div>

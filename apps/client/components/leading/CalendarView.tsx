@@ -40,7 +40,7 @@ function DateCell({
             }`}
         >
             <div
-                className={`text-[12px] md:text-sm font-medium mb-1 ${
+                className={`text-[12px] md:text-base font-medium mb-1 ${
                     isToday
                         ? 'w-5 h-5 bg-[var(--accent-blue)] text-white rounded-full flex items-center justify-center'
                         : isCurrentMonth
@@ -63,15 +63,15 @@ function DateCell({
                             return (
                                 <div key={`${stock.stockCode || stock.stockName}-${idx}`}>
                                     <div className="flex items-baseline gap-1">
-                                        <span className={`text-xs md:text-[12px] font-semibold truncate ${colorClass}`}>
+                                        <span className={`text-sm md:text-[12px] font-semibold truncate ${colorClass}`}>
                                             {stock.stockName}
                                         </span>
-                                        <span className={`text-[10px] md:text-xs font-medium flex-shrink-0 ${colorClass}`}>
+                                        <span className={`text-[10px] md:text-sm font-medium flex-shrink-0 ${colorClass}`}>
                                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                                         </span>
                                     </div>
                                     {themeTag && (
-                                        <div className="text-xs text-[var(--text-tertiary)] truncate">
+                                        <div className="text-sm text-[var(--text-tertiary)] truncate">
                                             {themeTag}
                                         </div>
                                     )}
@@ -84,11 +84,11 @@ function DateCell({
                                 key={`${stock.stockCode || stock.stockName}-${idx}`}
                                 className="flex items-baseline gap-1"
                             >
-                                <span className={`text-xs truncate opacity-50 ${colorClass}`}>
+                                <span className={`text-sm truncate opacity-50 ${colorClass}`}>
                                     {stock.stockName}
                                 </span>
                                 {themeTag && (
-                                    <span className="text-xs text-[var(--text-disabled)] truncate flex-shrink-0">
+                                    <span className="text-sm text-[var(--text-disabled)] truncate flex-shrink-0">
                                         {themeTag}
                                     </span>
                                 )}
@@ -196,14 +196,14 @@ export default function CalendarView() {
             {/* 헤더 */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">캘린더</h2>
-                    <span className="text-xs text-[var(--text-tertiary)]">일별 주도주</span>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">캘린더</h2>
+                    <span className="text-sm text-[var(--text-tertiary)]">일별 주도주</span>
                 </div>
 
                 <div className="flex items-center gap-1">
                     <button
                         onClick={handleToday}
-                        className="px-2 py-1 text-xs font-medium border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                        className="px-2 py-1 text-sm font-medium border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
                     >
                         오늘
                     </button>
@@ -214,7 +214,7 @@ export default function CalendarView() {
                         >
                             <ChevronLeft size={12} />
                         </button>
-                        <span className="px-2 text-sm font-medium text-[var(--text-primary)] whitespace-nowrap">
+                        <span className="px-2 text-base font-medium text-[var(--text-primary)] whitespace-nowrap">
                             {currentYear}.{String(currentMonth).padStart(2, '0')}
                         </span>
                         <button
@@ -234,7 +234,7 @@ export default function CalendarView() {
                     {dayNames.map((name) => (
                         <div
                             key={name}
-                            className="text-center py-1.5 text-xs font-medium text-[var(--text-tertiary)]"
+                            className="text-center py-1.5 text-sm font-medium text-[var(--text-tertiary)]"
                         >
                             {name}
                         </div>

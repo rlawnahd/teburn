@@ -94,7 +94,7 @@ export default function HotnessHistoryChart({ stockCode }: { stockCode: string }
     if (isLoading) {
         return (
             <div className="h-[120px] flex items-center justify-center">
-                <span className="text-[11px] text-[var(--text-tertiary)]">점수 추이 로딩 중...</span>
+                <span className="text-xs text-[var(--text-tertiary)]">점수 추이 로딩 중...</span>
             </div>
         );
     }
@@ -102,7 +102,7 @@ export default function HotnessHistoryChart({ stockCode }: { stockCode: string }
     if (!data || data.length < 2) {
         return (
             <div className="h-[80px] flex items-center justify-center">
-                <span className="text-[11px] text-[var(--text-tertiary)]">
+                <span className="text-xs text-[var(--text-tertiary)]">
                     {data && data.length === 1
                         ? '데이터 수집 중 (1일차)'
                         : '점수 히스토리가 아직 없습니다'}
@@ -118,11 +118,11 @@ export default function HotnessHistoryChart({ stockCode }: { stockCode: string }
     return (
         <div>
             <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-[var(--text-tertiary)]">
+                <span className="text-xs text-[var(--text-tertiary)]">
                     점수 추이 ({data.length}일)
                 </span>
                 {diff !== 0 && (
-                    <span className={`text-[11px] font-medium ${diff > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                    <span className={`text-xs font-medium ${diff > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                         전일 대비 {diff > 0 ? '+' : ''}{diff.toFixed(0)}점
                     </span>
                 )}

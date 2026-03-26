@@ -24,7 +24,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     </button>
                 </div>
 
-                <p className="text-sm text-[var(--text-secondary)] mb-6">
+                <p className="text-base text-[var(--text-secondary)] mb-6">
                     로그인하면 실시간 시세와 주도주 점수를 확인할 수 있어요.
                 </p>
 

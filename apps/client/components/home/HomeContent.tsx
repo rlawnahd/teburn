@@ -39,7 +39,7 @@ export default function HomeContent() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
-                <div className="text-[13px] text-[var(--text-tertiary)]">로딩 중...</div>
+                <div className="text-sm text-[var(--text-tertiary)]">로딩 중...</div>
             </div>
         );
     }
@@ -67,7 +67,7 @@ export default function HomeContent() {
                                     <button
                                         key={tab.key}
                                         onClick={() => handleTabChange(tab.key)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium transition-all rounded-md whitespace-nowrap ${
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all rounded-md whitespace-nowrap ${
                                             isActive
                                                 ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] tab-active'
                                                 : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'

@@ -64,7 +64,7 @@ export default function Sidebar() {
                 href={item.href}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl
-                  text-sm font-medium
+                  text-base font-medium
                   transition-all duration-150
                   ${isActive
                     ? 'bg-[var(--accent-blue)] text-white shadow-lg shadow-[var(--accent-blue)]/25'
@@ -83,7 +83,7 @@ export default function Sidebar() {
       {/* 하단 영역 */}
       <div className="p-4 border-t border-[var(--border-color)]">
         <div className="flex items-center justify-between px-2">
-          <span className="text-[13px] text-[var(--text-tertiary)]">테마 변경</span>
+          <span className="text-sm text-[var(--text-tertiary)]">테마 변경</span>
           <ThemeToggle size="sm" />
         </div>
       </div>

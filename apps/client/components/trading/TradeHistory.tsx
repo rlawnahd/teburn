@@ -18,10 +18,10 @@ const SELL_REASON_LABELS: Record<string, string> = {
 export default function TradeHistory({ trades }: Props) {
     return (
         <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
-            <h3 className="text-[var(--text-primary)] text-sm font-medium mb-3">매매 이력</h3>
+            <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">매매 이력</h3>
 
             {trades.length === 0 ? (
-                <p className="text-[var(--text-tertiary)] text-sm">매매 기록이 없습니다.</p>
+                <p className="text-[var(--text-tertiary)] text-base">매매 기록이 없습니다.</p>
             ) : (
                 <div className="space-y-1">
                     {trades.map((trade) => {
@@ -38,7 +38,7 @@ export default function TradeHistory({ trades }: Props) {
                         return (
                             <div key={trade._id} className="flex items-center justify-between py-2 border-b border-[var(--border-color)] last:border-0">
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                                    <span className={`text-sm font-bold px-1.5 py-0.5 rounded ${
                                         isBuy
                                             ? 'bg-[var(--rise-color)]/10 text-[var(--rise-color)]'
                                             : 'bg-[var(--fall-color)]/10 text-[var(--fall-color)]'
@@ -46,8 +46,8 @@ export default function TradeHistory({ trades }: Props) {
                                         {isBuy ? '매수' : '매도'}
                                     </span>
                                     <div>
-                                        <p className="text-[var(--text-primary)] text-sm">{trade.stockName}</p>
-                                        <p className="text-[var(--text-tertiary)] text-xs">
+                                        <p className="text-[var(--text-primary)] text-base">{trade.stockName}</p>
+                                        <p className="text-[var(--text-tertiary)] text-sm">
                                             {dateStr}
                                             {trade.sellReason && ` · ${SELL_REASON_LABELS[trade.sellReason] || trade.sellReason}`}
                                             {trade.signal && ` · ${trade.signal.hotnessGrade}등급`}
@@ -55,11 +55,11 @@ export default function TradeHistory({ trades }: Props) {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[var(--text-primary)] text-sm">
+                                    <p className="text-[var(--text-primary)] text-base">
                                         {trade.filledPrice.toLocaleString()}원 × {trade.quantity}주
                                     </p>
                                     {hasPnl && (
-                                        <p className={`text-xs font-medium ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                                        <p className={`text-sm font-medium ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                                             {isProfit ? '+' : ''}{trade.pnl!.toLocaleString()}원 ({isProfit ? '+' : ''}{trade.pnlRate!.toFixed(2)}%)
                                         </p>
                                     )}

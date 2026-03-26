@@ -24,7 +24,7 @@ function TimelineRow({ theme }: { theme: ThemeTimelineItem }) {
     return (
         <div className="flex items-center gap-0 group">
             <div className="w-20 sm:w-24 flex-shrink-0 pr-2 text-right">
-                <span className="text-[11px] text-[var(--text-secondary)] truncate block">{theme.themeName}</span>
+                <span className="text-xs text-[var(--text-secondary)] truncate block">{theme.themeName}</span>
             </div>
             <div className="flex-1 flex gap-[1px]">
                 {TIME_SLOTS.map(time => {
@@ -36,7 +36,7 @@ function TimelineRow({ theme }: { theme: ThemeTimelineItem }) {
                             style={{ background: slot ? getHeatColor(slot.avgChangeRate) : 'var(--bg-tertiary)' }}
                         >
                             {slot && (
-                                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/cell:block bg-[var(--bg-elevated)] border border-[var(--border-color)] rounded px-2 py-1 text-xs whitespace-nowrap z-20 shadow-md">
+                                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/cell:block bg-[var(--bg-elevated)] border border-[var(--border-color)] rounded px-2 py-1 text-sm whitespace-nowrap z-20 shadow-md">
                                     <p className="text-[var(--text-primary)] font-medium">{theme.themeName}</p>
                                     <p className="text-[var(--text-tertiary)]">{time}</p>
                                     <p className={slot.avgChangeRate >= 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}>
@@ -49,7 +49,7 @@ function TimelineRow({ theme }: { theme: ThemeTimelineItem }) {
                 })}
             </div>
             <div className="w-14 flex-shrink-0 text-right pl-2">
-                <span className={`text-[11px] font-semibold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                <span className={`text-xs font-semibold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                     {isPositive ? '+' : ''}{theme.currentRate.toFixed(1)}%
                 </span>
             </div>
@@ -83,7 +83,7 @@ export default function ThemeTimeline() {
     if (timeline.length === 0 || timeline.every(t => t.slots.length === 0)) {
         return (
             <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded p-4">
-                <h3 className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">테마 흐름</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">테마 흐름</h3>
                 <p className="text-[12px] text-[var(--text-tertiary)] text-center py-4">
                     장 운영 시간에 데이터가 수집됩니다
                 </p>
@@ -98,8 +98,8 @@ export default function ThemeTimeline() {
         <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">테마 흐름</span>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">장중 시간대별 등락률</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">테마 흐름</span>
+                    <span className="text-xs text-[var(--text-tertiary)]">장중 시간대별 등락률</span>
                 </div>
                 <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
                     <span className="flex items-center gap-1">

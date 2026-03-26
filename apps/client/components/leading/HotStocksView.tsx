@@ -67,7 +67,7 @@ function StockRow({
             className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
-            <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+            <span className={`w-5 text-center text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                 {rank}
             </span>
 
@@ -86,7 +86,7 @@ function StockRow({
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                    <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                     <GradeBadge grade={stock.grade} />
                     {isLimitUp && (
                         <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
@@ -101,36 +101,36 @@ function StockRow({
                                 key={theme}
                                 role="button"
                                 onClick={(e) => { e.stopPropagation(); onThemeClick(theme); }}
-                                className="text-xs text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
+                                className="text-sm text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
                             >
                                 {theme}
                             </span>
                         ))}
                         {stock.themes.length > 2 && (
-                            <span className="text-xs text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                            <span className="text-sm text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
                         )}
                     </div>
                 )}
                 {stock.latestNews && (
-                    <p className="text-xs text-[var(--text-tertiary)] truncate mt-0.5">
+                    <p className="text-sm text-[var(--text-tertiary)] truncate mt-0.5">
                         {stock.latestNews}
                     </p>
                 )}
             </div>
 
             <div className="text-right flex-shrink-0">
-                <div className="text-sm text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
-                <div className={`text-xs font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                <div className="text-base text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
+                <div className={`text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                     {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
                 </div>
             </div>
 
             <div className="hidden sm:block w-12 text-right flex-shrink-0">
-                <div className="text-xs text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
+                <div className="text-sm text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
             </div>
 
             <div className="hidden sm:flex w-10 items-center gap-1 flex-shrink-0 justify-end">
-                <span className="text-sm font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
+                <span className="text-base font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
                 <ScoreMiniGauge score={stock.totalScore} />
             </div>
         </button>
@@ -175,37 +175,37 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
                 {/* 시장 온도 */}
                 <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
                     <div className="text-lg font-bold" style={{ color: tempColor }}>{marketTemp}</div>
-                    <div className="text-[11px] text-[var(--text-tertiary)]">시장 온도</div>
+                    <div className="text-xs text-[var(--text-tertiary)]">시장 온도</div>
                 </div>
                 {/* S등급 */}
                 <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
                     <div className="text-lg font-bold" style={{ color: 'var(--grade-s)' }}>{sCount}</div>
-                    <div className="text-[11px] text-[var(--text-tertiary)]">S등급</div>
+                    <div className="text-xs text-[var(--text-tertiary)]">S등급</div>
                 </div>
                 {/* A등급 */}
                 <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
                     <div className="text-lg font-bold" style={{ color: 'var(--grade-a)' }}>{aCount}</div>
-                    <div className="text-[11px] text-[var(--text-tertiary)]">A등급</div>
+                    <div className="text-xs text-[var(--text-tertiary)]">A등급</div>
                 </div>
                 {/* 상한가 */}
                 <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
                     <div className="text-lg font-bold" style={{ color: limitUpCount > 0 ? 'var(--rise-color)' : 'var(--text-primary)' }}>{limitUpCount}</div>
-                    <div className="text-[11px] text-[var(--text-tertiary)]">상한가</div>
+                    <div className="text-xs text-[var(--text-tertiary)]">상한가</div>
                 </div>
                 {/* 오늘의 테마 */}
                 <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center col-span-2 sm:col-span-1">
                     {topTheme ? (
                         <>
-                            <div className="text-[13px] font-bold text-[var(--text-primary)] truncate">{topTheme}</div>
-                            <div className="text-[11px]" style={{ color: topThemeAvgChange >= 0 ? 'var(--rise-color)' : 'var(--fall-color)' }}>
+                            <div className="text-sm font-bold text-[var(--text-primary)] truncate">{topTheme}</div>
+                            <div className="text-xs" style={{ color: topThemeAvgChange >= 0 ? 'var(--rise-color)' : 'var(--fall-color)' }}>
                                 {topThemeAvgChange >= 0 ? '+' : ''}{topThemeAvgChange.toFixed(1)}% avg
                             </div>
-                            <div className="text-[11px] text-[var(--text-tertiary)]">오늘의 테마</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">오늘의 테마</div>
                         </>
                     ) : (
                         <>
                             <div className="text-lg font-bold text-[var(--text-tertiary)]">—</div>
-                            <div className="text-[11px] text-[var(--text-tertiary)]">오늘의 테마</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">오늘의 테마</div>
                         </>
                     )}
                 </div>
@@ -330,7 +330,7 @@ export default function HotStocksView() {
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
-                <p className="text-[13px] text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
+                <p className="text-sm text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
                 <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
@@ -351,13 +351,13 @@ export default function HotStocksView() {
             <section>
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">{title}</span>
-                        <span className="text-xs text-[var(--text-tertiary)]">{description}</span>
+                        <span className="text-base font-semibold text-[var(--text-primary)]">{title}</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">{description}</span>
                     </div>
-                    <span className="text-xs text-[var(--text-tertiary)]">{sectionStocks.length}종목</span>
+                    <span className="text-sm text-[var(--text-tertiary)]">{sectionStocks.length}종목</span>
                 </div>
                 <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-xs text-[var(--text-tertiary)]">
+                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm text-[var(--text-tertiary)]">
                         <span className="w-5 text-center">#</span>
                         <span className="w-6 text-center">변동</span>
                         <span className="flex-1">종목</span>
@@ -386,11 +386,11 @@ export default function HotStocksView() {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">주도주 분석</h2>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">거래대금 + 등락률 + 거래량 + 뉴스 + 대장주집중도</span>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">주도주 분석</h2>
+                    <span className="text-xs text-[var(--text-tertiary)]">거래대금 + 등락률 + 거래량 + 뉴스 + 대장주집중도</span>
                 </div>
                 {data?.lastUpdateTime && (
-                    <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)]">
+                    <span className="hidden sm:inline text-xs text-[var(--text-tertiary)]">
                         {formatDataDate(data.lastUpdateTime)}
                     </span>
                 )}

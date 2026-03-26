@@ -33,7 +33,7 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
             >
                 <div className="min-w-0">
                     <div className="text-[12px] text-[var(--text-tertiary)] truncate">{label}</div>
-                    <div className="text-[13px] font-medium text-[var(--text-secondary)]">--</div>
+                    <div className="text-sm font-medium text-[var(--text-secondary)]">--</div>
                 </div>
             </button>
         );
@@ -54,7 +54,7 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
             <div className="min-w-0 flex-1">
                 <div className="text-[12px] text-[var(--text-tertiary)] truncate">{data.name}</div>
                 <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-medium text-[var(--text-primary)]">
+                    <span className="text-sm font-medium text-[var(--text-primary)]">
                         {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                     </span>
                     <span className={`text-[12px] font-medium ${changeColor} flex items-center gap-0.5`}>

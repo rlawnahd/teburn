@@ -68,7 +68,7 @@ export default function TickerStrip() {
                             <span className={`text-[12px] font-semibold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                                 {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                             </span>
-                            <span className="text-[11px] text-[var(--text-tertiary)]">
+                            <span className="text-xs text-[var(--text-tertiary)]">
                                 {stock.currentPrice.toLocaleString()}
                             </span>
                         </button>
