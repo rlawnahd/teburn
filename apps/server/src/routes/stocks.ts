@@ -143,7 +143,7 @@ router.get('/:stockCode/chart', async (req: Request, res: Response) => {
     try {
         const { stockCode } = req.params;
         const period = (req.query.period as string) || 'D';
-        const days = Math.min(Number(req.query.days) || 60, 200);
+        const days = Math.min(Number(req.query.days) || 60, 2000);
 
         let candles;
         if (period === '1' || period === '5' || period === '15' || period === '30' || period === '60') {

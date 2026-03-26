@@ -39,7 +39,7 @@ export default function StockChart({ stockCode }: ChartProps) {
     const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
     const { theme } = useTheme();
 
-    const days = period === 'M' ? 200 : period === 'W' ? 120 : 90;
+    const days = period === 'M' ? 1825 : period === 'W' ? 1095 : period === 'D' ? 730 : 90;
 
     const { data: candles, isLoading } = useQuery({
         queryKey: ['chart', stockCode, period],
