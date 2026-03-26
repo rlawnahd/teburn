@@ -46,10 +46,12 @@ async function connect(): Promise<void> {
             isConnecting = false;
             console.log('🔌 키움 WebSocket 연결 성공');
 
-            // 기존 구독 종목 재등록
-            if (subscribedStocks.size > 0) {
-                registerStocks([...subscribedStocks]);
-            }
+            // 키움 서버 인증 처리 대기 후 구독 종목 등록
+            setTimeout(() => {
+                if (subscribedStocks.size > 0) {
+                    registerStocks([...subscribedStocks]);
+                }
+            }, 1000);
         });
 
         ws.on('message', (rawData: WebSocket.Data) => {
