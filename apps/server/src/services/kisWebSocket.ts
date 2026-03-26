@@ -217,16 +217,29 @@ function unregisterStock(stockCode: string): void {
 /**
  * 종목 실시간 구독 시작
  */
+const MAX_SUBSCRIBE = 40; // KIS 실시간 구독 최대 40개
+
 export function subscribeStocks(stockCodes: string[]): void {
-    const newCodes = stockCodes.filter(c => !subscribedStocks.has(c));
-    const removedCodes = [...subscribedStocks].filter(c => !stockCodes.includes(c));
+    // 40개 제한 적용
+    const limitedCodes = stockCodes.slice(0, MAX_SUBSCRIBE);
+    const newCodes = limitedCodes.filter(c => !subscribedStocks.has(c));
+    const removedCodes = [...subscribedStocks].filter(c => !limitedCodes.includes(c));
 
     if (newCodes.length > 0) {
+        // 40개 넘으면 기존 구독 해제 후 등록
+        while (subscribedStocks.size + newCodes.length > MAX_SUBSCRIBE && subscribedStocks.size > 0) {
+            const oldest = subscribedStocks.values().next().value;
+            if (oldest && !limitedCodes.includes(oldest)) {
+                subscribedStocks.delete(oldest);
+                unregisterStock(oldest);
+            } else break;
+        }
         for (const code of newCodes) {
+            if (subscribedStocks.size >= MAX_SUBSCRIBE) break;
             subscribedStocks.add(code);
             registerStock(code);
         }
-        console.log(`📡 KIS 실시간 종목 등록: ${newCodes.length}개`);
+        console.log(`📡 KIS 실시간 종목 등록: ${newCodes.length}개 (총 ${subscribedStocks.size}/${MAX_SUBSCRIBE})`);
     }
 
     if (removedCodes.length > 0) {
