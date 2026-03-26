@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getStockPrice, getStockCode, StockPrice } from '../services/kisApi';
 import { themePriceCache } from '../services/themePriceCache';
 import { calculateBatchHotness } from '../services/hotnessService';
+import { getDailyChart } from '../services/kisRestApi';
 import Theme from '../models/Theme';
 import News from '../models/News';
 import HotnessHistory from '../models/HotnessHistory';
@@ -134,6 +135,18 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
             success: false,
             message: error.message || '테마 가격 조회 중 오류가 발생했습니다.',
         });
+    }
+});
+
+// 종목 일봉 차트 데이터
+router.get('/:stockCode/chart', async (req: Request, res: Response) => {
+    try {
+        const { stockCode } = req.params;
+        const days = Math.min(Number(req.query.days) || 60, 120);
+        const candles = await getDailyChart(stockCode, days);
+        res.json({ success: true, data: candles });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

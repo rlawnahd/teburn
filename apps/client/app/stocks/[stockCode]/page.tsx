@@ -8,7 +8,7 @@ import { ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 import { fetchStockDetail } from '@/lib/api/stocks';
 import { formatTradingValue, formatVolume, formatRelativeTime } from '@/lib/utils/format';
 import GradeBadge from '@/components/ui/GradeBadge';
-import TradingViewChart from '@/components/stock/TradingViewChart';
+import StockChart from '@/components/stock/TradingViewChart';
 import HotnessHistoryChart from '@/components/stock/HotnessHistoryChart';
 import { useStockSubscription, useOnPriceUpdate } from '@/hooks/useRealtimePrice';
 import { useAuth } from '@/hooks/useAuth';
@@ -189,7 +189,7 @@ export default function StockDetailPage() {
                 </div>
 
                 {/* 차트 */}
-                <TradingViewChart stockCode={stockCode} />
+                <StockChart stockCode={stockCode} />
 
                 {/* 주도주 점수 */}
                 {stock.hotness && (() => {

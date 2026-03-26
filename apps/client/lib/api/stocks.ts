@@ -155,6 +155,24 @@ export const fetchHotnessHistory = async (stockCode: string, days = 30): Promise
     return data.data;
 };
 
+// 일봉 차트 데이터
+export interface DailyCandle {
+    date: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+}
+
+export const fetchDailyChart = async (stockCode: string, days = 60): Promise<DailyCandle[]> => {
+    const { data } = await axios.get<{ success: boolean; data: DailyCandle[] }>(
+        `${API_URL}/stocks/${encodeURIComponent(stockCode)}/chart`,
+        { params: { days } }
+    );
+    return data.data;
+};
+
 // 종목 상세 조회 (종목코드로)
 export const fetchStockDetail = async (stockCode: string): Promise<StockDetail> => {
     const { data } = await axios.get<StockDetailResponse>(
