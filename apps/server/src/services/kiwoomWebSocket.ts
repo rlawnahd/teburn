@@ -38,7 +38,6 @@ async function connect(): Promise<void> {
 
         ws = new WebSocket(WS_URL, {
             headers: {
-                'api-id': '0B',
                 'authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json;charset=UTF-8',
             },
