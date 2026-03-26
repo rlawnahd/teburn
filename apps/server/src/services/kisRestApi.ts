@@ -35,42 +35,48 @@ export interface DailyCandle {
 }
 
 /**
- * 분봉 조회 (당일)
+ * 분봉 조회 (당일, 연속조회로 전체 데이터)
  * KIS API: 주식당일분봉조회 (FHKST03010200)
  */
 export async function getMinuteChart(stockCode: string, period: number = 1): Promise<DailyCandle[]> {
     const token = await getKisToken();
+    const allCandles: DailyCandle[] = [];
+    let inputHour = '160000';
+    const maxPages = 10; // 최대 10번 연속조회 (300건)
 
-    const { data } = await axios.get(
-        `${BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice`,
-        {
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                authorization: `Bearer ${token}`,
-                appkey: KIS_APP_KEY,
-                appsecret: KIS_APP_SECRET,
-                tr_id: 'FHKST03010200',
-            },
-            params: {
-                FID_ETC_CLS_CODE: '',
-                FID_COND_MRKT_DIV_CODE: 'J',
-                FID_INPUT_ISCD: stockCode,
-                FID_INPUT_HOUR_1: '160000',
-                FID_PW_DATA_INCU_YN: 'Y',
-            },
-            timeout: 10000,
+    for (let page = 0; page < maxPages; page++) {
+        const { data } = await axios.get(
+            `${BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice`,
+            {
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHKST03010200',
+                },
+                params: {
+                    FID_ETC_CLS_CODE: '',
+                    FID_COND_MRKT_DIV_CODE: 'J',
+                    FID_INPUT_ISCD: stockCode,
+                    FID_INPUT_HOUR_1: inputHour,
+                    FID_PW_DATA_INCU_YN: 'Y',
+                },
+                timeout: 10000,
+            }
+        );
+
+        if (data.rt_cd !== '0') {
+            console.error('KIS 분봉 조회 실패:', data.msg1);
+            break;
         }
-    );
 
-    if (data.rt_cd !== '0') {
-        console.error('KIS 분봉 조회 실패:', data.msg1);
-        return [];
-    }
+        const items = data.output2 || [];
+        if (items.length === 0) break;
 
-    return (data.output2 || [])
-        .map((item: any) => {
+        for (const item of items) {
             const hour = item.stck_cntg_hour || '';
-            return {
+            const candle: DailyCandle = {
                 date: `${item.stck_bsop_date}${hour}`,
                 open: parseInt(item.stck_oprc) || 0,
                 high: parseInt(item.stck_hgpr) || 0,
@@ -78,9 +84,22 @@ export async function getMinuteChart(stockCode: string, period: number = 1): Pro
                 close: parseInt(item.stck_prpr) || 0,
                 volume: parseInt(item.cntg_vol) || 0,
             };
-        })
-        .filter((c: DailyCandle) => c.close > 0 && c.volume > 0)
-        .reverse();
+            if (candle.close > 0 && candle.volume > 0) {
+                allCandles.push(candle);
+            }
+        }
+
+        // 마지막 항목의 시간을 다음 조회 시작점으로
+        const lastItem = items[items.length - 1];
+        const lastHour = lastItem?.stck_cntg_hour;
+        if (!lastHour || lastHour <= '090000') break;
+        inputHour = lastHour;
+
+        // API rate limit
+        await new Promise(r => setTimeout(r, 100));
+    }
+
+    return allCandles.reverse(); // 오래된 순서로
 }
 
 /**
