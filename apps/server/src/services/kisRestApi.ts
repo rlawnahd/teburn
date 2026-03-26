@@ -36,7 +36,7 @@ export interface DailyCandle {
 
 /**
  * 분봉 조회 (당일)
- * period: 1, 5, 15, 30, 60
+ * KIS API: 주식당일분봉조회 (FHKST03010200)
  */
 export async function getMinuteChart(stockCode: string, period: number = 1): Promise<DailyCandle[]> {
     const token = await getKisToken();
@@ -56,7 +56,7 @@ export async function getMinuteChart(stockCode: string, period: number = 1): Pro
                 FID_COND_MRKT_DIV_CODE: 'J',
                 FID_INPUT_ISCD: stockCode,
                 FID_INPUT_HOUR_1: '160000',
-                FID_PW_DATA_INCU_YN: 'N',
+                FID_PW_DATA_INCU_YN: 'Y',
             },
             timeout: 10000,
         }
@@ -68,15 +68,18 @@ export async function getMinuteChart(stockCode: string, period: number = 1): Pro
     }
 
     return (data.output2 || [])
-        .map((item: any) => ({
-            date: `${item.stck_bsop_date}${item.stck_cntg_hour}`,
-            open: parseInt(item.stck_oprc) || 0,
-            high: parseInt(item.stck_hgpr) || 0,
-            low: parseInt(item.stck_lwpr) || 0,
-            close: parseInt(item.stck_prpr) || 0,
-            volume: parseInt(item.cntg_vol) || 0,
-        }))
-        .filter((c: DailyCandle) => c.close > 0)
+        .map((item: any) => {
+            const hour = item.stck_cntg_hour || '';
+            return {
+                date: `${item.stck_bsop_date}${hour}`,
+                open: parseInt(item.stck_oprc) || 0,
+                high: parseInt(item.stck_hgpr) || 0,
+                low: parseInt(item.stck_lwpr) || 0,
+                close: parseInt(item.stck_prpr) || 0,
+                volume: parseInt(item.cntg_vol) || 0,
+            };
+        })
+        .filter((c: DailyCandle) => c.close > 0 && c.volume > 0)
         .reverse();
 }
 

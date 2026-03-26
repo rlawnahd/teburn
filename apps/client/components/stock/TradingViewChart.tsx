@@ -19,10 +19,16 @@ const PERIOD_TABS: { key: ChartPeriod; label: string }[] = [
     { key: 'M', label: '월' },
 ];
 
-function formatTime(dateStr: string, period: ChartPeriod): string {
-    if (['1', '5', '15', '30', '60'].includes(period)) {
-        // 분봉: YYYYMMDDHHMMSS → YYYY-MM-DD
-        return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+function formatTime(dateStr: string, period: ChartPeriod): any {
+    if (['1', '5', '15', '30', '60'].includes(period) && dateStr.length >= 12) {
+        // 분봉: YYYYMMDDHHMMSS → UTC timestamp (seconds)
+        const y = parseInt(dateStr.slice(0, 4));
+        const m = parseInt(dateStr.slice(4, 6)) - 1;
+        const d = parseInt(dateStr.slice(6, 8));
+        const h = parseInt(dateStr.slice(8, 10));
+        const min = parseInt(dateStr.slice(10, 12));
+        // KST → UTC: -9시간. lightweight-charts는 UTC timestamp 사용
+        return Math.floor(new Date(y, m, d, h, min).getTime() / 1000) - 9 * 3600;
     }
     return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 }
@@ -110,7 +116,16 @@ export default function StockChart({ stockCode }: ChartProps) {
         candleSeries.setData(candleData);
 
         const volumeSeries = chart.addSeries(HistogramSeries, {
-            priceFormat: { type: 'volume' },
+            priceFormat: {
+                type: 'custom',
+                formatter: (v: number) => {
+                    const billion = v / 100000000;
+                    if (billion >= 10000) return `${(billion / 10000).toFixed(1)}조`;
+                    if (billion >= 1) return `${billion.toFixed(0)}억`;
+                    if (v >= 10000) return `${(v / 10000).toFixed(0)}만`;
+                    return `${v}`;
+                },
+            },
             priceScaleId: 'volume',
         });
 
@@ -118,9 +133,10 @@ export default function StockChart({ stockCode }: ChartProps) {
             scaleMargins: { top: 0.8, bottom: 0 },
         });
 
+        // 거래대금 = 종가 × 거래량 (억 단위로 표시)
         const volumeData = candles.map(c => ({
             time: formatTime(c.date, period) as any,
-            value: c.volume,
+            value: c.close * c.volume,
             color: c.close >= c.open
                 ? (isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)')
                 : (isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.4)'),
