@@ -294,14 +294,14 @@ export default function HotStocksView() {
     useOnHotnessUpdate(useCallback((update) => {
         queryClient.setQueryData(['hotStocks'], (old: any) => {
             if (!old?.stocks) return old;
-            return {
-                ...old,
-                stocks: old.stocks.map((s: any) =>
-                    s.stockCode === update.stockCode
-                        ? { ...s, totalScore: update.totalScore, grade: update.grade }
-                        : s
-                ),
-            };
+            const updated = old.stocks.map((s: any) =>
+                s.stockCode === update.stockCode
+                    ? { ...s, totalScore: update.totalScore, grade: update.grade }
+                    : s
+            );
+            // 점수 변동 시 자동 재정렬
+            updated.sort((a: any, b: any) => b.totalScore - a.totalScore);
+            return { ...old, stocks: updated };
         });
     }, [queryClient]));
 
