@@ -22,13 +22,13 @@ const PERIOD_TABS: { key: ChartPeriod; label: string }[] = [
 function formatTime(dateStr: string, period: ChartPeriod): any {
     if (['1', '5', '15', '30', '60'].includes(period) && dateStr.length >= 12) {
         // 분봉: YYYYMMDDHHMMSS → UTC timestamp (seconds)
+        // lightweight-charts는 UTC 기준이므로 KST 시간을 그대로 UTC로 취급
         const y = parseInt(dateStr.slice(0, 4));
         const m = parseInt(dateStr.slice(4, 6)) - 1;
         const d = parseInt(dateStr.slice(6, 8));
         const h = parseInt(dateStr.slice(8, 10));
         const min = parseInt(dateStr.slice(10, 12));
-        // KST → UTC: -9시간. lightweight-charts는 UTC timestamp 사용
-        return Math.floor(new Date(y, m, d, h, min).getTime() / 1000) - 9 * 3600;
+        return Date.UTC(y, m, d, h, min) / 1000;
     }
     return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 }
