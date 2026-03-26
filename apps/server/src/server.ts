@@ -25,7 +25,7 @@ import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
 import { startTradingBot } from './services/tradingBot';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
-import { onRealtimePrice } from './services/kiwoomWebSocket';
+import { onRealtimePrice, startKiwoomWebSocket } from './services/kiwoomWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
 import News from './models/News';
 
@@ -189,7 +189,10 @@ connectDB().then(async () => {
             .then(() => warmupHotStocks())
             .then(() => getTopHotStocks(100))
             .then((scores) => initRealtimeScores(scores))
-            .then(() => startTelegramBot())
+            .then(() => {
+                startKiwoomWebSocket();
+                return startTelegramBot();
+            })
             // .then(() => startTradingBot())  // Python 봇으로 대체 (apps/bot)
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
