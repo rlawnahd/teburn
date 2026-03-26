@@ -65,8 +65,8 @@ async function connect(): Promise<void> {
             isConnecting = false;
             console.log('🔌 키움 WebSocket 연결 성공');
 
-            // 3초 후 fallback (첫 메시지가 안 오는 경우 대비)
-            authTimer = setTimeout(tryRegister, 3000);
+            // 5초 후 fallback (키움 서버 인증 처리 대기)
+            authTimer = setTimeout(tryRegister, 5000);
         });
 
         ws.on('message', (rawData: WebSocket.Data) => {
@@ -103,6 +103,13 @@ async function connect(): Promise<void> {
                         console.log(`📡 실시간 ${msg.trnm}: 성공`);
                     } else {
                         console.error(`❌ 실시간 ${msg.trnm} 실패:`, msg.return_msg);
+                        // 인증 전 에러면 3초 후 재시도
+                        if (msg.return_msg?.includes('로그인 인증') && msg.trnm === 'REG') {
+                            isAuthenticated = false;
+                            authDone = false;
+                            console.log('🔄 3초 후 종목 등록 재시도...');
+                            setTimeout(tryRegister, 3000);
+                        }
                     }
                 }
             } catch (error) {
