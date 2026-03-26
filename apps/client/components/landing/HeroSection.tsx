@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Trophy } from 'lucide-react';
+import { fetchHotStocks } from '@/lib/api/leading';
 import LoginModal from '@/components/auth/LoginModal';
 
 const TICKER_DATA = [
@@ -27,11 +30,7 @@ function TickerRow({ stocks, direction, speed }: { stocks: typeof TICKER_DATA; d
         let t = 0;
         const animate = () => {
             t += 1;
-            setOffset(prev => {
-                const delta = direction === 'left' ? -speed : speed;
-                return prev + delta;
-            });
-
+            setOffset(prev => prev + (direction === 'left' ? -speed : speed));
             if (t % 60 === 0) {
                 setPrices(prev => prev.map((s, i) => {
                     const noise = Math.sin(t * 0.01 + i * 2.3) * s.base * 0.002;
@@ -40,7 +39,6 @@ function TickerRow({ stocks, direction, speed }: { stocks: typeof TICKER_DATA; d
                     return { ...s, current, rate };
                 }));
             }
-
             frameRef.current = requestAnimationFrame(animate);
         };
         frameRef.current = requestAnimationFrame(animate);
@@ -54,11 +52,7 @@ function TickerRow({ stocks, direction, speed }: { stocks: typeof TICKER_DATA; d
             {doubled.map((stock, i) => {
                 const isUp = stock.rate >= 0;
                 return (
-                    <div
-                        key={`${stock.code}-${i}`}
-                        className="inline-flex items-center gap-3 px-5 py-2 flex-shrink-0"
-                        style={{ minWidth: '200px' }}
-                    >
+                    <div key={`${stock.code}-${i}`} className="inline-flex items-center gap-3 px-5 py-2 flex-shrink-0" style={{ minWidth: '200px' }}>
                         <span className="text-xs font-medium text-[var(--text-primary)] opacity-60">{stock.name}</span>
                         <span className="text-xs font-mono opacity-50" style={{ color: isUp ? 'var(--rise-color)' : 'var(--fall-color)' }}>
                             {stock.current.toLocaleString()}
@@ -87,6 +81,101 @@ function LiveTickerBackground() {
             </div>
             <div className="absolute top-[80%] left-0 right-0 opacity-10">
                 <TickerRow stocks={[...TICKER_DATA].reverse().slice(6, 12)} direction="right" speed={0.15} />
+            </div>
+        </div>
+    );
+}
+
+function TopStockCard({ onLoginClick }: { onLoginClick: () => void }) {
+    const { data } = useQuery({
+        queryKey: ['hotStocks-landing'],
+        queryFn: () => fetchHotStocks(1),
+        staleTime: 60 * 1000,
+    });
+
+    const top = data?.stocks?.[0];
+    if (!top) return null;
+
+    const isUp = top.changeRate > 0;
+
+    return (
+        <div
+            className="mt-10 mx-auto max-w-sm"
+            style={{ animation: 'heroFadeIn 0.8s ease-out 0.3s both' }}
+        >
+            <div className="relative rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]/90 backdrop-blur-md overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/50">
+                    <Trophy size={14} className="text-amber-500" />
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">오늘의 주도주 1위</span>
+                    <span className="ml-auto text-[10px] text-[var(--text-tertiary)]">LIVE</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                </div>
+
+                {/* Stock info */}
+                <div className="px-4 py-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold text-[var(--text-primary)]">{top.stockName}</span>
+                                <span
+                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                    style={{
+                                        backgroundColor: top.grade === 'S' ? 'var(--grade-s)' : 'var(--grade-a)',
+                                        color: 'white',
+                                    }}
+                                >
+                                    {top.grade}등급
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm text-[var(--text-primary)]">{top.currentPrice.toLocaleString()}원</span>
+                                <span className={`text-sm font-semibold ${isUp ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                                    {isUp ? '+' : ''}{top.changeRate.toFixed(2)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-black text-[var(--text-primary)]">{top.totalScore}</div>
+                            <div className="text-[10px] text-[var(--text-tertiary)]">주도주 점수</div>
+                        </div>
+                    </div>
+
+                    {/* Score bars */}
+                    <div className="mt-3 grid grid-cols-5 gap-1">
+                        {[
+                            { label: '거래대금', score: top.tradingValueScore, max: 25 },
+                            { label: '모멘텀', score: top.momentumScore, max: 25 },
+                            { label: '거래량', score: top.volumeScore, max: 20 },
+                            { label: '뉴스', score: top.newsScore, max: 15 },
+                            { label: '테마', score: top.themeConcentrationScore, max: 15 },
+                        ].map((item) => (
+                            <div key={item.label} className="text-center">
+                                <div className="h-8 bg-[var(--bg-tertiary)] rounded-sm relative overflow-hidden">
+                                    <div
+                                        className="absolute bottom-0 left-0 right-0 rounded-sm transition-all"
+                                        style={{
+                                            height: `${(item.score / item.max) * 100}%`,
+                                            background: 'var(--brand-primary)',
+                                            opacity: 0.7,
+                                        }}
+                                    />
+                                </div>
+                                <div className="text-[9px] text-[var(--text-tertiary)] mt-1">{item.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Blur overlay for "more" */}
+                <div className="px-4 py-3 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/30">
+                    <button
+                        onClick={onLoginClick}
+                        className="w-full text-xs text-[var(--accent-blue)] hover:underline"
+                    >
+                        + 29개 종목 더 보기 →
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -149,10 +238,13 @@ export default function HeroSection() {
                     5가지 지표로 주도주를 실시간 분석합니다
                 </p>
 
-                <div style={{ animation: 'heroFadeIn 0.8s ease-out 0.35s both' }}>
+                {/* Top 1 stock card */}
+                <TopStockCard onLoginClick={() => setShowLogin(true)} />
+
+                <div style={{ animation: 'heroFadeIn 0.8s ease-out 0.45s both' }}>
                     <button
                         onClick={() => setShowLogin(true)}
-                        className="mt-10 inline-flex items-center h-14 px-10 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+                        className="mt-8 inline-flex items-center h-14 px-10 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
                             background: 'var(--brand-gradient, linear-gradient(135deg, #ef4444, #dc2626))',
                             boxShadow: '0 8px 32px rgba(239, 68, 68, 0.3)',
