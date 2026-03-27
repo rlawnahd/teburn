@@ -13,26 +13,6 @@ import { useOnPriceUpdate, useOnHotnessUpdate } from '@/hooks/useRealtimePrice';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatePresence, motion } from 'framer-motion';
 
-function ScoreMiniGauge({ score }: { score: number }) {
-    return (
-        <div className="w-12 flex items-center gap-1">
-            <div className="flex-1 h-[3px] bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                        width: `${Math.min(score, 100)}%`,
-                        background: score >= 70
-                            ? 'var(--grade-s)'
-                            : score >= 50
-                            ? 'var(--grade-a)'
-                            : 'var(--text-tertiary)',
-                    }}
-                />
-            </div>
-        </div>
-    );
-}
-
 type PriceFlash = 'rise' | 'fall' | null;
 type RankChange = { delta: number; isNew: boolean };
 
@@ -93,7 +73,6 @@ function StockRow({
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
-                    <GradeBadge grade={stock.grade} />
                     {isStreaking && (
                         <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${
                             streakDays >= 3
@@ -154,9 +133,9 @@ function StockRow({
                 <div className="text-sm text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
             </div>
 
-            <div className="hidden sm:flex w-10 items-center gap-1 flex-shrink-0 justify-end">
+            <div className="hidden sm:flex w-16 items-center gap-1.5 flex-shrink-0 justify-end">
                 <span className="text-base font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
-                <ScoreMiniGauge score={stock.totalScore} />
+                <GradeBadge grade={stock.grade} />
             </div>
         </motion.button>
     );
