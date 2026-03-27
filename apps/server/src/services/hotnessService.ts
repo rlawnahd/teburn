@@ -152,8 +152,9 @@ async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<str
     const kstToday = new Date(now.getTime() + kstOffset).toISOString().split('T')[0];
 
     // 오늘 제외한 최근 3 영업일
+    // DailyLeadingTheme의 date는 UTC로 저장되어 있어서 KST로 변환 필요
     const tradingDates = recentDays
-        .map(d => new Date(d.date).toISOString().split('T')[0])
+        .map(d => new Date(new Date(d.date).getTime() + kstOffset).toISOString().split('T')[0])
         .filter(d => d !== kstToday)
         .slice(0, 3);
 

@@ -164,8 +164,9 @@ router.get('/hot', async (req: Request, res: Response) => {
             const kstOffset = 9 * 60 * 60 * 1000;
             const kstToday = new Date(Date.now() + kstOffset).toISOString().split('T')[0];
 
+            // DailyLeadingTheme의 date는 UTC로 저장되어 있어서 KST로 변환 필요
             const tradingDates = recentDays
-                .map(d => new Date(d.date).toISOString().split('T')[0])
+                .map(d => new Date(new Date(d.date).getTime() + kstOffset).toISOString().split('T')[0])
                 .filter(d => d !== kstToday)
                 .slice(0, 3);
 
