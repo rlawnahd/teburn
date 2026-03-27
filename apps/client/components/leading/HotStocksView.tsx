@@ -104,7 +104,7 @@ function StockRow({
                         </span>
                     )}
                     {isLimitUp && (
-                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
+                        <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
                             상한가
                         </span>
                     )}
@@ -139,9 +139,15 @@ function StockRow({
                     : priceFlash === 'fall' ? 'text-[var(--fall-color)] font-semibold'
                     : 'text-[var(--text-primary)]'
                 }`}>{stock.currentPrice.toLocaleString()}</div>
-                <div className={`text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                    {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
-                </div>
+                {isLimitUp ? (
+                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--rise-color)] mt-0.5">
+                        <span className="text-sm font-bold text-white">↑ {stock.changeRate.toFixed(2)}%</span>
+                    </div>
+                ) : (
+                    <div className={`text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                        {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                    </div>
+                )}
             </div>
 
             <div className="hidden sm:block w-12 text-right flex-shrink-0">
