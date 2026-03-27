@@ -151,22 +151,20 @@ async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<str
     const kstOffset = 9 * 60 * 60 * 1000;
     const kstToday = new Date(now.getTime() + kstOffset).toISOString().split('T')[0];
 
-    // 오늘 제외한 최근 3 영업일
     // DailyLeadingTheme의 date는 UTC로 저장되어 있어서 KST로 변환 필요
-    const tradingDates = recentDays
-        .map(d => new Date(new Date(d.date).getTime() + kstOffset).toISOString().split('T')[0])
-        .filter(d => d !== kstToday)
-        .slice(0, 3);
+    const allTradingDates = recentDays
+        .map(d => new Date(new Date(d.date).getTime() + kstOffset).toISOString().split('T')[0]);
 
-    if (tradingDates.length === 0) return result;
+    // 과거 영업일만 (오늘 제외) — 현재 계산 대상 종목은 이미 오늘 리스트에 있음
+    const pastDates = allTradingDates.filter(d => d !== kstToday).slice(0, 3);
 
-    // 해당 영업일들의 HotnessHistory 조회
+    if (pastDates.length === 0) return result;
+
     const histories = await HotnessHistory.find({
-        date: { $in: tradingDates },
+        date: { $in: pastDates },
         stockCode: { $in: stockCodes },
     }).select('stockCode date').lean();
 
-    // 종목별 등장 일수 카운트 (연속인지 확인)
     const stockDates = new Map<string, Set<string>>();
     for (const h of histories) {
         if (!stockDates.has(h.stockCode)) stockDates.set(h.stockCode, new Set());
@@ -180,22 +178,21 @@ async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<str
             continue;
         }
 
-        // 가장 최근 영업일부터 연속 체크
-        let streak = 0;
-        for (const td of tradingDates) {
-            if (dates.has(td)) {
-                streak++;
-            } else {
-                break; // 연속 끊김
-            }
+        // 가장 최근 과거 영업일부터 연속 체크
+        let pastStreak = 0;
+        for (const td of pastDates) {
+            if (dates.has(td)) pastStreak++;
+            else break;
         }
 
-        let score = 0;
-        if (streak >= 3) score = 30;
-        else if (streak >= 2) score = 20;
-        else if (streak >= 1) score = 10;
+        // 오늘(현재 리스트에 있음) + 과거 연속일 = 총 연속일
+        const totalDays = pastStreak > 0 ? pastStreak + 1 : 0;
 
-        result.set(code, { score, days: streak });
+        let score = 0;
+        if (totalDays >= 3) score = 30;
+        else if (totalDays >= 2) score = 20;
+
+        result.set(code, { score, days: totalDays });
     }
 
     return result;

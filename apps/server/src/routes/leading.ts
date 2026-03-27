@@ -165,14 +165,17 @@ router.get('/hot', async (req: Request, res: Response) => {
             const kstToday = new Date(Date.now() + kstOffset).toISOString().split('T')[0];
 
             // DailyLeadingTheme의 date는 UTC로 저장되어 있어서 KST로 변환 필요
-            const tradingDates = recentDays
-                .map(d => new Date(new Date(d.date).getTime() + kstOffset).toISOString().split('T')[0])
-                .filter(d => d !== kstToday)
-                .slice(0, 3);
+            // 현재 리스트에 있는 종목 = 오늘 1일 확정, 과거 기록에서 추가 연속일 계산
+            const allTradingDates = recentDays
+                .map(d => new Date(new Date(d.date).getTime() + kstOffset).toISOString().split('T')[0]);
 
-            if (tradingDates.length > 0) {
+            // 오늘과 그 이전 날짜들 분리 (HotnessHistory에서 오늘 기록이 있을 수도 없을 수도 있음)
+            // 과거 영업일만 조회 (오늘 제외)
+            const pastDates = allTradingDates.filter(d => d !== kstToday).slice(0, 3);
+
+            if (pastDates.length > 0) {
                 const histories = await HotnessHistory.find({
-                    date: { $in: tradingDates },
+                    date: { $in: pastDates },
                     stockCode: { $in: allStockCodes },
                 }).select('stockCode date').lean();
 
@@ -185,12 +188,14 @@ router.get('/hot', async (req: Request, res: Response) => {
                 for (const code of allStockCodes) {
                     const dates = stockDates.get(code);
                     if (!dates) continue;
-                    let streak = 0;
-                    for (const td of tradingDates) {
-                        if (dates.has(td)) streak++;
+                    // 가장 최근 영업일부터 연속 체크
+                    let pastStreak = 0;
+                    for (const td of pastDates) {
+                        if (dates.has(td)) pastStreak++;
                         else break;
                     }
-                    if (streak > 0) streakMap.set(code, streak);
+                    // 오늘(현재 리스트에 있음) + 과거 연속일 = 총 연속일
+                    if (pastStreak > 0) streakMap.set(code, pastStreak + 1);
                 }
             }
         }
