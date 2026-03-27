@@ -11,6 +11,7 @@ import { SkeletonRow } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { useOnPriceUpdate, useOnHotnessUpdate } from '@/hooks/useRealtimePrice';
 import { useAuth } from '@/hooks/useAuth';
+import { AnimatePresence, motion } from 'framer-motion';
 
 function ScoreMiniGauge({ score }: { score: number }) {
     return (
@@ -62,14 +63,16 @@ function StockRow({
         : '';
 
     return (
-        <button
+        <motion.button
+            layout
+            layoutId={stock.stockCode}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''} ${
+            className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${
                 isStreaking
                     ? 'border border-amber-500/40 bg-amber-500/[0.03] rounded-sm my-0.5'
                     : 'border-b border-[var(--border-color)]'
             }`}
-            style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <div className="w-7 flex-shrink-0 text-center">
                 <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -142,7 +145,7 @@ function StockRow({
                 <span className="text-base font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
                 <ScoreMiniGauge score={stock.totalScore} />
             </div>
-        </button>
+        </motion.button>
     );
 }
 
@@ -376,18 +379,20 @@ export default function HotStocksView() {
                         <span className="hidden sm:block w-12 text-right">거래대금</span>
                         <span className="hidden sm:block w-10 text-right">점수</span>
                     </div>
-                    {sectionStocks.map((stock, i) => (
-                        <StockRow
-                            key={stock.stockCode}
-                            stock={stock}
-                            rank={startRank + i}
-                            priceFlash={flashes[stock.stockCode] || null}
-                            rankChange={rankChanges[stock.stockCode] || null}
-                            staggerIndex={i}
-                            onStockClick={handleStockClick}
-                            onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
-                        />
-                    ))}
+                    <AnimatePresence mode="popLayout">
+                        {sectionStocks.map((stock, i) => (
+                            <StockRow
+                                key={stock.stockCode}
+                                stock={stock}
+                                rank={startRank + i}
+                                priceFlash={flashes[stock.stockCode] || null}
+                                rankChange={rankChanges[stock.stockCode] || null}
+                                staggerIndex={i}
+                                onStockClick={handleStockClick}
+                                onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
+                            />
+                        ))}
+                    </AnimatePresence>
                 </div>
             </section>
         );
