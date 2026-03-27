@@ -48,7 +48,7 @@ export default function HomePage() {
                         />
                         <FeatureCard
                             title="무료 · 간편 로그인"
-                            description="TEBURN의 모든 기능은 완전 무료이며, 카카오 또는 Google 계정으로 10초 만에 시작할 수 있습니다."
+                            description="TEBURN의 모든 기능은 완전 무료이며, 아이디만 만들면 바로 시작할 수 있습니다."
                         />
                     </div>
 
