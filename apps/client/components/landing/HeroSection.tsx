@@ -165,12 +165,12 @@ function TopStockCard() {
                     {/* Score bars */}
                     <div className="mt-3 grid grid-cols-6 gap-1">
                         {[
-                            { label: '거래대금', score: top.tradingValueScore, max: 30 },
+                            { label: '거래대금', score: top.tradingValueScore, max: 35 },
                             { label: '모멘텀', score: top.momentumScore, max: 20 },
                             { label: '거래량', score: top.volumeScore, max: 15 },
-                            { label: '뉴스', score: top.newsScore, max: 10 },
-                            { label: '테마', score: top.themeConcentrationScore, max: 10 },
-                            { label: '연속', score: top.streakScore ?? 0, max: 15 },
+                            { label: '뉴스', score: top.newsScore, max: 15 },
+                            { label: '테마', score: top.themeConcentrationScore, max: 15 },
+                            { label: '연속', score: top.streakScore ?? 0, max: 30 },
                         ].map((item) => (
                             <div key={item.label} className="text-center">
                                 <div className="h-8 bg-[var(--bg-tertiary)] rounded-sm relative overflow-hidden">

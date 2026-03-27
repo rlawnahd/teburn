@@ -55,12 +55,19 @@ function StockRow({
 }) {
     const isPositive = stock.changeRate > 0;
     const isLimitUp = stock.changeRate >= 29.9;
-    const isStreaking = (stock.sStreak || 0) >= 2;
+    const streakDays = stock.sStreak || 0;
+    const isStreaking = streakDays >= 2;
 
     // 순위 변동 시에만 행 전체 깜빡임 (가격 변동은 깜빡임 없음)
     const rankFlashClass = rankChange && rankChange.delta !== 0 && !rankChange.isNew
         ? (rankChange.delta > 0 ? 'animate-flash-rise' : 'animate-flash-fall')
         : '';
+
+    const streakClass = streakDays >= 3
+        ? 'streak-glow-intense my-0.5'
+        : isStreaking
+        ? 'streak-glow my-0.5'
+        : 'border-b border-[var(--border-color)]';
 
     return (
         <motion.button
@@ -68,11 +75,7 @@ function StockRow({
             layoutId={stock.stockCode}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${
-                isStreaking
-                    ? 'border border-amber-500/40 bg-amber-500/[0.03] rounded-sm my-0.5'
-                    : 'border-b border-[var(--border-color)]'
-            }`}
+            className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${streakClass}`}
         >
             <div className="w-7 flex-shrink-0 text-center">
                 <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -92,8 +95,12 @@ function StockRow({
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                     <GradeBadge grade={stock.grade} />
                     {isStreaking && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-500/15 flex-shrink-0 rounded-md">
-                            {stock.sStreak}일 연속
+                        <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${
+                            streakDays >= 3
+                                ? 'text-red-500 bg-red-500/15'
+                                : 'text-amber-600 bg-amber-500/15'
+                        }`}>
+                            🔥{streakDays}일
                         </span>
                     )}
                     {isLimitUp && (

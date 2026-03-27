@@ -1,5 +1,6 @@
 // 주도주 점수 통합 서비스
-// 주도주 점수 = 거래대금(30) + 등락률(20) + 거래량급증(15) + 뉴스(10) + 대장주집중도(10) + 연속성(15) = 총 100점
+// 주도주 점수 = 거래대금(35) + 등락률(20) + 거래량급증(15) + 뉴스(15) + 대장주집중도(15) = 총 100점
+// 연속성 보너스: 최대 +30점 (100점 초과 가능)
 
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
@@ -50,16 +51,16 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~30)
+// 거래대금 점수 (0~35)
 export function calculateTradingValueScore(tradingValue: number): number {
     const billion = tradingValue / 100000000; // 억 단위
-    if (billion >= 1000) return 30;  // 1000억 이상
-    if (billion >= 500) return 26;   // 500억 이상
-    if (billion >= 300) return 22;   // 300억 이상
-    if (billion >= 200) return 17;   // 200억 이상
-    if (billion >= 100) return 12;   // 100억 이상
-    if (billion >= 50) return 7;     // 50억 이상
-    return 2;                        // 50억 미만
+    if (billion >= 1000) return 35;  // 1000억 이상
+    if (billion >= 500) return 30;   // 500억 이상
+    if (billion >= 300) return 25;   // 300억 이상
+    if (billion >= 200) return 20;   // 200억 이상
+    if (billion >= 100) return 14;   // 100억 이상
+    if (billion >= 50) return 8;     // 50억 이상
+    return 3;                        // 50억 미만
 }
 
 // 등락률 점수 (0~20)
@@ -85,16 +86,16 @@ function calculateVolumeSurgeScore(surgeRate: number | null): number {
     return 0;
 }
 
-// 뉴스 점수 (0~10)
+// 뉴스 점수 (0~15)
 function calculateNewsScore(newsCount: number): number {
-    if (newsCount >= 10) return 10;
-    if (newsCount >= 5) return 8;
-    if (newsCount >= 3) return 6;
-    if (newsCount >= 1) return 3;
+    if (newsCount >= 10) return 15;
+    if (newsCount >= 5) return 12;
+    if (newsCount >= 3) return 9;
+    if (newsCount >= 1) return 4;
     return 0;
 }
 
-// 대장주 집중도 점수 (0~10)
+// 대장주 집중도 점수 (0~15)
 // 테마 내 거래대금 점유율로 자금이 집중되는 대장주 식별
 function calculateThemeConcentrationScore(stockCode: string, themes: string[]): { score: number; concentration: number } {
     let maxConcentration = 0;
@@ -116,11 +117,11 @@ function calculateThemeConcentrationScore(stockCode: string, themes: string[]): 
     }
 
     let score = 0;
-    if (maxConcentration >= 50) score = 10;
-    else if (maxConcentration >= 40) score = 8;
-    else if (maxConcentration >= 30) score = 6;
-    else if (maxConcentration >= 20) score = 4;
-    else if (maxConcentration >= 10) score = 2;
+    if (maxConcentration >= 50) score = 15;
+    else if (maxConcentration >= 40) score = 12;
+    else if (maxConcentration >= 30) score = 9;
+    else if (maxConcentration >= 20) score = 6;
+    else if (maxConcentration >= 10) score = 3;
 
     return { score, concentration: Math.round(maxConcentration * 10) / 10 };
 }
@@ -160,9 +161,9 @@ async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<str
     for (const code of stockCodes) {
         const days = stockDayCount.get(code) || 0;
         let score = 0;
-        if (days >= 3) score = 15;      // 3일 연속
-        else if (days >= 2) score = 10;  // 2일 연속
-        else if (days >= 1) score = 5;   // 어제만
+        if (days >= 3) score = 30;      // 3일 연속
+        else if (days >= 2) score = 20;  // 2일 연속
+        else if (days >= 1) score = 10;  // 어제만
 
         result.set(code, { score, days });
     }
@@ -205,7 +206,8 @@ export async function calculateBatchHotness(
             calculateThemeConcentrationScore(stock.stockCode, stock.themes);
         const streak = streakScores.get(stock.stockCode) || { score: 0, days: 0 };
 
-        const totalScore = tradingValueScore + momentumScore + volumeScore + newsScore + themeConcentrationScore + streak.score;
+        const baseScore = tradingValueScore + momentumScore + volumeScore + newsScore + themeConcentrationScore;
+        const totalScore = baseScore + streak.score; // 보너스 포함, 100점 초과 가능
 
         results.push({
             stockCode: stock.stockCode,
@@ -229,7 +231,7 @@ export async function calculateBatchHotness(
             latestNews: newsData.latestNewsTitle,
             themeConcentration,
 
-            grade: getGrade(totalScore),
+            grade: getGrade(baseScore), // 등급은 기본 100점 기준
         });
     }
 

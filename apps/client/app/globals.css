@@ -400,6 +400,26 @@ h1, h2, h3, h4, h5, h6 {
   animation: flash-fall 1.5s ease-out;
 }
 
+/* 연속 주도주 불꽃 글로우 */
+@keyframes fireGlow {
+  0%, 100% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.2), inset 0 0 4px rgba(245, 158, 11, 0.05); }
+  50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.35), inset 0 0 8px rgba(245, 158, 11, 0.08); }
+}
+
+.streak-glow {
+  animation: fireGlow 2s ease-in-out infinite;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-lg);
+  background: rgba(245, 158, 11, 0.03);
+}
+
+.streak-glow-intense {
+  animation: fireGlow 1.5s ease-in-out infinite;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-lg);
+  background: rgba(239, 68, 68, 0.03);
+}
+
 /* 순위 변동 진입 */
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-12px); }
