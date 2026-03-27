@@ -26,6 +26,7 @@ import tradingRoutes from './routes/trading';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
+import { startHistoryCollection } from './services/themeHistoryService';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -190,6 +191,7 @@ connectDB().then(async () => {
             .then((scores) => initRealtimeScores(scores))
             .then(() => {
                 startKisWebSocket();
+                startHistoryCollection();
                 return startTelegramBot();
             })
             .catch(err => {
