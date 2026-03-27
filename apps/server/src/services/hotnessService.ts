@@ -127,45 +127,74 @@ function calculateThemeConcentrationScore(stockCode: string, themes: string[]): 
 }
 
 // 연속성 점수 (0~15)
-// HotnessHistory에서 최근 3일간 상위권에 있었는지 확인
+// DailyLeadingTheme 기반 연속 주도주 계산
+// 실제 장 운영일(DailyLeadingTheme에 기록된 날) 기준으로 연속 여부 판단
+// → 공휴일/주말 상관없이 정확한 영업일 기준
+import DailyLeadingTheme from '../models/DailyLeadingTheme';
+
 async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<string, { score: number; days: number }>> {
     const result = new Map<string, { score: number; days: number }>();
 
     if (stockCodes.length === 0) return result;
 
+    // 최근 장 운영일 3일 조회 (오늘 제외, 가장 최근 3개 영업일)
+    const recentDays = await DailyLeadingTheme.find()
+        .sort({ date: -1 })
+        .limit(4) // 오늘 포함될 수 있으니 4개 조회
+        .select('date')
+        .lean();
+
+    if (recentDays.length === 0) return result;
+
+    // 오늘 날짜 (KST 기준)
     const now = new Date();
     const kstOffset = 9 * 60 * 60 * 1000;
-    const kstNow = new Date(now.getTime() + kstOffset);
+    const kstToday = new Date(now.getTime() + kstOffset).toISOString().split('T')[0];
 
-    // 최근 3일 날짜 (오늘 제외)
-    const dates: string[] = [];
-    for (let i = 1; i <= 3; i++) {
-        const d = new Date(kstNow);
-        d.setDate(d.getDate() - i);
-        dates.push(d.toISOString().split('T')[0]);
-    }
+    // 오늘 제외한 최근 3 영업일
+    const tradingDates = recentDays
+        .map(d => new Date(d.date).toISOString().split('T')[0])
+        .filter(d => d !== kstToday)
+        .slice(0, 3);
 
-    // 최근 3일간의 상위 30위 기록 조회
+    if (tradingDates.length === 0) return result;
+
+    // 해당 영업일들의 HotnessHistory 조회
     const histories = await HotnessHistory.find({
-        date: { $in: dates },
+        date: { $in: tradingDates },
         stockCode: { $in: stockCodes },
     }).select('stockCode date').lean();
 
-    // 종목별 등장 일수 카운트
-    const stockDayCount = new Map<string, number>();
+    // 종목별 등장 일수 카운트 (연속인지 확인)
+    const stockDates = new Map<string, Set<string>>();
     for (const h of histories) {
-        const count = stockDayCount.get(h.stockCode) || 0;
-        stockDayCount.set(h.stockCode, count + 1);
+        if (!stockDates.has(h.stockCode)) stockDates.set(h.stockCode, new Set());
+        stockDates.get(h.stockCode)!.add(h.date);
     }
 
     for (const code of stockCodes) {
-        const days = stockDayCount.get(code) || 0;
-        let score = 0;
-        if (days >= 3) score = 30;      // 3일 연속
-        else if (days >= 2) score = 20;  // 2일 연속
-        else if (days >= 1) score = 10;  // 어제만
+        const dates = stockDates.get(code);
+        if (!dates) {
+            result.set(code, { score: 0, days: 0 });
+            continue;
+        }
 
-        result.set(code, { score, days });
+        // 가장 최근 영업일부터 연속 체크
+        let streak = 0;
+        for (const td of tradingDates) {
+            if (dates.has(td)) {
+                streak++;
+            } else {
+                break; // 연속 끊김
+            }
+        }
+
+        let score = 0;
+        if (streak >= 3) score = 30;
+        else if (streak >= 2) score = 20;
+        else if (streak >= 1) score = 10;
+
+        result.set(code, { score, days: streak });
     }
 
     return result;

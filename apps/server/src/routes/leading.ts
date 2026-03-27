@@ -10,6 +10,7 @@ import { getMarketStatus } from '../utils/marketStatus';
 import { themePriceCache } from '../services/themePriceCache';
 import { getTopHotStocks, getThemeHotness } from '../services/hotnessService';
 import HotnessHistory from '../models/HotnessHistory';
+import DailyLeadingTheme from '../models/DailyLeadingTheme';
 
 const router = Router();
 
@@ -148,40 +149,48 @@ router.get('/hot', async (req: Request, res: Response) => {
         const hotStocks = await getTopHotStocks(limit);
         const stats = themePriceCache.getStats();
 
-        // 연속 S등급 일수 계산
-        const sStockCodes = hotStocks.filter(s => s.grade === 'S').map(s => s.stockCode);
+        // 연속 주도주 일수 계산 (DailyLeadingTheme 기반 실제 영업일)
+        const allStockCodes = hotStocks.map(s => s.stockCode);
         const streakMap = new Map<string, number>();
 
-        if (sStockCodes.length > 0) {
-            const histories = await HotnessHistory.find({
-                stockCode: { $in: sStockCodes },
-                grade: 'S',
-            }).sort({ date: -1 }).limit(sStockCodes.length * 10).lean();
+        if (allStockCodes.length > 0) {
+            // 최근 장 운영일 조회
+            const recentDays = await DailyLeadingTheme.find()
+                .sort({ date: -1 })
+                .limit(4)
+                .select('date')
+                .lean();
 
-            // 종목별로 그룹핑 후 연속 일수 계산
-            const byStock = new Map<string, string[]>();
-            for (const h of histories) {
-                const dates = byStock.get(h.stockCode) || [];
-                dates.push(h.date);
-                byStock.set(h.stockCode, dates);
-            }
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const kstToday = new Date(Date.now() + kstOffset).toISOString().split('T')[0];
 
-            for (const [code, dates] of byStock) {
-                // 날짜 내림차순 정렬 후 연속 일수 계산
-                const sorted = dates.sort().reverse();
-                let streak = 1;
-                for (let i = 1; i < sorted.length; i++) {
-                    const prev = new Date(sorted[i - 1]);
-                    const curr = new Date(sorted[i]);
-                    const diffDays = (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24);
-                    // 주말 건너뛰기 (1~3일 차이까지 연속으로 인정)
-                    if (diffDays <= 3) {
-                        streak++;
-                    } else {
-                        break;
-                    }
+            const tradingDates = recentDays
+                .map(d => new Date(d.date).toISOString().split('T')[0])
+                .filter(d => d !== kstToday)
+                .slice(0, 3);
+
+            if (tradingDates.length > 0) {
+                const histories = await HotnessHistory.find({
+                    date: { $in: tradingDates },
+                    stockCode: { $in: allStockCodes },
+                }).select('stockCode date').lean();
+
+                const stockDates = new Map<string, Set<string>>();
+                for (const h of histories) {
+                    if (!stockDates.has(h.stockCode)) stockDates.set(h.stockCode, new Set());
+                    stockDates.get(h.stockCode)!.add(h.date);
                 }
-                streakMap.set(code, streak);
+
+                for (const code of allStockCodes) {
+                    const dates = stockDates.get(code);
+                    if (!dates) continue;
+                    let streak = 0;
+                    for (const td of tradingDates) {
+                        if (dates.has(td)) streak++;
+                        else break;
+                    }
+                    if (streak > 0) streakMap.set(code, streak);
+                }
             }
         }
 
