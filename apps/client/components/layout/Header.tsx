@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, X, Menu } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
-import LoginModal from '@/components/auth/LoginModal';
+
 import { useAuth } from '@/hooks/useAuth';
 import { searchStocks, SearchStockResult } from '@/lib/api/stocks';
 
@@ -133,7 +133,7 @@ export default function Header() {
     const { user, isLoggedIn, logout } = useAuth();
     const [showSearch, setShowSearch] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
-    const [showLoginModal, setShowLoginModal] = useState(false);
+
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -241,12 +241,12 @@ export default function Header() {
                             </button>
                         </div>
                     ) : (
-                        <button
-                            onClick={() => setShowLoginModal(true)}
+                        <Link
+                            href="/login"
                             className="hidden sm:flex items-center h-8 px-3 text-[12px] font-medium bg-[var(--accent-color)] text-white rounded hover:opacity-90 transition-opacity"
                         >
                             로그인
-                        </button>
+                        </Link>
                     )}
 
                     <ThemeToggle />
@@ -297,12 +297,13 @@ export default function Header() {
                                 로그아웃
                             </button>
                         ) : (
-                            <button
-                                onClick={() => { setShowLoginModal(true); setShowMobileMenu(false); }}
-                                className="w-full text-left px-3 py-2.5 text-[14px] font-medium text-[var(--accent-color)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                            <Link
+                                href="/login"
+                                onClick={() => setShowMobileMenu(false)}
+                                className="block px-3 py-2.5 text-[14px] font-medium text-[var(--accent-color)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                             >
                                 로그인
-                            </button>
+                            </Link>
                         )}
                     </nav>
                 </div>
@@ -310,7 +311,6 @@ export default function Header() {
             )}
 
             {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}
-            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
         </>
     );
 }

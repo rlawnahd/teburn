@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
 import { fetchHotStocks } from '@/lib/api/leading';
-import LoginModal from '@/components/auth/LoginModal';
+import Link from 'next/link';
 
 const TICKER_DATA = [
     { name: '삼성전자', code: '005930', base: 72400, change: 2.3 },
@@ -86,7 +86,7 @@ function LiveTickerBackground() {
     );
 }
 
-function TopStockCard({ onLoginClick }: { onLoginClick: () => void }) {
+function TopStockCard() {
     const { data } = useQuery({
         queryKey: ['hotStocks-landing'],
         queryFn: () => fetchHotStocks(1),
@@ -169,12 +169,9 @@ function TopStockCard({ onLoginClick }: { onLoginClick: () => void }) {
 
                 {/* Blur overlay for "more" */}
                 <div className="px-4 py-3 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/30">
-                    <button
-                        onClick={onLoginClick}
-                        className="w-full text-xs text-[var(--accent-blue)] hover:underline"
-                    >
+                    <Link href="/login" className="w-full text-xs text-[var(--accent-blue)] hover:underline block text-center">
                         + 29개 종목 더 보기 →
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
@@ -182,8 +179,6 @@ function TopStockCard({ onLoginClick }: { onLoginClick: () => void }) {
 }
 
 export default function HeroSection() {
-    const [showLogin, setShowLogin] = useState(false);
-
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[var(--bg-primary)]">
             {/* Subtle grid */}
@@ -239,11 +234,11 @@ export default function HeroSection() {
                 </p>
 
                 {/* Top 1 stock card */}
-                <TopStockCard onLoginClick={() => setShowLogin(true)} />
+                <TopStockCard />
 
                 <div style={{ animation: 'heroFadeIn 0.8s ease-out 0.45s both' }}>
-                    <button
-                        onClick={() => setShowLogin(true)}
+                    <Link
+                        href="/signup"
                         className="mt-8 inline-flex items-center h-14 px-10 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
                             background: 'var(--brand-gradient, linear-gradient(135deg, #ef4444, #dc2626))',
@@ -251,15 +246,14 @@ export default function HeroSection() {
                         }}
                     >
                         무료로 시작하기
-                    </button>
+                    </Link>
 
                     <p className="mt-4 text-xs text-[var(--text-tertiary)]">
-                        카카오 / Google 계정으로 10초 만에 시작
+                        가입은 무료, 10초면 충분합니다
                     </p>
                 </div>
             </div>
 
-            <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
         </section>
     );
 }
