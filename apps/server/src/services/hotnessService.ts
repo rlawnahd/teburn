@@ -1,5 +1,5 @@
 // 주도주 점수 통합 서비스
-// 주도주 점수 = 거래대금(25) + 등락률(25) + 거래량급증(20) + 뉴스(15) + 대장주집중도(15) = 총 100점
+// 주도주 점수 = 거래대금(35) + 등락률(20) + 거래량급증(15) + 뉴스(15) + 대장주집중도(15) = 총 100점
 
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
@@ -48,38 +48,38 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~25)
+// 거래대금 점수 (0~35)
 export function calculateTradingValueScore(tradingValue: number): number {
     const billion = tradingValue / 100000000; // 억 단위
-    if (billion >= 1000) return 25;  // 1000억 이상
-    if (billion >= 500) return 21;   // 500억 이상
-    if (billion >= 300) return 17;   // 300억 이상
-    if (billion >= 200) return 13;   // 200억 이상
-    if (billion >= 100) return 9;    // 100억 이상
-    if (billion >= 50) return 5;     // 50억 이상
-    return 2;                        // 50억 미만
+    if (billion >= 1000) return 35;  // 1000억 이상
+    if (billion >= 500) return 30;   // 500억 이상
+    if (billion >= 300) return 25;   // 300억 이상
+    if (billion >= 200) return 20;   // 200억 이상
+    if (billion >= 100) return 14;   // 100억 이상
+    if (billion >= 50) return 8;     // 50억 이상
+    return 3;                        // 50억 미만
 }
 
-// 등락률 점수 (0~25)
+// 등락률 점수 (0~20)
 export function calculateMomentumScore(changeRate: number): number {
-    if (changeRate >= 20) return 25;  // 상한가 근접
-    if (changeRate >= 15) return 21;
-    if (changeRate >= 10) return 17;
-    if (changeRate >= 7) return 13;
-    if (changeRate >= 5) return 10;
-    if (changeRate >= 3) return 7;
-    if (changeRate >= 1) return 4;
+    if (changeRate >= 20) return 20;  // 상한가 근접
+    if (changeRate >= 15) return 17;
+    if (changeRate >= 10) return 14;
+    if (changeRate >= 7) return 11;
+    if (changeRate >= 5) return 8;
+    if (changeRate >= 3) return 5;
+    if (changeRate >= 1) return 3;
     return 0;
 }
 
-// 거래량 급증률 점수 (0~20)
+// 거래량 급증률 점수 (0~15)
 function calculateVolumeSurgeScore(surgeRate: number | null): number {
     if (surgeRate === null) return 0;
-    if (surgeRate >= 10) return 20;
-    if (surgeRate >= 5) return 16;
-    if (surgeRate >= 3) return 12;
-    if (surgeRate >= 2) return 8;
-    if (surgeRate >= 1.5) return 4;
+    if (surgeRate >= 10) return 15;
+    if (surgeRate >= 5) return 12;
+    if (surgeRate >= 3) return 9;
+    if (surgeRate >= 2) return 6;
+    if (surgeRate >= 1.5) return 3;
     return 0;
 }
 

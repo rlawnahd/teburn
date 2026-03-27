@@ -144,9 +144,9 @@ function TopStockCard({ onLoginClick }: { onLoginClick: () => void }) {
                     {/* Score bars */}
                     <div className="mt-3 grid grid-cols-5 gap-1">
                         {[
-                            { label: '거래대금', score: top.tradingValueScore, max: 25 },
-                            { label: '모멘텀', score: top.momentumScore, max: 25 },
-                            { label: '거래량', score: top.volumeScore, max: 20 },
+                            { label: '거래대금', score: top.tradingValueScore, max: 35 },
+                            { label: '모멘텀', score: top.momentumScore, max: 20 },
+                            { label: '거래량', score: top.volumeScore, max: 15 },
                             { label: '뉴스', score: top.newsScore, max: 15 },
                             { label: '테마', score: top.themeConcentrationScore, max: 15 },
                         ].map((item) => (
