@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import { requireAuth, AuthRequest } from '../middleware/auth';
+import User from '../models/User';
 import Theme from '../models/Theme';
 import News from '../models/News';
 import DailyLeadingTheme from '../models/DailyLeadingTheme';
@@ -9,10 +11,20 @@ import { saveTodayVolumeHistory } from '../services/volumeSurgeService';
 
 const router = Router();
 
+async function requireAdmin(req: AuthRequest, res: Response, next: any) {
+    if (!req.user || req.user.provider !== 'local' || req.user.providerId !== 'admin') {
+        return res.status(403).json({ success: false, message: '관리자 권한이 필요합니다.' });
+    }
+    next();
+}
+
+router.use(requireAuth);
+router.use(requireAdmin);
+
 // ============================================
 // 대시보드 - 데이터 현황
 // ============================================
-router.get('/dashboard', async (req: Request, res: Response) => {
+router.get('/dashboard', async (req: AuthRequest, res: Response) => {
     try {
         const [
             themeCount,
@@ -76,9 +88,53 @@ router.get('/dashboard', async (req: Request, res: Response) => {
 });
 
 // ============================================
+// 유저 통계
+// ============================================
+router.get('/users/stats', async (req: AuthRequest, res: Response) => {
+    try {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        const [totalUsers, todaySignups, weekSignups, monthSignups, providerStats] = await Promise.all([
+            User.countDocuments(),
+            User.countDocuments({ createdAt: { $gte: todayStart } }),
+            User.countDocuments({ createdAt: { $gte: weekAgo } }),
+            User.countDocuments({ createdAt: { $gte: monthAgo } }),
+            User.aggregate([
+                { $group: { _id: '$provider', count: { $sum: 1 } } },
+            ]),
+        ]);
+
+        const recentUsers = await User.find()
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('name provider createdAt')
+            .lean();
+
+        res.json({
+            total: totalUsers,
+            today: todaySignups,
+            week: weekSignups,
+            month: monthSignups,
+            byProvider: Object.fromEntries(providerStats.map((p: any) => [p._id, p.count])),
+            recentUsers: recentUsers.map((u: any) => ({
+                name: u.name,
+                provider: u.provider,
+                createdAt: u.createdAt,
+            })),
+        });
+    } catch (err) {
+        console.error('유저 통계 에러:', err);
+        res.status(500).json({ success: false, message: '서버 에러' });
+    }
+});
+
+// ============================================
 // 테마 목록 조회 (어드민용)
 // ============================================
-router.get('/themes', async (req: Request, res: Response) => {
+router.get('/themes', async (req: AuthRequest, res: Response) => {
     try {
         const { search, isCustom, isActive, page = 1, limit = 50 } = req.query;
 
@@ -132,7 +188,7 @@ router.get('/themes', async (req: Request, res: Response) => {
 // ============================================
 // 테마 상세 조회
 // ============================================
-router.get('/themes/:id', async (req: Request, res: Response) => {
+router.get('/themes/:id', async (req: AuthRequest, res: Response) => {
     try {
         const theme = await Theme.findById(req.params.id);
         if (!theme) {
@@ -148,7 +204,7 @@ router.get('/themes/:id', async (req: Request, res: Response) => {
 // ============================================
 // 커스텀 테마 생성
 // ============================================
-router.post('/themes', async (req: Request, res: Response) => {
+router.post('/themes', async (req: AuthRequest, res: Response) => {
     try {
         const { name, stocks, keywords } = req.body;
 
@@ -185,7 +241,7 @@ router.post('/themes', async (req: Request, res: Response) => {
 // ============================================
 // 테마 수정
 // ============================================
-router.put('/themes/:id', async (req: Request, res: Response) => {
+router.put('/themes/:id', async (req: AuthRequest, res: Response) => {
     try {
         const { name, stocks, keywords, isActive } = req.body;
 
@@ -230,7 +286,7 @@ router.put('/themes/:id', async (req: Request, res: Response) => {
 // ============================================
 // 테마 삭제 (커스텀만 가능)
 // ============================================
-router.delete('/themes/:id', async (req: Request, res: Response) => {
+router.delete('/themes/:id', async (req: AuthRequest, res: Response) => {
     try {
         const theme = await Theme.findById(req.params.id);
         if (!theme) {
@@ -255,7 +311,7 @@ router.delete('/themes/:id', async (req: Request, res: Response) => {
 // ============================================
 // 테마 활성화/비활성화 토글
 // ============================================
-router.patch('/themes/:id/toggle', async (req: Request, res: Response) => {
+router.patch('/themes/:id/toggle', async (req: AuthRequest, res: Response) => {
     try {
         const theme = await Theme.findById(req.params.id);
         if (!theme) {
@@ -276,7 +332,7 @@ router.patch('/themes/:id/toggle', async (req: Request, res: Response) => {
 // ============================================
 // 테마에 종목 추가
 // ============================================
-router.post('/themes/:id/stocks', async (req: Request, res: Response) => {
+router.post('/themes/:id/stocks', async (req: AuthRequest, res: Response) => {
     try {
         const { name, code } = req.body;
 
@@ -310,7 +366,7 @@ router.post('/themes/:id/stocks', async (req: Request, res: Response) => {
 // ============================================
 // 테마에서 종목 삭제
 // ============================================
-router.delete('/themes/:id/stocks/:stockName', async (req: Request, res: Response) => {
+router.delete('/themes/:id/stocks/:stockName', async (req: AuthRequest, res: Response) => {
     try {
         const theme = await Theme.findById(req.params.id);
         if (!theme) {
@@ -339,7 +395,7 @@ router.delete('/themes/:id/stocks/:stockName', async (req: Request, res: Respons
 // ============================================
 let isCrawling = false;
 
-router.post('/crawl/themes', async (req: Request, res: Response) => {
+router.post('/crawl/themes', async (req: AuthRequest, res: Response) => {
     try {
         if (isCrawling) {
             return res.status(400).json({ error: '이미 크롤링이 진행 중입니다' });
@@ -367,14 +423,14 @@ router.post('/crawl/themes', async (req: Request, res: Response) => {
 });
 
 // 크롤링 상태 확인
-router.get('/crawl/status', (req: Request, res: Response) => {
+router.get('/crawl/status', (req: AuthRequest, res: Response) => {
     res.json({ isCrawling });
 });
 
 // ============================================
 // 주가 캐시 수동 갱신
 // ============================================
-router.post('/cache/refresh', async (req: Request, res: Response) => {
+router.post('/cache/refresh', async (req: AuthRequest, res: Response) => {
     try {
         res.json({ message: '캐시 갱신이 시작되었습니다.' });
 
@@ -397,7 +453,7 @@ router.post('/cache/refresh', async (req: Request, res: Response) => {
 // ============================================
 let isCollectingVolume = false;
 
-router.post('/collect/volume', async (req: Request, res: Response) => {
+router.post('/collect/volume', async (req: AuthRequest, res: Response) => {
     try {
         if (isCollectingVolume) {
             return res.status(400).json({ error: '이미 거래량 수집이 진행 중입니다' });
@@ -434,7 +490,7 @@ router.post('/collect/volume', async (req: Request, res: Response) => {
 });
 
 // 수집 상태 확인
-router.get('/collect/status', (req: Request, res: Response) => {
+router.get('/collect/status', (req: AuthRequest, res: Response) => {
     res.json({
         isCollectingVolume,
     });
