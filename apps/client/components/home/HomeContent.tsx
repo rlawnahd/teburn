@@ -1,9 +1,8 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Flame, TrendingUp, LayoutGrid, Calendar, BarChart2 } from 'lucide-react';
+import { Flame, LayoutGrid, Calendar, BarChart2 } from 'lucide-react';
 import HotStocksView from '@/components/leading/HotStocksView';
-import TopTradingView from '@/components/leading/TopTradingView';
 import LeadingSectorView from '@/components/leading/LeadingSectorView';
 import CalendarView from '@/components/leading/CalendarView';
 import IndexView from '@/components/leading/IndexView';
@@ -12,13 +11,12 @@ import TickerStrip from '@/components/home/TickerStrip';
 import LandingPage from '@/components/landing/LandingPage';
 import { useAuth } from '@/hooks/useAuth';
 
-type TabType = 'hot' | 'stocks' | 'sectors' | 'calendar' | 'index';
+type TabType = 'hot' | 'sectors' | 'calendar' | 'index';
 
-const VALID_TABS: TabType[] = ['hot', 'stocks', 'sectors', 'calendar', 'index'];
+const VALID_TABS: TabType[] = ['hot', 'sectors', 'calendar', 'index'];
 
 const TAB_CONFIG: { key: TabType; label: string; icon: typeof Flame }[] = [
     { key: 'hot', label: '주도주', icon: Flame },
-    { key: 'stocks', label: '거래대금', icon: TrendingUp },
     { key: 'sectors', label: '섹터', icon: LayoutGrid },
     { key: 'calendar', label: '캘린더', icon: Calendar },
     { key: 'index', label: '지수', icon: BarChart2 },
@@ -87,7 +85,6 @@ export default function HomeContent() {
             <main className="max-w-[1280px] mx-auto p-4">
                 <div key={activeTab} className="animate-contentFadeIn">
                     {activeTab === 'hot' && <HotStocksView />}
-                    {activeTab === 'stocks' && <TopTradingView />}
                     {activeTab === 'sectors' && <LeadingSectorView />}
                     {activeTab === 'calendar' && <CalendarView />}
                     {activeTab === 'index' && <IndexView />}
