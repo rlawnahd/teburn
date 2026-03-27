@@ -256,8 +256,11 @@ function usePriceFlashAndRank(stocks: HotStock[]) {
         setRankChanges(newRankChanges);
         prevStocksRef.current = stocks;
 
-        // 1.5초 후 플래시 해제
-        const timer = setTimeout(() => setFlashes({}), 1500);
+        // 1.5초 후 플래시 + 순위 변동 해제
+        const timer = setTimeout(() => {
+            setFlashes({});
+            setRankChanges({});
+        }, 1500);
         return () => clearTimeout(timer);
     }, [stocks]);
 
