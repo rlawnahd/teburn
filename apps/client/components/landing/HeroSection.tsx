@@ -202,26 +202,6 @@ function TopStockCard() {
 export default function HeroSection() {
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[var(--bg-primary)]">
-            {/* Subtle grid */}
-            <div
-                className="absolute inset-0 opacity-[0.03]"
-                style={{
-                    backgroundImage:
-                        'linear-gradient(var(--text-tertiary) 1px, transparent 1px), linear-gradient(90deg, var(--text-tertiary) 1px, transparent 1px)',
-                    backgroundSize: '80px 80px',
-                }}
-            />
-
-            {/* Glow */}
-            <div
-                className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none"
-                style={{
-                    background: 'radial-gradient(circle, var(--brand-primary) 0%, transparent 70%)',
-                    opacity: 0.05,
-                    filter: 'blur(120px)',
-                }}
-            />
-
             {/* Live ticker background */}
             <LiveTickerBackground />
 
@@ -262,8 +242,7 @@ export default function HeroSection() {
                         href="/login"
                         className="mt-8 inline-flex items-center h-14 px-10 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
-                            background: 'var(--brand-gradient, linear-gradient(135deg, #ef4444, #dc2626))',
-                            boxShadow: '0 8px 32px rgba(239, 68, 68, 0.3)',
+                            background: 'var(--accent-blue)',
                         }}
                     >
                         무료로 시작하기

@@ -15,8 +15,7 @@ export default function PreviewSection() {
                     href="/login"
                     className="inline-flex items-center h-12 px-8 text-[15px] font-semibold text-white rounded-lg transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                     style={{
-                        background: 'var(--brand-gradient)',
-                        boxShadow: '0 4px 24px rgba(239, 68, 68, 0.25)',
+                        background: 'var(--accent-blue)',
                     }}
                 >
                     무료로 시작하기
