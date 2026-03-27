@@ -66,21 +66,17 @@ function StockRow({
             className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
-            <span className={`w-5 text-center text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
-                {rank}
-            </span>
-
-            {/* 순위 변동 뱃지 */}
-            <div className="w-6 flex-shrink-0 text-center">
+            <div className="w-7 flex-shrink-0 text-center">
+                <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                    {rank}
+                </span>
                 {rankChange?.isNew ? (
-                    <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1 py-0.5 rounded-sm">NEW</span>
+                    <span className="text-[9px] font-bold text-amber-500 ml-0.5">N</span>
                 ) : rankChange && rankChange.delta !== 0 ? (
-                    <span className={`text-[10px] font-semibold ${rankChange.delta > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                    <span className={`text-[9px] font-semibold ml-0.5 ${rankChange.delta > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                         {rankChange.delta > 0 ? '▲' : '▼'}{Math.abs(rankChange.delta)}
                     </span>
-                ) : (
-                    <span className="text-[10px] text-[var(--text-disabled)]">—</span>
-                )}
+                ) : null}
             </div>
 
             <div className="flex-1 min-w-0">
@@ -364,8 +360,7 @@ export default function HotStocksView() {
                 </div>
                 <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm text-[var(--text-tertiary)]">
-                        <span className="w-5 text-center">#</span>
-                        <span className="w-6 text-center">변동</span>
+                        <span className="w-7 text-center">#</span>
                         <span className="flex-1">종목</span>
                         <span className="text-right">현재가</span>
                         <span className="hidden sm:block w-12 text-right">거래대금</span>
