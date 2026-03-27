@@ -86,6 +86,25 @@ function LiveTickerBackground() {
     );
 }
 
+function useCountUp(target: number, duration: number = 1000): number {
+    const [value, setValue] = useState(0);
+    const startTime = useRef<number | null>(null);
+
+    useEffect(() => {
+        startTime.current = null;
+        const animate = (timestamp: number) => {
+            if (!startTime.current) startTime.current = timestamp;
+            const progress = Math.min((timestamp - startTime.current) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+            setValue(Math.round(eased * target));
+            if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+    }, [target, duration]);
+
+    return value;
+}
+
 function TopStockCard() {
     const { data } = useQuery({
         queryKey: ['hotStocks-landing'],
@@ -94,6 +113,8 @@ function TopStockCard() {
     });
 
     const top = data?.stocks?.[0];
+    const animatedScore = useCountUp(top?.totalScore || 0, 1200);
+
     if (!top) return null;
 
     const isUp = top.changeRate > 0;
@@ -136,7 +157,7 @@ function TopStockCard() {
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-2xl font-black text-[var(--text-primary)]">{top.totalScore}</div>
+                            <div className="text-2xl font-black text-[var(--text-primary)]">{animatedScore}</div>
                             <div className="text-[10px] text-[var(--text-tertiary)]">주도주 점수</div>
                         </div>
                     </div>
