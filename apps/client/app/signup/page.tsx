@@ -88,7 +88,7 @@ export default function SignupPage() {
                                 }}
                                 onBlur={handleUsernameBlur}
                                 placeholder="영문/숫자 4~20자"
-                                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)]"
+                                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-blue)]"
                                 autoComplete="username"
                                 autoFocus
                             />
@@ -108,7 +108,7 @@ export default function SignupPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="8자 이상"
-                                    className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)] pr-10"
+                                    className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-blue)] pr-10"
                                     autoComplete="new-password"
                                 />
                                 <button
@@ -128,7 +128,7 @@ export default function SignupPage() {
                                 value={passwordConfirm}
                                 onChange={(e) => setPasswordConfirm(e.target.value)}
                                 placeholder="비밀번호 재입력"
-                                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)]"
+                                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-blue)]"
                                 autoComplete="new-password"
                             />
                         </div>
@@ -138,7 +138,7 @@ export default function SignupPage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-2.5 rounded-lg font-medium bg-[var(--accent-color)] text-white hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-2.5 rounded-lg font-medium bg-[var(--accent-blue)] text-white hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isSubmitting && <Loader2 size={16} className="animate-spin" />}
                             가입하기
@@ -147,7 +147,7 @@ export default function SignupPage() {
 
                     <p className="text-sm text-center mt-4 text-[var(--text-secondary)]">
                         이미 계정이 있으신가요?{' '}
-                        <Link href="/login" className="text-[var(--accent-color)] hover:underline">
+                        <Link href="/login" className="text-[var(--accent-blue)] hover:underline">
                             로그인
                         </Link>
                     </p>
