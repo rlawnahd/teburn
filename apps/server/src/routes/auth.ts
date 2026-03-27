@@ -5,8 +5,42 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { generateToken, AuthRequest, authMiddleware, requireAuth } from '../middleware/auth';
+import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+const authRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { success: false, message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+});
+
+const USERNAME_REGEX = /^[a-z0-9]{4,20}$/;
+
+function validateUsername(raw: string): { valid: boolean; username: string; error?: string } {
+    const username = raw.toLowerCase();
+    if (!USERNAME_REGEX.test(username)) {
+        return { valid: false, username, error: '아이디는 영문/숫자 4~20자여야 합니다.' };
+    }
+    return { valid: true, username };
+}
+
+function validatePassword(password: string): string | null {
+    if (!password || password.length < 8) return '비밀번호는 8자 이상이어야 합니다.';
+    if (password.length > 72) return '비밀번호는 72자 이하여야 합니다.';
+    return null;
+}
+
+function userToResponse(user: any) {
+    return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profileImage: user.profileImage,
+        provider: user.provider,
+    };
+}
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
@@ -131,6 +165,84 @@ router.get('/ws-token', requireAuth, (req: AuthRequest, res: Response) => {
         { expiresIn: '60s' }
     );
     res.json({ success: true, token: wsToken });
+});
+
+router.post('/signup', authRateLimit, async (req: Request, res: Response) => {
+    try {
+        const { username: rawUsername, password } = req.body;
+        if (!rawUsername || typeof rawUsername !== 'string') {
+            return res.status(400).json({ success: false, message: '아이디를 입력해주세요.' });
+        }
+        const { valid, username, error } = validateUsername(rawUsername);
+        if (!valid) {
+            return res.status(400).json({ success: false, message: error });
+        }
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return res.status(400).json({ success: false, message: passwordError });
+        }
+
+        const existing = await User.findOne({ provider: 'local', providerId: username });
+        if (existing) {
+            return res.status(409).json({ success: false, message: '이미 사용 중인 아이디입니다.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await User.create({
+            name: username,
+            email: '',
+            provider: 'local',
+            providerId: username,
+            password: hashedPassword,
+        });
+
+        const token = generateToken(user._id.toString(), 'local');
+        res.cookie('token', token, cookieOptions);
+        res.status(201).json({ success: true, data: userToResponse(user) });
+    } catch (err) {
+        console.error('회원가입 에러:', err);
+        res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+    }
+});
+
+router.post('/login', authRateLimit, async (req: Request, res: Response) => {
+    try {
+        const { username: rawUsername, password } = req.body;
+        if (!rawUsername || !password) {
+            return res.status(400).json({ success: false, message: '아이디와 비밀번호를 입력해주세요.' });
+        }
+        const username = rawUsername.toLowerCase();
+
+        const user = await User.findOne({ provider: 'local', providerId: username }).select('+password');
+        if (!user || !user.password) {
+            return res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+        }
+
+        const token = generateToken(user._id.toString(), 'local');
+        res.cookie('token', token, cookieOptions);
+        res.json({ success: true, data: userToResponse(user) });
+    } catch (err) {
+        console.error('로그인 에러:', err);
+        res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+    }
+});
+
+router.get('/check-username/:username', authRateLimit, async (req: Request, res: Response) => {
+    try {
+        const { valid, username, error } = validateUsername(req.params.username);
+        if (!valid) {
+            return res.status(400).json({ success: false, message: error });
+        }
+        const existing = await User.findOne({ provider: 'local', providerId: username });
+        res.json({ success: true, available: !existing });
+    } catch (err) {
+        res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+    }
 });
 
 router.post('/logout', (_req: Request, res: Response) => {
