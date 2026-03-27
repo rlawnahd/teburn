@@ -1,5 +1,5 @@
 // 주도주 점수 통합 서비스
-// 주도주 점수 = 거래대금(35) + 등락률(20) + 거래량급증(15) + 뉴스(15) + 대장주집중도(15) = 총 100점
+// 주도주 점수 = 거래대금(30) + 등락률(20) + 거래량급증(15) + 뉴스(10) + 대장주집중도(10) + 연속성(15) = 총 100점
 
 import { themePriceCache } from './themePriceCache';
 import { getBatchVolumeSurgeRates } from './volumeSurgeService';
@@ -18,11 +18,13 @@ export interface HotnessScore {
 
     // 주도주 점수 상세
     totalScore: number;                // 총점 (0~100)
-    tradingValueScore: number;         // 거래대금 (0~25)
-    momentumScore: number;             // 등락률 (0~25)
-    volumeScore: number;               // 거래량 급증 (0~20)
-    newsScore: number;                 // 뉴스 노출 (0~15)
-    themeConcentrationScore: number;   // 대장주 집중도 (0~15)
+    tradingValueScore: number;         // 거래대금 (0~30)
+    momentumScore: number;             // 등락률 (0~20)
+    volumeScore: number;               // 거래량 급증 (0~15)
+    newsScore: number;                 // 뉴스 노출 (0~10)
+    themeConcentrationScore: number;   // 대장주 집중도 (0~10)
+    streakScore: number;               // 연속성 (0~15)
+    streakDays: number;                // 연속 상위권 일수
 
     // 원본 데이터
     volumeSurgeRate: number | null;  // 거래량 급증률 (배수)
@@ -48,16 +50,16 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~35)
+// 거래대금 점수 (0~30)
 export function calculateTradingValueScore(tradingValue: number): number {
     const billion = tradingValue / 100000000; // 억 단위
-    if (billion >= 1000) return 35;  // 1000억 이상
-    if (billion >= 500) return 30;   // 500억 이상
-    if (billion >= 300) return 25;   // 300억 이상
-    if (billion >= 200) return 20;   // 200억 이상
-    if (billion >= 100) return 14;   // 100억 이상
-    if (billion >= 50) return 8;     // 50억 이상
-    return 3;                        // 50억 미만
+    if (billion >= 1000) return 30;  // 1000억 이상
+    if (billion >= 500) return 26;   // 500억 이상
+    if (billion >= 300) return 22;   // 300억 이상
+    if (billion >= 200) return 17;   // 200억 이상
+    if (billion >= 100) return 12;   // 100억 이상
+    if (billion >= 50) return 7;     // 50억 이상
+    return 2;                        // 50억 미만
 }
 
 // 등락률 점수 (0~20)
@@ -83,16 +85,16 @@ function calculateVolumeSurgeScore(surgeRate: number | null): number {
     return 0;
 }
 
-// 뉴스 점수 (0~15)
+// 뉴스 점수 (0~10)
 function calculateNewsScore(newsCount: number): number {
-    if (newsCount >= 10) return 15;
-    if (newsCount >= 5) return 12;
-    if (newsCount >= 3) return 9;
-    if (newsCount >= 1) return 4;
+    if (newsCount >= 10) return 10;
+    if (newsCount >= 5) return 8;
+    if (newsCount >= 3) return 6;
+    if (newsCount >= 1) return 3;
     return 0;
 }
 
-// 대장주 집중도 점수 (0~15)
+// 대장주 집중도 점수 (0~10)
 // 테마 내 거래대금 점유율로 자금이 집중되는 대장주 식별
 function calculateThemeConcentrationScore(stockCode: string, themes: string[]): { score: number; concentration: number } {
     let maxConcentration = 0;
@@ -114,13 +116,58 @@ function calculateThemeConcentrationScore(stockCode: string, themes: string[]): 
     }
 
     let score = 0;
-    if (maxConcentration >= 50) score = 15;
-    else if (maxConcentration >= 40) score = 12;
-    else if (maxConcentration >= 30) score = 9;
-    else if (maxConcentration >= 20) score = 6;
-    else if (maxConcentration >= 10) score = 3;
+    if (maxConcentration >= 50) score = 10;
+    else if (maxConcentration >= 40) score = 8;
+    else if (maxConcentration >= 30) score = 6;
+    else if (maxConcentration >= 20) score = 4;
+    else if (maxConcentration >= 10) score = 2;
 
     return { score, concentration: Math.round(maxConcentration * 10) / 10 };
+}
+
+// 연속성 점수 (0~15)
+// HotnessHistory에서 최근 3일간 상위권에 있었는지 확인
+async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<string, { score: number; days: number }>> {
+    const result = new Map<string, { score: number; days: number }>();
+
+    if (stockCodes.length === 0) return result;
+
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstNow = new Date(now.getTime() + kstOffset);
+
+    // 최근 3일 날짜 (오늘 제외)
+    const dates: string[] = [];
+    for (let i = 1; i <= 3; i++) {
+        const d = new Date(kstNow);
+        d.setDate(d.getDate() - i);
+        dates.push(d.toISOString().split('T')[0]);
+    }
+
+    // 최근 3일간의 상위 30위 기록 조회
+    const histories = await HotnessHistory.find({
+        date: { $in: dates },
+        stockCode: { $in: stockCodes },
+    }).select('stockCode date').lean();
+
+    // 종목별 등장 일수 카운트
+    const stockDayCount = new Map<string, number>();
+    for (const h of histories) {
+        const count = stockDayCount.get(h.stockCode) || 0;
+        stockDayCount.set(h.stockCode, count + 1);
+    }
+
+    for (const code of stockCodes) {
+        const days = stockDayCount.get(code) || 0;
+        let score = 0;
+        if (days >= 3) score = 15;      // 3일 연속
+        else if (days >= 2) score = 10;  // 2일 연속
+        else if (days >= 1) score = 5;   // 어제만
+
+        result.set(code, { score, days });
+    }
+
+    return result;
 }
 
 /**
@@ -133,9 +180,10 @@ export async function calculateBatchHotness(
     const stockNames = stocks.map((s) => s.stockName);
 
     // 모든 지표 병렬 조회
-    const [volumeSurges, newsCounts] = await Promise.all([
+    const [volumeSurges, newsCounts, streakScores] = await Promise.all([
         getBatchVolumeSurgeRates(stockCodes),
         getBatchStockNewsCountFromApi(stockNames, 30), // 상위 30개만 API 검색
+        calculateBatchStreakScores(stockCodes),
     ]);
 
     const results: HotnessScore[] = [];
@@ -155,8 +203,9 @@ export async function calculateBatchHotness(
         const newsScore = calculateNewsScore(newsCount);
         const { score: themeConcentrationScore, concentration: themeConcentration } =
             calculateThemeConcentrationScore(stock.stockCode, stock.themes);
+        const streak = streakScores.get(stock.stockCode) || { score: 0, days: 0 };
 
-        const totalScore = tradingValueScore + momentumScore + volumeScore + newsScore + themeConcentrationScore;
+        const totalScore = tradingValueScore + momentumScore + volumeScore + newsScore + themeConcentrationScore + streak.score;
 
         results.push({
             stockCode: stock.stockCode,
@@ -172,6 +221,8 @@ export async function calculateBatchHotness(
             volumeScore,
             newsScore,
             themeConcentrationScore,
+            streakScore: streak.score,
+            streakDays: streak.days,
 
             volumeSurgeRate: volumeSurge,
             newsCount,
@@ -331,6 +382,7 @@ export async function saveDailyHotnessHistory(): Promise<void> {
                     volumeScore: stock.volumeScore,
                     newsScore: stock.newsScore,
                     themeConcentrationScore: stock.themeConcentrationScore,
+                    streakScore: stock.streakScore,
                     date: dateStr,
                 },
                 { upsert: true }

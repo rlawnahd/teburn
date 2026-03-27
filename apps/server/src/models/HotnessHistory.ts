@@ -10,6 +10,7 @@ export interface IHotnessHistory extends Document {
     volumeScore: number;
     newsScore: number;
     themeConcentrationScore: number;
+    streakScore: number;
     date: string; // YYYY-MM-DD
     createdAt: Date;
 }
@@ -24,6 +25,7 @@ const HotnessHistorySchema: Schema = new Schema({
     volumeScore: { type: Number, default: 0 },
     newsScore: { type: Number, default: 0 },
     themeConcentrationScore: { type: Number, default: 0 },
+    streakScore: { type: Number, default: 0 },
     date: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
 });

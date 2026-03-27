@@ -86,6 +86,8 @@ export interface HotnessInfo {
     volumeScore: number;
     newsScore: number;
     themeConcentrationScore: number;
+    streakScore: number;
+    streakDays: number;
     volumeSurgeRate: number | null;
     newsCount: number;
     themeConcentration: number;
@@ -145,6 +147,7 @@ export interface HotnessHistoryItem {
     volumeScore: number;
     newsScore: number;
     themeConcentrationScore: number;
+    streakScore: number;
 }
 
 export const fetchHotnessHistory = async (stockCode: string, days = 30): Promise<HotnessHistoryItem[]> => {

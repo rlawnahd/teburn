@@ -22,6 +22,8 @@ export interface HotnessUpdate {
     volumeScore: number;
     newsScore: number;
     themeConcentrationScore: number;
+    streakScore: number;
+    streakDays: number;
     timestamp: number;
 }
 

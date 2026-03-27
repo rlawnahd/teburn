@@ -24,6 +24,8 @@ interface RealtimeScore {
     volumeScore: number;
     newsScore: number;
     themeConcentrationScore: number;
+    streakScore: number;
+    streakDays: number;
 
     // 원본 데이터 (배치에서 유지)
     volumeSurgeRate: number | null;
@@ -93,7 +95,7 @@ export function realtimeHotnessUpdate(
 
     // 배치에서 가져온 점수는 유지
     const newTotalScore = newTradingValueScore + newMomentumScore +
-        existing.volumeScore + existing.newsScore + existing.themeConcentrationScore;
+        existing.volumeScore + existing.newsScore + existing.themeConcentrationScore + existing.streakScore;
 
     // 점수 변화 없으면 skip
     if (newTotalScore === existing.totalScore) {
