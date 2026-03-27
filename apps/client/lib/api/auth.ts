@@ -7,7 +7,7 @@ export interface AuthUser {
     name: string;
     email: string;
     profileImage?: string;
-    provider: 'kakao' | 'google';
+    provider: 'kakao' | 'google' | 'local';
 }
 
 export const fetchCurrentUser = async (): Promise<AuthUser | null> => {
@@ -16,6 +16,32 @@ export const fetchCurrentUser = async (): Promise<AuthUser | null> => {
         { withCredentials: true }
     );
     return data.data;
+};
+
+export const signup = async (username: string, password: string): Promise<AuthUser> => {
+    const { data } = await axios.post<{ success: boolean; data: AuthUser }>(
+        `${API_URL}/auth/signup`,
+        { username, password },
+        { withCredentials: true }
+    );
+    return data.data;
+};
+
+export const login = async (username: string, password: string): Promise<AuthUser> => {
+    const { data } = await axios.post<{ success: boolean; data: AuthUser }>(
+        `${API_URL}/auth/login`,
+        { username, password },
+        { withCredentials: true }
+    );
+    return data.data;
+};
+
+export const checkUsername = async (username: string): Promise<boolean> => {
+    const { data } = await axios.get<{ success: boolean; available: boolean }>(
+        `${API_URL}/auth/check-username/${encodeURIComponent(username)}`,
+        { withCredentials: true }
+    );
+    return data.available;
 };
 
 export const logout = async (): Promise<void> => {

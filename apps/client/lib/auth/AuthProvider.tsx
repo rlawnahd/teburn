@@ -8,6 +8,7 @@ export interface AuthContextType {
     isLoggedIn: boolean;
     isLoading: boolean;
     logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -15,18 +16,25 @@ export const AuthContext = createContext<AuthContextType>({
     isLoggedIn: false,
     isLoading: true,
     logout: async () => {},
+    refreshUser: async () => {},
 });
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        fetchCurrentUser()
-            .then(setUser)
-            .catch(() => setUser(null))
-            .finally(() => setIsLoading(false));
+    const refreshUser = useCallback(async () => {
+        try {
+            const u = await fetchCurrentUser();
+            setUser(u);
+        } catch {
+            setUser(null);
+        }
     }, []);
+
+    useEffect(() => {
+        refreshUser().finally(() => setIsLoading(false));
+    }, [refreshUser]);
 
     const logout = useCallback(async () => {
         await logoutApi();
@@ -34,7 +42,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, isLoggedIn: !!user, isLoading, logout }}>
+        <AuthContext.Provider value={{ user, isLoggedIn: !!user, isLoading, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
