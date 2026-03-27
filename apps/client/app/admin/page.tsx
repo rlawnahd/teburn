@@ -41,9 +41,8 @@ import {
 } from '@/lib/api/admin';
 import { useAuth } from '@/hooks/useAuth';
 
-type TabType = 'dashboard' | 'themes';
+type TabType = 'users' | 'data' | 'themes';
 
-// 시간 포맷
 function formatTime(dateStr: string | null): string {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
@@ -58,19 +57,148 @@ function formatTime(dateStr: string | null): string {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-// 대시보드 탭
-function DashboardTab() {
+function formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+// ============================================
+// 유저 탭
+// ============================================
+function UsersTab() {
+    const { data: userStats, isLoading } = useQuery({
+        queryKey: ['admin-user-stats'],
+        queryFn: fetchUserStats,
+        refetchInterval: 30000,
+    });
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-5">
+            {/* 핵심 지표 */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
+                            <Users size={20} className="text-rose-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">전체 가입자</span>
+                    </div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
+                        {userStats?.total || 0}
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                            <UserPlus size={20} className="text-sky-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">오늘 가입</span>
+                    </div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
+                        {userStats?.today || 0}
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                            <Calendar size={20} className="text-violet-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">이번 주</span>
+                    </div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
+                        {userStats?.week || 0}
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                            <TrendingUp size={20} className="text-amber-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">이번 달</span>
+                    </div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
+                        {userStats?.month || 0}
+                    </div>
+                </div>
+            </div>
+
+            {/* Provider 분포 */}
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">가입 경로</h3>
+                <div className="flex gap-4">
+                    {[
+                        { label: '카카오', key: 'kakao', color: 'bg-yellow-500', bg: 'bg-yellow-500/10' },
+                        { label: 'Google', key: 'google', color: 'bg-blue-500', bg: 'bg-blue-500/10' },
+                        { label: '자체 가입', key: 'local', color: 'bg-emerald-500', bg: 'bg-emerald-500/10' },
+                    ].map((p) => {
+                        const count = userStats?.byProvider?.[p.key] || 0;
+                        const total = userStats?.total || 1;
+                        const pct = Math.round((count / total) * 100);
+                        return (
+                            <div key={p.key} className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm text-[var(--text-secondary)]">{p.label}</span>
+                                    <span className="text-sm font-semibold text-[var(--text-primary)]">{count}</span>
+                                </div>
+                                <div className="h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                                    <div className={`h-full rounded-full ${p.color}`} style={{ width: `${pct}%` }} />
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* 최근 가입자 */}
+            {userStats?.recentUsers && userStats.recentUsers.length > 0 && (
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">최근 가입자</h3>
+                    <div className="space-y-3">
+                        {userStats.recentUsers.map((u, i) => (
+                            <div key={i} className="flex items-center justify-between py-2 border-b border-[var(--border-color)] last:border-0">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-xs font-bold text-[var(--text-secondary)]">
+                                        {u.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-sm font-medium text-[var(--text-primary)]">{u.name}</span>
+                                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                                        u.provider === 'kakao' ? 'bg-yellow-500/10 text-yellow-600' :
+                                        u.provider === 'google' ? 'bg-blue-500/10 text-blue-500' :
+                                        'bg-emerald-500/10 text-emerald-500'
+                                    }`}>
+                                        {u.provider}
+                                    </span>
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">{formatDate(u.createdAt)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ============================================
+// 데이터 탭
+// ============================================
+function DataTab() {
     const queryClient = useQueryClient();
 
     const { data: dashboard, isLoading } = useQuery({
         queryKey: ['admin-dashboard'],
         queryFn: fetchDashboard,
-        refetchInterval: 30000,
-    });
-
-    const { data: userStats } = useQuery({
-        queryKey: ['admin-user-stats'],
-        queryFn: fetchUserStats,
         refetchInterval: 30000,
     });
 
@@ -100,74 +228,17 @@ function DashboardTab() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* 유저 통계 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-                            <Users size={20} className="text-rose-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">전체 가입자</span>
-                    </div>
-                    <div className="text-2xl font-bold text-[var(--text-primary)]">
-                        {userStats?.total || 0}
-                    </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
-                        카카오 {userStats?.byProvider?.kakao || 0} / 구글 {userStats?.byProvider?.google || 0} / 자체 {userStats?.byProvider?.local || 0}
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                            <UserPlus size={20} className="text-sky-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">오늘 가입</span>
-                    </div>
-                    <div className="text-2xl font-bold text-[var(--text-primary)]">
-                        {userStats?.today || 0}
-                    </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
-                        이번 주 {userStats?.week || 0} / 이번 달 {userStats?.month || 0}
-                    </div>
-                </div>
-            </div>
-
-            {/* 최근 가입자 */}
-            {userStats?.recentUsers && userStats.recentUsers.length > 0 && (
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">최근 가입자</h3>
-                    <div className="space-y-2">
-                        {userStats.recentUsers.map((u, i) => (
-                            <div key={i} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[var(--text-primary)]">{u.name}</span>
-                                    <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
-                                        u.provider === 'kakao' ? 'bg-yellow-500/10 text-yellow-600' :
-                                        u.provider === 'google' ? 'bg-blue-500/10 text-blue-500' :
-                                        'bg-emerald-500/10 text-emerald-500'
-                                    }`}>
-                                        {u.provider}
-                                    </span>
-                                </div>
-                                <span className="text-[var(--text-tertiary)]">{formatTime(u.createdAt)}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
+        <div className="space-y-5">
             {/* 통계 카드 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-xl bg-[var(--accent-blue)]/10 flex items-center justify-center">
                             <FolderTree size={20} className="text-[var(--accent-blue)]" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">테마</span>
                     </div>
-                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {dashboard?.themes.total || 0}
                     </div>
                     <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
@@ -175,14 +246,14 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                             <TrendingUp size={20} className="text-emerald-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">종목</span>
                     </div>
-                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {dashboard?.stocks.unique || 0}
                     </div>
                     <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
@@ -190,14 +261,14 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                             <Newspaper size={20} className="text-violet-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">뉴스</span>
                     </div>
-                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {dashboard?.news.total?.toLocaleString() || 0}
                     </div>
                     <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
@@ -205,30 +276,27 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                             <Calendar size={20} className="text-amber-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">일별 기록</span>
                     </div>
-                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {dashboard?.dailyLeading.days || 0}일
-                    </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
-                        히스토리 {dashboard?.history.records?.toLocaleString() || 0}건
                     </div>
                 </div>
             </div>
 
-            {/* 작업 버튼 */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
+            {/* 수동 작업 */}
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">수동 작업</h3>
                 <div className="flex flex-wrap gap-3">
                     <button
                         onClick={() => crawlMutation.mutate()}
                         disabled={crawlStatus?.isCrawling || crawlMutation.isPending}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--accent-blue)] text-white text-sm font-medium hover:bg-[var(--accent-blue)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent-blue)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                     >
                         <RefreshCw size={16} className={crawlStatus?.isCrawling ? 'animate-spin' : ''} />
                         {crawlStatus?.isCrawling ? '크롤링 중...' : '테마 크롤링'}
@@ -237,7 +305,7 @@ function DashboardTab() {
                     <button
                         onClick={() => cacheMutation.mutate()}
                         disabled={cacheMutation.isPending}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-500/90 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                     >
                         <Database size={16} className={cacheMutation.isPending ? 'animate-spin' : ''} />
                         {cacheMutation.isPending ? '갱신 중...' : '주가 캐시 갱신'}
@@ -245,22 +313,22 @@ function DashboardTab() {
                 </div>
 
                 {crawlMutation.isSuccess && (
-                    <p className="text-[13px] text-emerald-500 mt-3">크롤링이 시작되었습니다.</p>
+                    <p className="text-sm text-emerald-500 mt-3">크롤링이 시작되었습니다.</p>
                 )}
                 {cacheMutation.isSuccess && (
-                    <p className="text-[13px] text-emerald-500 mt-3">캐시 갱신이 시작되었습니다.</p>
+                    <p className="text-sm text-emerald-500 mt-3">캐시 갱신이 시작되었습니다.</p>
                 )}
             </div>
 
-            {/* 최근 업데이트 */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
+            {/* 마지막 업데이트 */}
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">마지막 업데이트</h3>
-                <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
+                <div className="space-y-3 text-sm">
+                    <div className="flex justify-between py-2 border-b border-[var(--border-color)]">
                         <span className="text-[var(--text-tertiary)]">테마 크롤링</span>
                         <span className="text-[var(--text-secondary)]">{formatTime(dashboard?.lastThemeUpdate || null)}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between py-2">
                         <span className="text-[var(--text-tertiary)]">뉴스 크롤링</span>
                         <span className="text-[var(--text-secondary)]">{formatTime(dashboard?.news.lastCrawled || null)}</span>
                     </div>
@@ -270,7 +338,9 @@ function DashboardTab() {
     );
 }
 
+// ============================================
 // 테마 수정 모달
+// ============================================
 function ThemeEditModal({
     theme,
     onClose,
@@ -341,7 +411,7 @@ function ThemeEditModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] shadow-sm">
                 {/* 헤더 */}
                 <div className="flex items-center justify-between p-5 border-b border-[var(--border-color)]">
                     <h2 className="text-lg font-bold text-[var(--text-primary)]">
@@ -349,7 +419,7 @@ function ThemeEditModal({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
                     >
                         <X size={20} />
                     </button>
@@ -358,7 +428,7 @@ function ThemeEditModal({
                 {/* 본문 */}
                 <div className="p-5 space-y-5">
                     {error && (
-                        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-500 text-sm">
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 text-red-500 text-sm">
                             <AlertCircle size={16} />
                             {error}
                         </div>
@@ -374,7 +444,7 @@ function ThemeEditModal({
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="예: 트럼프 수혜주"
-                            className="w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                         />
                     </div>
 
@@ -388,7 +458,7 @@ function ThemeEditModal({
                             value={keywords}
                             onChange={(e) => setKeywords(e.target.value)}
                             placeholder="예: 트럼프, 미국, 관세"
-                            className="w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                         />
                     </div>
 
@@ -406,26 +476,26 @@ function ThemeEditModal({
                                     value={newStockName}
                                     onChange={(e) => setNewStockName(e.target.value)}
                                     placeholder="종목명"
-                                    className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                                 />
                                 <input
                                     type="text"
                                     value={newStockCode}
                                     onChange={(e) => setNewStockCode(e.target.value)}
                                     placeholder="종목코드"
-                                    className="w-28 px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                                    className="w-28 px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                                 />
                                 <button
                                     onClick={() => addStockMutation.mutate()}
                                     disabled={!newStockName || addStockMutation.isPending}
-                                    className="px-4 py-2 rounded-lg bg-[var(--accent-blue)] text-white text-sm font-medium disabled:opacity-50"
+                                    className="px-4 py-2 rounded-xl bg-[var(--accent-blue)] text-white text-sm font-medium disabled:opacity-50"
                                 >
                                     <Plus size={16} />
                                 </button>
                             </div>
 
                             {/* 종목 목록 */}
-                            <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-[var(--border-color)] p-2">
+                            <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-[var(--border-color)] p-2">
                                 {displayTheme.stocks?.length === 0 ? (
                                     <p className="text-sm text-[var(--text-tertiary)] text-center py-4">
                                         등록된 종목이 없습니다
@@ -434,7 +504,7 @@ function ThemeEditModal({
                                     displayTheme.stocks?.map((stock, i) => (
                                         <div
                                             key={i}
-                                            className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--bg-tertiary)]"
+                                            className="flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--bg-tertiary)]"
                                         >
                                             <div>
                                                 <span className="text-sm text-[var(--text-primary)]">{stock.name}</span>
@@ -463,14 +533,14 @@ function ThemeEditModal({
                 <div className="flex justify-end gap-3 p-5 border-t border-[var(--border-color)]">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)]"
+                        className="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)]"
                     >
                         취소
                     </button>
                     <button
                         onClick={() => saveMutation.mutate()}
                         disabled={!name.trim() || saveMutation.isPending}
-                        className="px-5 py-2.5 rounded-lg bg-[var(--accent-blue)] text-white text-sm font-medium disabled:opacity-50"
+                        className="px-5 py-2.5 rounded-xl bg-[var(--accent-blue)] text-white text-sm font-medium disabled:opacity-50"
                     >
                         {saveMutation.isPending ? '저장 중...' : '저장'}
                     </button>
@@ -480,7 +550,9 @@ function ThemeEditModal({
     );
 }
 
+// ============================================
 // 테마 관리 탭
+// ============================================
 function ThemesTab() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
@@ -520,7 +592,7 @@ function ThemesTab() {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-5">
             {/* 검색 & 필터 */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
@@ -533,7 +605,7 @@ function ThemesTab() {
                             setPage(1);
                         }}
                         placeholder="테마명 검색..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                     />
                 </div>
 
@@ -545,7 +617,7 @@ function ThemesTab() {
                                 setFilter(f);
                                 setPage(1);
                             }}
-                            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                                 filter === f
                                     ? 'bg-[var(--accent-blue)] text-white'
                                     : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:bg-[var(--bg-tertiary)]'
@@ -558,7 +630,7 @@ function ThemesTab() {
 
                 <button
                     onClick={() => setIsAddingNew(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-500/90"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                     <Plus size={16} />
                     새 테마
@@ -571,7 +643,7 @@ function ThemesTab() {
                     <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
                 </div>
             ) : (
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden shadow-sm">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">
@@ -606,7 +678,7 @@ function ThemesTab() {
                                         <button
                                             onClick={() => toggleMutation.mutate(theme._id)}
                                             disabled={toggleMutation.isPending}
-                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
                                                 theme.isActive
                                                     ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
                                                     : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:bg-[var(--border-color)]'
@@ -619,7 +691,7 @@ function ThemesTab() {
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 onClick={() => handleEdit(theme)}
-                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--accent-blue)]"
+                                                className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--accent-blue)]"
                                             >
                                                 <Edit3 size={16} />
                                             </button>
@@ -631,7 +703,7 @@ function ThemesTab() {
                                                         }
                                                     }}
                                                     disabled={deleteMutation.isPending}
-                                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-tertiary)] hover:bg-red-500/10 hover:text-red-500"
+                                                    className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:bg-red-500/10 hover:text-red-500"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -653,7 +725,7 @@ function ThemesTab() {
                                 <button
                                     onClick={() => setPage(p => p - 1)}
                                     disabled={page === 1}
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center border border-[var(--border-color)] disabled:opacity-50"
+                                    className="w-8 h-8 rounded-xl flex items-center justify-center border border-[var(--border-color)] disabled:opacity-50"
                                 >
                                     <ChevronLeft size={16} />
                                 </button>
@@ -663,7 +735,7 @@ function ThemesTab() {
                                 <button
                                     onClick={() => setPage(p => p + 1)}
                                     disabled={page === data.pagination.totalPages}
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center border border-[var(--border-color)] disabled:opacity-50"
+                                    className="w-8 h-8 rounded-xl flex items-center justify-center border border-[var(--border-color)] disabled:opacity-50"
                                 >
                                     <ChevronRight size={16} />
                                 </button>
@@ -691,12 +763,13 @@ function ThemesTab() {
     );
 }
 
+// ============================================
 // 메인 페이지
+// ============================================
 export default function AdminPage() {
     const { user, isLoggedIn, isLoading } = useAuth();
-    const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+    const [activeTab, setActiveTab] = useState<TabType>('users');
 
-    // admin 아이디만 접근 가능
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]">
@@ -715,46 +788,38 @@ export default function AdminPage() {
         );
     }
 
+    const tabs: { key: TabType; label: string }[] = [
+        { key: 'users', label: '유저' },
+        { key: 'data', label: '데이터' },
+        { key: 'themes', label: '테마 관리' },
+    ];
+
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
-            {/* 탭 */}
+            {/* 탭 바 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                <div className="flex px-3">
-                    <div className="flex items-center gap-2 pr-4 border-r border-[var(--border-color)]">
-                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">어드민</span>
-                    </div>
-                    <button
-                        onClick={() => setActiveTab('dashboard')}
-                        className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
-                            activeTab === 'dashboard'
-                                ? 'text-[var(--text-primary)]'
-                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
-                        }`}
-                    >
-                        대시보드
-                        {activeTab === 'dashboard' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-blue)]" />
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('themes')}
-                        className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
-                            activeTab === 'themes'
-                                ? 'text-[var(--text-primary)]'
-                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
-                        }`}
-                    >
-                        테마 관리
-                        {activeTab === 'themes' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-blue)]" />
-                        )}
-                    </button>
+                <div className="max-w-5xl mx-auto px-4 flex items-center gap-1 py-2">
+                    <span className="text-sm font-bold text-[var(--text-primary)] mr-4">어드민</span>
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+                                activeTab === tab.key
+                                    ? 'bg-[var(--accent-blue)] text-white'
+                                    : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
             {/* 컨텐츠 */}
-            <main className="p-4 max-w-6xl mx-auto">
-                {activeTab === 'dashboard' && <DashboardTab />}
+            <main className="max-w-5xl mx-auto p-4">
+                {activeTab === 'users' && <UsersTab />}
+                {activeTab === 'data' && <DataTab />}
                 {activeTab === 'themes' && <ThemesTab />}
             </main>
         </div>

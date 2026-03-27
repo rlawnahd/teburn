@@ -40,7 +40,7 @@ export interface DashboardData {
 }
 
 export async function fetchDashboard(): Promise<DashboardData> {
-    const res = await fetch(`${API_BASE}/admin/dashboard`);
+    const res = await fetch(`${API_BASE}/admin/dashboard`, { credentials: 'include' });
     if (!res.ok) throw new Error('대시보드 조회 실패');
     return res.json();
 }
@@ -81,7 +81,7 @@ export async function fetchThemeList(params?: {
     if (params?.page) query.set('page', String(params.page));
     if (params?.limit) query.set('limit', String(params.limit));
 
-    const res = await fetch(`${API_BASE}/admin/themes?${query}`);
+    const res = await fetch(`${API_BASE}/admin/themes?${query}`, { credentials: 'include' });
     if (!res.ok) throw new Error('테마 목록 조회 실패');
     return res.json();
 }
@@ -106,7 +106,7 @@ export interface ThemeDetail {
 }
 
 export async function fetchThemeDetail(id: string): Promise<ThemeDetail> {
-    const res = await fetch(`${API_BASE}/admin/themes/${id}`);
+    const res = await fetch(`${API_BASE}/admin/themes/${id}`, { credentials: 'include' });
     if (!res.ok) throw new Error('테마 상세 조회 실패');
     return res.json();
 }
@@ -120,6 +120,7 @@ export async function createTheme(data: {
     const res = await fetch(`${API_BASE}/admin/themes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
     });
     if (!res.ok) {
@@ -139,6 +140,7 @@ export async function updateTheme(id: string, data: {
     const res = await fetch(`${API_BASE}/admin/themes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
     });
     if (!res.ok) {
@@ -152,6 +154,7 @@ export async function updateTheme(id: string, data: {
 export async function deleteTheme(id: string): Promise<void> {
     const res = await fetch(`${API_BASE}/admin/themes/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
     });
     if (!res.ok) {
         const error = await res.json();
@@ -163,6 +166,7 @@ export async function deleteTheme(id: string): Promise<void> {
 export async function toggleTheme(id: string): Promise<{ isActive: boolean }> {
     const res = await fetch(`${API_BASE}/admin/themes/${id}/toggle`, {
         method: 'PATCH',
+        credentials: 'include',
     });
     if (!res.ok) throw new Error('테마 토글 실패');
     return res.json();
@@ -173,6 +177,7 @@ export async function addStockToTheme(themeId: string, stock: ThemeStock): Promi
     const res = await fetch(`${API_BASE}/admin/themes/${themeId}/stocks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(stock),
     });
     if (!res.ok) {
@@ -186,6 +191,7 @@ export async function addStockToTheme(themeId: string, stock: ThemeStock): Promi
 export async function removeStockFromTheme(themeId: string, stockName: string): Promise<ThemeDetail> {
     const res = await fetch(`${API_BASE}/admin/themes/${themeId}/stocks/${encodeURIComponent(stockName)}`, {
         method: 'DELETE',
+        credentials: 'include',
     });
     if (!res.ok) {
         const error = await res.json();
@@ -198,6 +204,7 @@ export async function removeStockFromTheme(themeId: string, stockName: string): 
 export async function triggerCrawl(): Promise<{ message: string }> {
     const res = await fetch(`${API_BASE}/admin/crawl/themes`, {
         method: 'POST',
+        credentials: 'include',
     });
     if (!res.ok) {
         const error = await res.json();
@@ -208,7 +215,7 @@ export async function triggerCrawl(): Promise<{ message: string }> {
 
 // 크롤링 상태 확인
 export async function getCrawlStatus(): Promise<{ isCrawling: boolean }> {
-    const res = await fetch(`${API_BASE}/admin/crawl/status`);
+    const res = await fetch(`${API_BASE}/admin/crawl/status`, { credentials: 'include' });
     if (!res.ok) throw new Error('크롤링 상태 조회 실패');
     return res.json();
 }
@@ -217,6 +224,7 @@ export async function getCrawlStatus(): Promise<{ isCrawling: boolean }> {
 export async function refreshCache(): Promise<{ message: string }> {
     const res = await fetch(`${API_BASE}/admin/cache/refresh`, {
         method: 'POST',
+        credentials: 'include',
     });
     if (!res.ok) throw new Error('캐시 갱신 실패');
     return res.json();
