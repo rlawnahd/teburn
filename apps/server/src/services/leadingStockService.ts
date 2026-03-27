@@ -46,7 +46,7 @@ export interface CalendarDay {
  * @param minChangeRate 최소 등락률 (기본 4%)
  * @param limit 최대 개수 (기본 30)
  */
-export function getLeadingStocks(minChangeRate: number = 4, limit: number = 30): LeadingStock[] {
+export function getLeadingStocks(minChangeRate: number = 4, limit: number = 50): LeadingStock[] {
     const allThemePrices = themePriceCache.getAllThemePrices();
 
     // 종목별로 소속 테마 매핑
@@ -69,11 +69,11 @@ export function getLeadingStocks(minChangeRate: number = 4, limit: number = 30):
         }
     }
 
-    // 필터링: 상승률 조건
+    // 필터링: 상승률 조건 (minChangeRate가 0 이하면 하락 종목 포함)
     const filteredStocks: LeadingStock[] = [];
 
     for (const [stockCode, stock] of stockDataMap) {
-        if (stock.changeRate >= minChangeRate) {
+        if (minChangeRate <= 0 || stock.changeRate >= minChangeRate) {
             filteredStocks.push({
                 stockCode,
                 stockName: stock.stockName,
