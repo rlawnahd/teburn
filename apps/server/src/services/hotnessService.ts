@@ -304,19 +304,18 @@ async function doRefresh(): Promise<void> {
         const candidates: Array<{ stockCode: string; stockName: string; themes: string[]; tradingValue: number }> = [];
 
         for (const [stockCode, data] of stockDataMap) {
-            if (data.changeRate >= 4) {
-                candidates.push({
-                    stockCode,
-                    stockName: data.name,
-                    themes: Array.from(stockThemesMap.get(stockCode) || []).slice(0, 3),
-                    tradingValue: data.tradingValue,
-                });
-            }
+            // 등락률 필터 없음 — 전체 종목 대상으로 점수 계산 후 TOP N 선정
+            candidates.push({
+                stockCode,
+                stockName: data.name,
+                themes: Array.from(stockThemesMap.get(stockCode) || []).slice(0, 3),
+                tradingValue: data.tradingValue,
+            });
         }
 
         candidates.sort((a, b) => b.tradingValue - a.tradingValue);
 
-        console.log(`📊 4% 이상 상승 종목: ${candidates.length}개 (전체 ${stockDataMap.size}개 중)`);
+        console.log(`📊 후보 종목: ${candidates.length}개 (전체 ${stockDataMap.size}개 중)`);
         console.log(`📊 거래대금 TOP 5: ${candidates.slice(0, 5).map(c => c.stockName).join(', ')}`);
 
         const scored = await calculateBatchHotness(candidates);

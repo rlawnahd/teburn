@@ -274,7 +274,7 @@ export default function HotStocksView() {
 
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['hotStocks'],
-        queryFn: () => fetchHotStocks(30),
+        queryFn: () => fetchHotStocks(20),
         refetchInterval: (query) => {
             const stocks = query.state.data?.stocks;
             if (!stocks || stocks.length === 0) return 5000;

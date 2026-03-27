@@ -14,7 +14,7 @@ export default function TickerStrip() {
 
     const { data } = useQuery({
         queryKey: ['hotStocks'],
-        queryFn: () => fetchHotStocks(30),
+        queryFn: () => fetchHotStocks(20),
         refetchInterval: isLoggedIn ? 5 * 60 * 1000 : 60 * 1000,
         staleTime: 30 * 1000,
     });
