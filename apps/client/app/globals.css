@@ -58,12 +58,12 @@
   --error-bg: #fff0f1;
 
   /* 그림자 */
-  --shadow-sm: none;
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
 
   /* 등급 틴트 */
   --grade-s-tint: rgba(242, 54, 69, 0.04);
@@ -71,11 +71,11 @@
   --grade-new-color: #d97706;
 
   /* 반경 */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
-  --radius-xl: 8px;
-  --radius-2xl: 12px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
   /* 타이포 스케일 */
@@ -89,8 +89,8 @@
 
   /* 트랜지션 */
   --transition-fast: 100ms ease;
-  --transition-normal: 150ms ease;
-  --transition-slow: 250ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
 }
 
 /* ============================
@@ -147,12 +147,12 @@
   --error-bg: #2d1f22;
 
   /* 그림자 */
-  --shadow-sm: none;
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-xl: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.3);
 
   /* 등급 틴트 */
   --grade-s-tint: rgba(242, 54, 69, 0.06);
@@ -233,8 +233,9 @@ h1, h2, h3, h4, h5, h6 {
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-normal);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .card:hover {
@@ -245,7 +246,7 @@ h1, h2, h3, h4, h5, h6 {
 .card-flat {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 }
 
 /* 등급 틴트 행 */
@@ -278,11 +279,11 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary {
   background: var(--accent-blue);
   color: white;
-  padding: 6px 12px;
+  padding: 8px 16px;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 13px;
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
 }
 
 .btn-primary:hover {
@@ -292,11 +293,11 @@ h1, h2, h3, h4, h5, h6 {
 .btn-secondary {
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  padding: 6px 12px;
+  padding: 8px 16px;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 13px;
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
 }
 
 .btn-secondary:hover {
@@ -466,8 +467,8 @@ input, textarea, select {
   background: var(--bg-tertiary);
   border: 1px solid transparent;
   color: var(--text-primary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
 }
 
 input:focus, textarea:focus, select:focus {
