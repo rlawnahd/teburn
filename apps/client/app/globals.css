@@ -402,22 +402,47 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 연속 주도주 불꽃 글로우 */
 @keyframes fireGlow {
-  0%, 100% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.2), inset 0 0 4px rgba(245, 158, 11, 0.05); }
-  50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.35), inset 0 0 8px rgba(245, 158, 11, 0.08); }
+  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3), 0 0 20px rgba(245, 158, 11, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), 0 0 32px rgba(245, 158, 11, 0.15); }
+}
+
+@keyframes fireGlowIntense {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3), 0 0 24px rgba(239, 68, 68, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.15); }
 }
 
 .streak-glow {
   animation: fireGlow 2s ease-in-out infinite;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.5);
   border-radius: var(--radius-lg);
-  background: rgba(245, 158, 11, 0.03);
+  background: rgba(245, 158, 11, 0.06);
+  border-left: 3px solid #f59e0b;
 }
 
 .streak-glow-intense {
-  animation: fireGlow 1.5s ease-in-out infinite;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  animation: fireGlowIntense 1.5s ease-in-out infinite;
+  border: 1px solid rgba(239, 68, 68, 0.5);
   border-radius: var(--radius-lg);
-  background: rgba(239, 68, 68, 0.03);
+  background: rgba(239, 68, 68, 0.06);
+  border-left: 3px solid #ef4444;
+}
+
+/* 라이트모드: 글로우 대신 배경 tint 강화 */
+:root .streak-glow {
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+}
+:root .streak-glow-intense {
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
+}
+
+/* 다크모드: 글로우 애니메이션 활성 */
+[data-theme="dark"] .streak-glow {
+  animation: fireGlow 2s ease-in-out infinite;
+}
+[data-theme="dark"] .streak-glow-intense {
+  animation: fireGlowIntense 1.5s ease-in-out infinite;
 }
 
 /* 순위 변동 진입 */
