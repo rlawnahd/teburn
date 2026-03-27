@@ -33,16 +33,21 @@ function DateCell({
     return (
         <div
             onClick={hasData ? onClick : undefined}
-            className={`relative min-h-[80px] md:min-h-[100px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] ${
-                isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]'
-            } ${isToday ? 'ring-1 ring-inset ring-[var(--accent-blue)]' : ''} ${
+            className={`relative min-h-[90px] md:min-h-[110px] p-2 md:p-2.5 rounded-lg transition-colors ${
+                isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]/60'
+            } ${isToday ? 'bg-[var(--accent-blue)]/5 ring-1 ring-inset ring-[var(--accent-blue)]/40' : ''} ${
                 hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''
             }`}
         >
+            {/* Data indicator dot */}
+            {hasData && !isToday && (
+                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--accent-blue)]/40" />
+            )}
+
             <div
-                className={`text-[12px] md:text-base font-medium mb-1 ${
+                className={`text-sm font-medium mb-1.5 ${
                     isToday
-                        ? 'w-5 h-5 bg-[var(--accent-blue)] text-white rounded-full flex items-center justify-center'
+                        ? 'w-6 h-6 bg-[var(--accent-blue)] text-white rounded-full flex items-center justify-center text-xs'
                         : isCurrentMonth
                         ? 'text-[var(--text-primary)]'
                         : 'text-[var(--text-disabled)]'
@@ -51,7 +56,7 @@ function DateCell({
                 {day}
             </div>
 
-            {hasData && (
+            {hasData ? (
                 <div className="space-y-0.5">
                     {dayData.topStocks.slice(0, 3).map((stock, idx) => {
                         const isPositive = stock.changeRate > 0;
@@ -63,15 +68,15 @@ function DateCell({
                             return (
                                 <div key={`${stock.stockCode || stock.stockName}-${idx}`}>
                                     <div className="flex items-baseline gap-1">
-                                        <span className={`text-sm md:text-[12px] font-semibold truncate ${colorClass}`}>
+                                        <span className={`text-sm font-semibold truncate ${colorClass}`}>
                                             {stock.stockName}
                                         </span>
-                                        <span className={`text-[10px] md:text-sm font-medium flex-shrink-0 ${colorClass}`}>
+                                        <span className={`text-[10px] font-medium flex-shrink-0 ${colorClass}`}>
                                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                                         </span>
                                     </div>
                                     {themeTag && (
-                                        <div className="text-sm text-[var(--text-tertiary)] truncate">
+                                        <div className="text-[11px] text-[var(--text-tertiary)] truncate">
                                             {themeTag}
                                         </div>
                                     )}
@@ -84,19 +89,18 @@ function DateCell({
                                 key={`${stock.stockCode || stock.stockName}-${idx}`}
                                 className="flex items-baseline gap-1"
                             >
-                                <span className={`text-sm truncate opacity-50 ${colorClass}`}>
+                                <span className="text-xs text-[var(--text-tertiary)] truncate">
                                     {stock.stockName}
                                 </span>
-                                {themeTag && (
-                                    <span className="text-sm text-[var(--text-disabled)] truncate flex-shrink-0">
-                                        {themeTag}
-                                    </span>
-                                )}
                             </div>
                         );
                     })}
                 </div>
-            )}
+            ) : isCurrentMonth ? (
+                <div className="flex-1 flex items-center justify-center pt-4">
+                    <div className="w-1 h-1 rounded-full bg-[var(--border-color)]" />
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -193,58 +197,59 @@ export default function CalendarView() {
 
     return (
         <div className="space-y-3">
-            {/* 헤더 */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold text-[var(--text-primary)]">캘린더</h2>
-                    <span className="text-sm text-[var(--text-tertiary)]">일별 주도주</span>
-                </div>
+            {/* 캘린더 카드 */}
+            <div className="rounded-2xl border border-[var(--border-color)] overflow-hidden">
+                {/* 헤더 — 카드 내부 */}
+                <div className="flex items-center justify-between px-4 py-3 bg-[var(--bg-primary)]">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-base font-semibold text-[var(--text-primary)]">캘린더</h2>
+                        <span className="text-sm text-[var(--text-tertiary)]">일별 주도주</span>
+                    </div>
 
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={handleToday}
-                        className="px-2 py-1 text-sm font-medium border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
-                    >
-                        오늘
-                    </button>
-                    <div className="flex items-center border border-[var(--border-color)]">
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={handlePrevMonth}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] border-r border-[var(--border-color)]"
+                            onClick={handleToday}
+                            className="px-3 py-1 text-xs font-medium rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
                         >
-                            <ChevronLeft size={12} />
+                            오늘
                         </button>
-                        <span className="px-2 text-base font-medium text-[var(--text-primary)] whitespace-nowrap">
-                            {currentYear}.{String(currentMonth).padStart(2, '0')}
-                        </span>
-                        <button
-                            onClick={handleNextMonth}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] border-l border-[var(--border-color)]"
-                        >
-                            <ChevronRight size={12} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={handlePrevMonth}
+                                className="w-7 h-7 flex items-center justify-center rounded-xl text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            <span className="px-1 text-sm font-semibold text-[var(--text-primary)] whitespace-nowrap tabular-nums">
+                                {currentYear}.{String(currentMonth).padStart(2, '0')}
+                            </span>
+                            <button
+                                onClick={handleNextMonth}
+                                className="w-7 h-7 flex items-center justify-center rounded-xl text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                            >
+                                <ChevronRight size={14} />
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 캘린더 */}
-            <div className="border border-[var(--border-color)] overflow-hidden">
                 {/* 요일 헤더 */}
-                <div className="grid grid-cols-5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="grid grid-cols-5 bg-[var(--bg-secondary)]">
                     {dayNames.map((name) => (
                         <div
                             key={name}
-                            className="text-center py-1.5 text-sm font-medium text-[var(--text-tertiary)]"
+                            className="text-center py-2 text-xs font-medium text-[var(--text-tertiary)]"
                         >
                             {name}
                         </div>
                     ))}
                 </div>
 
+                {/* 날짜 그리드 */}
                 {isLoading ? (
-                    <div className="grid grid-cols-5">
+                    <div className="grid grid-cols-5 gap-px bg-[var(--border-color)]/30 p-1">
                         {Array.from({ length: 25 }).map((_, i) => (
-                            <div key={i} className="min-h-[80px] md:min-h-[100px] p-1.5 md:p-2 border-r border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+                            <div key={i} className="min-h-[90px] md:min-h-[110px] p-2 md:p-2.5 rounded-lg bg-[var(--bg-primary)]">
                                 <Skeleton className="h-3 w-4 rounded-sm mb-2" />
                                 <Skeleton className="h-3 w-full rounded-sm mb-1" />
                                 <Skeleton className="h-2 w-2/3 rounded-sm" />
@@ -252,7 +257,7 @@ export default function CalendarView() {
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-5">
+                    <div className="grid grid-cols-5 gap-px bg-[var(--border-color)]/20 p-0.5">
                         {calendarDates.map((date, i) => {
                             const dateStr = formatLocalDate(date);
                             const isToday =
