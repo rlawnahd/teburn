@@ -226,6 +226,14 @@ export default function Header() {
                     {/* 로그인/로그아웃 */}
                     {isLoggedIn ? (
                         <div className="hidden sm:flex items-center gap-1.5">
+                            {user?.provider === 'local' && user?.name === 'admin' && (
+                                <Link
+                                    href="/admin"
+                                    className="h-8 px-2.5 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded flex items-center"
+                                >
+                                    어드민
+                                </Link>
+                            )}
                             {user?.profileImage && (
                                 <img
                                     src={user.profileImage}
