@@ -9,6 +9,7 @@ import {
 import { getMarketStatus } from '../utils/marketStatus';
 import { themePriceCache } from '../services/themePriceCache';
 import { getTopHotStocks, getThemeHotness } from '../services/hotnessService';
+import { getLatestThemeAnalysis } from '../services/marketThemeService';
 import HotnessHistory from '../models/HotnessHistory';
 import DailyLeadingTheme from '../models/DailyLeadingTheme';
 
@@ -241,6 +242,20 @@ router.get('/hot/theme/:themeName', async (req: Request, res: Response) => {
             success: false,
             message: error.message || '테마 주도주 점수 조회 중 오류가 발생했습니다.',
         });
+    }
+});
+
+// 오늘의 시장 테마 AI 분석 조회
+router.get('/market-themes', async (_req: Request, res: Response) => {
+    try {
+        const analysis = await getLatestThemeAnalysis();
+        res.json({
+            success: true,
+            data: analysis,
+        });
+    } catch (err) {
+        console.error('시장 테마 조회 에러:', err);
+        res.status(500).json({ success: false, message: '시장 테마 조회 실패' });
     }
 });
 

@@ -179,6 +179,26 @@ interface HotStocksResponse {
     };
 }
 
+// 시장 테마 AI 분석
+export interface MarketTheme {
+    name: string;
+    stocks: string[];
+    reason: string;
+}
+
+export interface MarketThemeAnalysis {
+    themes: MarketTheme[];
+    date: string;
+    analyzedAt: string;
+}
+
+export const fetchMarketThemes = async (): Promise<MarketThemeAnalysis | null> => {
+    const { data } = await axios.get<{ success: boolean; data: MarketThemeAnalysis | null }>(
+        `${API_URL}/leading/market-themes`
+    );
+    return data.data;
+};
+
 // 주도주 점수 TOP 종목 조회
 export const fetchHotStocks = async (
     limit: number = 30

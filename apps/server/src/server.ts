@@ -27,6 +27,7 @@ import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broad
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
 import { startHistoryCollection } from './services/themeHistoryService';
+import { startThemeAnalysisScheduler } from './services/marketThemeService';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -192,6 +193,7 @@ connectDB().then(async () => {
             .then(() => {
                 startKisWebSocket();
                 startHistoryCollection();
+                startThemeAnalysisScheduler();
                 return startTelegramBot();
             })
             .catch(err => {

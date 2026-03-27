@@ -12,6 +12,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { useOnPriceUpdate, useOnHotnessUpdate } from '@/hooks/useRealtimePrice';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatePresence, motion } from 'framer-motion';
+import MarketThemeCard from './MarketThemeCard';
 
 type PriceFlash = 'rise' | 'fall' | null;
 type RankChange = { delta: number; isNew: boolean };
@@ -405,6 +406,8 @@ export default function HotStocksView() {
             </div>
 
             {stocks.length > 0 && <MarketKpiStrip stocks={stocks} />}
+
+            <MarketThemeCard />
 
             {renderSection('S등급', '70점 이상', hotStocks, 1)}
             {renderSection('A등급', '50~69점', warmStocks, hotStocks.length + 1)}
