@@ -170,7 +170,7 @@ function TopStockCard() {
                             { label: '거래량', score: top.volumeScore, max: 15 },
                             { label: '뉴스', score: top.newsScore, max: 10 },
                             { label: '테마', score: top.themeConcentrationScore, max: 10 },
-                            { label: '연속', score: top.streakScore, max: 15 },
+                            { label: '연속', score: top.streakScore ?? 0, max: 15 },
                         ].map((item) => (
                             <div key={item.label} className="text-center">
                                 <div className="h-8 bg-[var(--bg-tertiary)] rounded-sm relative overflow-hidden">

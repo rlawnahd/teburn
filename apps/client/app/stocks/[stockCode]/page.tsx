@@ -43,7 +43,8 @@ function ScoreBar({
     detail?: string;
     color: string;
 }) {
-    const percentage = Math.min((score / maxScore) * 100, 100);
+    const safeScore = score ?? 0;
+    const percentage = Math.min((safeScore / maxScore) * 100, 100);
 
     return (
         <div className="flex items-center gap-1.5">
@@ -51,7 +52,7 @@ function ScoreBar({
             <div className="flex-1 h-[4px] bg-[var(--bg-tertiary)] overflow-hidden">
                 <div className={`h-full ${color}`} style={{ width: `${percentage}%` }} />
             </div>
-            <div className="w-6 text-right text-xs font-medium text-[var(--text-secondary)]">{score.toFixed(0)}</div>
+            <div className="w-6 text-right text-xs font-medium text-[var(--text-secondary)]">{(score ?? 0).toFixed(0)}</div>
             <div className="w-4 text-right text-[11px] text-[var(--text-tertiary)]">/{maxScore}</div>
             {detail && (
                 <div className="w-14 text-right text-[11px] text-[var(--text-tertiary)]">{detail}</div>
@@ -219,7 +220,7 @@ export default function StockDetailPage() {
                                 { label: '거래량', score: stock.hotness.volumeScore, maxScore: 15, color: 'bg-violet-500', detail: stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-' },
                                 { label: '뉴스', score: stock.hotness.newsScore, maxScore: 10, color: 'bg-emerald-500', detail: `${stock.hotness.newsCount}건` },
                                 { label: '대장주', score: stock.hotness.themeConcentrationScore, maxScore: 10, color: 'bg-sky-500', detail: `${stock.hotness.themeConcentration}%` },
-                                { label: '연속성', score: stock.hotness.streakScore, maxScore: 15, color: 'bg-orange-500', detail: stock.hotness.streakDays > 0 ? `${stock.hotness.streakDays}일` : '-' },
+                                { label: '연속성', score: stock.hotness.streakScore ?? 0, maxScore: 15, color: 'bg-orange-500', detail: (stock.hotness.streakDays ?? 0) > 0 ? `${stock.hotness.streakDays}일` : '-' },
                             ].map((bar, i) => (
                                 <div key={bar.label} className="animate-stagger" style={{ animationDelay: `${i * 50}ms` }}>
                                     <ScoreBar
