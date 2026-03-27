@@ -29,7 +29,7 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
         return (
             <button
                 onClick={onClick}
-                className="flex items-center justify-between px-2.5 py-1.5 bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-left"
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-left"
             >
                 <div className="min-w-0">
                     <div className="text-[12px] text-[var(--text-tertiary)] truncate">{label}</div>
@@ -49,7 +49,7 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
     return (
         <button
             onClick={onClick}
-            className={`flex items-center justify-between px-2.5 py-1.5 ${bgTint} hover:brightness-95 transition-all cursor-pointer text-left ${flashClass}`}
+            className={`flex items-center justify-between px-3 py-2 ${bgTint} hover:brightness-95 transition-all cursor-pointer text-left ${flashClass}`}
         >
             <div className="min-w-0 flex-1">
                 <div className="text-[12px] text-[var(--text-tertiary)] truncate">{data.name}</div>
@@ -107,9 +107,9 @@ export default function IndexWidget({ onTabChange }: { onTabChange: (tab: string
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded mb-2 overflow-hidden">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded-xl mb-2 overflow-hidden">
                 {[0, 1, 2, 3].map((i) => (
-                    <div key={i} className="bg-[var(--bg-primary)] px-2.5 py-1.5">
+                    <div key={i} className="bg-[var(--bg-primary)] px-3 py-2">
                         <Skeleton className="h-3 w-14 rounded-sm mb-1" />
                         <Skeleton className="h-4 w-20 rounded-sm" />
                     </div>
@@ -119,7 +119,7 @@ export default function IndexWidget({ onTabChange }: { onTabChange: (tab: string
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded mb-2 overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded-xl mb-2 overflow-hidden">
             <IndexCard data={data?.kospiIndex ?? null} label="코스피" flash={flashes['kospi'] || null} onClick={() => onTabChange('index')} />
             <IndexCard data={data?.kosdaqIndex ?? null} label="코스닥" flash={flashes['kosdaq'] || null} onClick={() => onTabChange('index')} />
             <IndexCard data={data?.kospi ?? null} label="KOSPI 야간선물" flash={flashes['kospiFuture'] || null} onClick={() => onTabChange('index')} />

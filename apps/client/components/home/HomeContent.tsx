@@ -55,7 +55,7 @@ export default function HomeContent() {
 
             {/* 지수 위젯 + 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                <div className="max-w-[1280px] mx-auto px-3 pt-2 pb-0">
+                <div className="max-w-[1280px] mx-auto px-4 pt-3 pb-0">
                     <IndexWidget onTabChange={(tab) => handleTabChange(tab as TabType)} />
 
                     {/* 탭 — pill 스타일 */}
@@ -67,7 +67,7 @@ export default function HomeContent() {
                                     <button
                                         key={tab.key}
                                         onClick={() => handleTabChange(tab.key)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all rounded-md whitespace-nowrap ${
+                                        className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all rounded-lg whitespace-nowrap ${
                                             isActive
                                                 ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] tab-active'
                                                 : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
@@ -84,7 +84,7 @@ export default function HomeContent() {
             </div>
 
             {/* 컨텐츠 */}
-            <main className="max-w-[1280px] mx-auto p-3">
+            <main className="max-w-[1280px] mx-auto p-4">
                 <div key={activeTab} className="animate-contentFadeIn">
                     {activeTab === 'hot' && <HotStocksView />}
                     {activeTab === 'stocks' && <TopTradingView />}

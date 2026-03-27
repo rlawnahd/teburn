@@ -54,7 +54,7 @@ export default function LoginPage() {
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">로그인하고 실시간 주도주를 확인하세요</p>
                 </div>
 
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl p-6">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl p-7">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium mb-1">아이디</label>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-2.5 rounded-lg font-medium bg-[var(--accent-blue)] text-white hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-2.5 rounded-xl font-medium bg-[var(--accent-blue)] text-white hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isSubmitting && <Loader2 size={16} className="animate-spin" />}
                             로그인
@@ -121,14 +121,14 @@ export default function LoginPage() {
                     <div className="space-y-3">
                         <a
                             href={getLoginUrl('kakao')}
-                            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium"
+                            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium"
                             style={{ backgroundColor: '#FEE500', color: '#000000' }}
                         >
                             카카오로 시작하기
                         </a>
                         <a
                             href={getLoginUrl('google')}
-                            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium border border-[var(--border-color)] hover:bg-[var(--bg-secondary)]"
+                            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium border border-[var(--border-color)] hover:bg-[var(--bg-secondary)]"
                         >
                             Google로 시작하기
                         </a>

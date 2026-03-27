@@ -68,7 +68,7 @@ function StockRow({
             layoutId={stock.stockCode}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${
+            className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${
                 isStreaking
                     ? 'border border-amber-500/40 bg-amber-500/[0.03] rounded-sm my-0.5'
                     : 'border-b border-[var(--border-color)]'
@@ -92,12 +92,12 @@ function StockRow({
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                     <GradeBadge grade={stock.grade} />
                     {isStreaking && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-500/15 flex-shrink-0 rounded-sm">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-500/15 flex-shrink-0 rounded-md">
                             {stock.sStreak}일 연속
                         </span>
                     )}
                     {isLimitUp && (
-                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
+                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
                             상한가
                         </span>
                     )}
@@ -183,29 +183,29 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
     return (
         <div className="mb-4">
             {/* KPI 5-column grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded overflow-hidden mb-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded-xl overflow-hidden mb-3">
                 {/* 시장 온도 */}
-                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                <div className="bg-[var(--bg-primary)] px-4 py-3 text-center">
                     <div className="text-lg font-bold" style={{ color: tempColor }}>{marketTemp}</div>
                     <div className="text-xs text-[var(--text-tertiary)]">시장 온도</div>
                 </div>
                 {/* S등급 */}
-                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                <div className="bg-[var(--bg-primary)] px-4 py-3 text-center">
                     <div className="text-lg font-bold" style={{ color: 'var(--grade-s)' }}>{sCount}</div>
                     <div className="text-xs text-[var(--text-tertiary)]">S등급</div>
                 </div>
                 {/* A등급 */}
-                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                <div className="bg-[var(--bg-primary)] px-4 py-3 text-center">
                     <div className="text-lg font-bold" style={{ color: 'var(--grade-a)' }}>{aCount}</div>
                     <div className="text-xs text-[var(--text-tertiary)]">A등급</div>
                 </div>
                 {/* 상한가 */}
-                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center">
+                <div className="bg-[var(--bg-primary)] px-4 py-3 text-center">
                     <div className="text-lg font-bold" style={{ color: limitUpCount > 0 ? 'var(--rise-color)' : 'var(--text-primary)' }}>{limitUpCount}</div>
                     <div className="text-xs text-[var(--text-tertiary)]">상한가</div>
                 </div>
                 {/* 오늘의 테마 */}
-                <div className="bg-[var(--bg-primary)] px-3 py-2.5 text-center col-span-2 sm:col-span-1">
+                <div className="bg-[var(--bg-primary)] px-4 py-3 text-center col-span-2 sm:col-span-1">
                     {topTheme ? (
                         <>
                             <div className="text-sm font-bold text-[var(--text-primary)] truncate">{topTheme}</div>
@@ -333,7 +333,7 @@ export default function HotStocksView() {
                 <div className="flex items-center gap-2">
                     <div className="h-4 w-20 bg-[var(--bg-tertiary)] rounded animate-pulse" />
                 </div>
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded-xl overflow-hidden">
                     {Array.from({ length: 8 }).map((_, i) => (
                         <SkeletonRow key={i} cols={5} />
                     ))}
@@ -371,8 +371,8 @@ export default function HotStocksView() {
                     </div>
                     <span className="text-sm text-[var(--text-tertiary)]">{sectionStocks.length}종목</span>
                 </div>
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm text-[var(--text-tertiary)]">
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded-xl overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm text-[var(--text-tertiary)]">
                         <span className="w-7 text-center">#</span>
                         <span className="flex-1">종목</span>
                         <span className="text-right">현재가</span>

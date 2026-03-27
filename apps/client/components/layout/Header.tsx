@@ -61,7 +61,7 @@ function SearchModal({ onClose }: { onClose: () => void }) {
         <div className="fixed inset-0 z-[100]">
             <div className="absolute inset-0 bg-black/40 animate-backdropIn" onClick={onClose} />
             <div className="relative max-w-lg mx-3 sm:mx-auto mt-12 animate-scaleIn">
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-lg overflow-hidden">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-lg overflow-hidden">
                     <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-color)]">
                         <Search size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
                         <input
@@ -216,7 +216,7 @@ export default function Header() {
                     {/* 검색 버튼 */}
                     <button
                         onClick={() => setShowSearch(true)}
-                        className="flex items-center gap-1.5 h-8 px-2.5 border border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-colors rounded"
+                        className="flex items-center gap-1.5 h-8 px-2.5 border border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-colors rounded-lg"
                     >
                         <Search size={14} />
                         <span className="text-[12px] hidden sm:inline">검색</span>
@@ -251,7 +251,7 @@ export default function Header() {
                     ) : (
                         <Link
                             href="/login"
-                            className="hidden sm:flex items-center h-8 px-3 text-[12px] font-medium bg-[var(--accent-color)] text-white rounded hover:opacity-90 transition-opacity"
+                            className="hidden sm:flex items-center h-8 px-3 text-[12px] font-medium bg-[var(--accent-color)] text-white rounded-lg hover:opacity-90 transition-opacity"
                         >
                             로그인
                         </Link>

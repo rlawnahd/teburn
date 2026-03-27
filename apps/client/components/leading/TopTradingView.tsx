@@ -37,7 +37,7 @@ function StockRow({
                 />
             </div>
 
-            <div className="relative flex items-center py-1.5 px-2 md:px-3 gap-2 md:gap-3">
+            <div className="relative flex items-center py-2 px-3 md:px-4 gap-2 md:gap-3">
                 <div className={`w-5 text-right text-base font-medium flex-shrink-0 ${
                     rank <= 3 ? 'text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-tertiary)]'
                 }`}>
@@ -48,7 +48,7 @@ function StockRow({
                     <div className="flex items-center gap-1.5">
                         <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                         {isLimitUp && (
-                            <span className="px-1 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
+                            <span className="px-1 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
                                 상한가
                             </span>
                         )}
@@ -133,8 +133,8 @@ export default function TopTradingView() {
     if (isLoading) {
         return (
             <div className="space-y-3">
-                <div className="h-10 bg-[var(--bg-tertiary)] rounded animate-pulse" />
-                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
+                <div className="h-10 bg-[var(--bg-tertiary)] rounded-xl animate-pulse" />
+                <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded-xl overflow-hidden">
                     {Array.from({ length: 10 }).map((_, i) => (
                         <SkeletonRow key={i} cols={4} />
                     ))}
@@ -154,7 +154,7 @@ export default function TopTradingView() {
 
     return (
         <div className="space-y-3">
-            <div className="px-2 py-1.5 bg-[var(--bg-tertiary)] rounded-r">
+            <div className="px-3 py-2 bg-[var(--bg-tertiary)] rounded-lg">
                 <p className="text-sm text-[var(--text-tertiary)] leading-relaxed">
                     <span className="text-[var(--text-secondary)] font-medium">테마주</span> 중 거래대금 상위.
                     대형주 제외, <span className="text-[var(--rise-color)]">오늘 돈이 몰리는 테마</span>에 집중.
@@ -174,7 +174,7 @@ export default function TopTradingView() {
                     )}
                 </div>
 
-                <div className="flex items-center border border-[var(--border-color)] rounded overflow-hidden">
+                <div className="flex items-center border border-[var(--border-color)] rounded-lg overflow-hidden">
                     {[0, 4, 6, 10].map((rate) => (
                         <button
                             key={rate}
@@ -191,8 +191,8 @@ export default function TopTradingView() {
                 </div>
             </div>
 
-            <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded overflow-hidden">
-                <div className="flex items-center py-1.5 px-2 md:px-3 text-sm text-[var(--text-tertiary)] border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
+            <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded-xl overflow-hidden">
+                <div className="flex items-center py-2 px-3 md:px-4 text-sm text-[var(--text-tertiary)] border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
                     <div className="w-5 text-right">#</div>
                     <div className="flex-1 ml-2 md:ml-3">종목</div>
                     <div className="w-20 text-right hidden sm:block">현재가</div>

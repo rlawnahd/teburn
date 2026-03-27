@@ -103,9 +103,9 @@ function DashboardTab() {
         <div className="space-y-6">
             {/* 유저 통계 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
                             <Users size={20} className="text-rose-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">전체 가입자</span>
@@ -118,9 +118,9 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
                             <UserPlus size={20} className="text-sky-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">오늘 가입</span>
@@ -136,7 +136,7 @@ function DashboardTab() {
 
             {/* 최근 가입자 */}
             {userStats?.recentUsers && userStats.recentUsers.length > 0 && (
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">최근 가입자</h3>
                     <div className="space-y-2">
                         {userStats.recentUsers.map((u, i) => (
@@ -160,9 +160,9 @@ function DashboardTab() {
 
             {/* 통계 카드 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-[var(--accent-blue)]/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-blue)]/10 flex items-center justify-center">
                             <FolderTree size={20} className="text-[var(--accent-blue)]" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">테마</span>
@@ -175,9 +175,9 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                             <TrendingUp size={20} className="text-emerald-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">종목</span>
@@ -190,9 +190,9 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                             <Newspaper size={20} className="text-violet-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">뉴스</span>
@@ -205,9 +205,9 @@ function DashboardTab() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                             <Calendar size={20} className="text-amber-500" />
                         </div>
                         <span className="text-sm text-[var(--text-tertiary)]">일별 기록</span>
@@ -222,7 +222,7 @@ function DashboardTab() {
             </div>
 
             {/* 작업 버튼 */}
-            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">수동 작업</h3>
                 <div className="flex flex-wrap gap-3">
                     <button
@@ -253,7 +253,7 @@ function DashboardTab() {
             </div>
 
             {/* 최근 업데이트 */}
-            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">마지막 업데이트</h3>
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -571,7 +571,7 @@ function ThemesTab() {
                     <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
                 </div>
             ) : (
-                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">
@@ -753,7 +753,7 @@ export default function AdminPage() {
             </div>
 
             {/* 컨텐츠 */}
-            <main className="p-3 max-w-6xl mx-auto">
+            <main className="p-4 max-w-6xl mx-auto">
                 {activeTab === 'dashboard' && <DashboardTab />}
                 {activeTab === 'themes' && <ThemesTab />}
             </main>

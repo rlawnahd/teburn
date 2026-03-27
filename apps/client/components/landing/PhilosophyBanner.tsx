@@ -23,9 +23,9 @@ export default function PhilosophyBanner() {
                         return (
                             <div
                                 key={i}
-                                className="flex items-start gap-4 p-5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]/50"
+                                className="flex items-start gap-4 p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50"
                             >
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-tertiary)]">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--bg-tertiary)]">
                                     <Icon size={20} className="text-[var(--brand-primary)]" />
                                 </div>
                                 <p className="text-base font-medium text-[var(--text-primary)] leading-relaxed pt-2">

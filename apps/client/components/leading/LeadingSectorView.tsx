@@ -32,13 +32,13 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
     return (
         <div
             onClick={onClick}
-            className="border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors rounded overflow-hidden min-h-[140px] flex flex-col"
+            className="border border-[var(--border-color)] bg-[var(--bg-primary)] cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors rounded-xl overflow-hidden min-h-[140px] flex flex-col"
         >
             {/* 컬러 악센트 스트라이프 */}
             <div className="h-[3px]" style={{ background: accentColor }} />
 
             {/* 헤더 */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                         {rank}
@@ -46,7 +46,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{sector.themeName}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`px-1 py-0.5 text-[10px] font-bold text-white rounded-sm ${grade.bg}`}>
+                    <span className={`px-1 py-0.5 text-[10px] font-bold text-white rounded-md ${grade.bg}`}>
                         {grade.label}
                     </span>
                     <span className={`text-base font-bold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
@@ -55,7 +55,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                 </div>
             </div>
 
-            <div className="px-3 py-2 flex-1 flex flex-col">
+            <div className="px-4 py-2.5 flex-1 flex flex-col">
                 <div className="flex items-center gap-3 text-sm mb-2">
                     <span className="text-[var(--text-tertiary)]">
                         종목 <span className="text-[var(--text-secondary)] font-medium">{sector.stockCount}</span>
