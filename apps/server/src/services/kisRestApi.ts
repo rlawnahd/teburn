@@ -22,7 +22,13 @@ export async function getKisToken(): Promise<string> {
         token: data.access_token,
         expiresAt: Date.now() + (data.expires_in - 60) * 1000,
     };
+    console.log('🔑 KIS REST API 토큰 발급 완료');
     return data.access_token;
+}
+
+/** 토큰 만료 시 캐시 초기화 (에러 핸들링에서 호출) */
+export function invalidateKisToken(): void {
+    cachedToken = null;
 }
 
 export interface DailyCandle {

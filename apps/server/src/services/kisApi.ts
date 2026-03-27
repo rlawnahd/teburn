@@ -1,6 +1,6 @@
 import axios from 'axios';
 import stockCodesData from '../data/stockCodes.json';
-import { getKisToken } from './kisRestApi';
+import { getKisToken, invalidateKisToken } from './kisRestApi';
 
 // KIS REST API 설정
 const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
@@ -81,6 +81,13 @@ export async function getStockPrice(stockCode: string, retries = 2): Promise<Sto
         };
     } catch (error: any) {
         const errMsg = error.response?.data || error.message;
+
+        // 토큰 만료 시 캐시 초기화 후 재시도
+        if (retries > 0 && (String(errMsg).includes('만료된 token') || String(errMsg).includes('EGW00123'))) {
+            invalidateKisToken();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            return getStockPrice(stockCode, retries - 1);
+        }
 
         // 네트워크 에러 시 재시도
         if (retries > 0 && (error.code === 'ECONNRESET' || String(errMsg).includes('socket hang up'))) {
