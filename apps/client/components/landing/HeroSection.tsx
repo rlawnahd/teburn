@@ -259,7 +259,7 @@ export default function HeroSection() {
 
                 <div style={{ animation: 'heroFadeIn 0.8s ease-out 0.45s both' }}>
                     <Link
-                        href="/signup"
+                        href="/login"
                         className="mt-8 inline-flex items-center h-14 px-10 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
                             background: 'var(--brand-gradient, linear-gradient(135deg, #ef4444, #dc2626))',

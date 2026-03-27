@@ -12,7 +12,7 @@ export default function PreviewSection() {
                 </p>
 
                 <Link
-                    href="/signup"
+                    href="/login"
                     className="inline-flex items-center h-12 px-8 text-[15px] font-semibold text-white rounded-lg transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                     style={{
                         background: 'var(--brand-gradient)',
