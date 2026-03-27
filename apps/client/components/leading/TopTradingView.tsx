@@ -94,7 +94,7 @@ function StockRow({
 
 export default function TopTradingView() {
     const router = useRouter();
-    const [minRate, setMinRate] = useState(4);
+    const [minRate, setMinRate] = useState(0);
 
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['leadingStocks', minRate],
@@ -157,7 +157,7 @@ export default function TopTradingView() {
             <div className="px-3 py-2 bg-[var(--bg-tertiary)] rounded-lg">
                 <p className="text-sm text-[var(--text-tertiary)] leading-relaxed">
                     <span className="text-[var(--text-secondary)] font-medium">테마주</span> 중 거래대금 상위.
-                    대형주 제외, <span className="text-[var(--rise-color)]">오늘 돈이 몰리는 테마</span>에 집중.
+                    상승·하락 무관, <span className="text-[var(--accent-blue)]">오늘 자금이 몰리는 종목</span>을 추적합니다.
                 </p>
             </div>
 
