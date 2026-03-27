@@ -17,11 +17,15 @@ const authRateLimit = rateLimit({
 });
 
 const USERNAME_REGEX = /^[a-z0-9]{4,20}$/;
+const RESERVED_USERNAMES = ['admin', 'root', 'system', 'null', 'undefined', 'api', 'auth'];
 
 function validateUsername(raw: string): { valid: boolean; username: string; error?: string } {
     const username = raw.toLowerCase();
     if (!USERNAME_REGEX.test(username)) {
         return { valid: false, username, error: '아이디는 영문/숫자 4~20자여야 합니다.' };
+    }
+    if (RESERVED_USERNAMES.includes(username)) {
+        return { valid: false, username, error: '사용할 수 없는 아이디입니다.' };
     }
     return { valid: true, username };
 }
