@@ -55,12 +55,7 @@ function StockRow({
     const isPositive = stock.changeRate > 0;
     const isLimitUp = stock.changeRate >= 29.9;
 
-    const flashClass = priceFlash === 'rise'
-        ? 'animate-flash-rise'
-        : priceFlash === 'fall'
-        ? 'animate-flash-fall'
-        : '';
-
+    // 순위 변동 시에만 행 전체 깜빡임 (가격 변동은 깜빡임 없음)
     const rankFlashClass = rankChange && rankChange.delta !== 0 && !rankChange.isNew
         ? (rankChange.delta > 0 ? 'animate-flash-rise' : 'animate-flash-fall')
         : '';
@@ -68,7 +63,7 @@ function StockRow({
     return (
         <button
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${flashClass || rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
+            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <span className={`w-5 text-center text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -123,7 +118,11 @@ function StockRow({
             </div>
 
             <div className="text-right flex-shrink-0">
-                <div className="text-base text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
+                <div className={`text-base transition-colors duration-700 ${
+                    priceFlash === 'rise' ? 'text-[var(--rise-color)] font-semibold'
+                    : priceFlash === 'fall' ? 'text-[var(--fall-color)] font-semibold'
+                    : 'text-[var(--text-primary)]'
+                }`}>{stock.currentPrice.toLocaleString()}</div>
                 <div className={`text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                     {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
                 </div>
