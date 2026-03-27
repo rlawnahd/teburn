@@ -54,6 +54,7 @@ function StockRow({
 }) {
     const isPositive = stock.changeRate > 0;
     const isLimitUp = stock.changeRate >= 29.9;
+    const isStreaking = (stock.sStreak || 0) >= 2;
 
     // 순위 변동 시에만 행 전체 깜빡임 (가격 변동은 깜빡임 없음)
     const rankFlashClass = rankChange && rankChange.delta !== 0 && !rankChange.isNew
@@ -63,7 +64,11 @@ function StockRow({
     return (
         <button
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''}`}
+            className={`w-full flex items-center gap-2 px-3 py-2.5 border-b hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${rankChange?.isNew ? 'animate-slideInLeft' : ''} ${
+                isStreaking
+                    ? 'border border-amber-500/40 bg-amber-500/[0.03] rounded-sm my-0.5'
+                    : 'border-b border-[var(--border-color)]'
+            }`}
             style={{ animationDelay: `${staggerIndex * 30}ms` }}
         >
             <div className="w-7 flex-shrink-0 text-center">
@@ -83,6 +88,11 @@ function StockRow({
                 <div className="flex items-center gap-1.5">
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                     <GradeBadge grade={stock.grade} />
+                    {isStreaking && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-500/15 flex-shrink-0 rounded-sm">
+                            {stock.sStreak}일 연속
+                        </span>
+                    )}
                     {isLimitUp && (
                         <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                             상한가

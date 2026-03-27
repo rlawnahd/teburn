@@ -164,6 +164,7 @@ export interface HotStock {
     themeConcentration: number;        // 최대 집중도 (%)
 
     grade: 'S' | 'A' | 'B' | 'C' | 'D';
+    sStreak?: number;                  // 연속 S등급 일수
 }
 
 interface HotStocksResponse {
