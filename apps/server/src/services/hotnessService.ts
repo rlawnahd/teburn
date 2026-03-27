@@ -265,6 +265,13 @@ function refreshHotStocks(): Promise<void> {
 }
 
 /**
+ * 주도주 캐시 데이터 반환 (어드민 모니터링용)
+ */
+export function getHotStocksCache(): HotnessScore[] {
+    return hotStocksCache?.data || [];
+}
+
+/**
  * 전체 종목 중 주도주 점수 TOP N 조회 (stale-while-revalidate)
  */
 export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[]> {

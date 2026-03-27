@@ -21,6 +21,11 @@ import {
     AlertCircle,
     Users,
     UserPlus,
+    Activity,
+    Wifi,
+    WifiOff,
+    Zap,
+    Server,
 } from 'lucide-react';
 import {
     fetchDashboard,
@@ -36,6 +41,7 @@ import {
     getCrawlStatus,
     refreshCache,
     fetchUserStats,
+    fetchSystemStatus,
     ThemeListItem,
     ThemeDetail,
 } from '@/lib/api/admin';
@@ -191,15 +197,32 @@ function UsersTab() {
 }
 
 // ============================================
-// 데이터 탭
+// 데이터 탭 — 실시간 시스템 모니터링
 // ============================================
+function freshnessColor(dateStr: string | null, thresholds: { green: number; yellow: number }): string {
+    if (!dateStr) return 'bg-red-500';
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    if (diffMs < thresholds.green) return 'bg-emerald-500';
+    if (diffMs < thresholds.yellow) return 'bg-yellow-500';
+    return 'bg-red-500';
+}
+
+function marketStatusLabel(status: string): { text: string; color: string } {
+    switch (status) {
+        case 'regular': return { text: '정규장', color: 'bg-emerald-500/10 text-emerald-600' };
+        case 'pre_market': return { text: '장전 시간외', color: 'bg-sky-500/10 text-sky-600' };
+        case 'post_market': return { text: '장후 시간외', color: 'bg-amber-500/10 text-amber-600' };
+        default: return { text: '장 마감', color: 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]' };
+    }
+}
+
 function DataTab() {
     const queryClient = useQueryClient();
 
-    const { data: dashboard, isLoading } = useQuery({
-        queryKey: ['admin-dashboard'],
-        queryFn: fetchDashboard,
-        refetchInterval: 30000,
+    const { data: status, isLoading } = useQuery({
+        queryKey: ['admin-system-status'],
+        queryFn: fetchSystemStatus,
+        refetchInterval: 5000,
     });
 
     const { data: crawlStatus } = useQuery({
@@ -219,7 +242,7 @@ function DataTab() {
         mutationFn: refreshCache,
     });
 
-    if (isLoading) {
+    if (isLoading || !status) {
         return (
             <div className="flex items-center justify-center py-20">
                 <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
@@ -227,65 +250,164 @@ function DataTab() {
         );
     }
 
+    const market = marketStatusLabel(status.market.status);
+    const isMarketOpen = status.market.status === 'regular' || status.market.status === 'pre_market' || status.market.status === 'post_market';
+
     return (
         <div className="space-y-5">
-            {/* 통계 카드 */}
+            {/* 상단 상태 바 */}
+            <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-5 py-3 shadow-sm">
+                <div className={`w-2.5 h-2.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 animate-pulse' : 'bg-[var(--text-tertiary)]'}`} />
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full ${market.color}`}>
+                    {market.text}
+                </span>
+                {status.market.isHoliday && (
+                    <span className="text-sm font-medium px-3 py-1 rounded-full bg-red-500/10 text-red-500">
+                        공휴일
+                    </span>
+                )}
+                <span className="ml-auto text-[13px] text-[var(--text-tertiary)]">
+                    5초 자동 갱신
+                </span>
+            </div>
+
+            {/* 실시간 카드 4개 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                {/* 접속 유저 */}
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-blue)]/10 flex items-center justify-center">
-                            <FolderTree size={20} className="text-[var(--accent-blue)]" />
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                            <Users size={20} className="text-sky-500" />
                         </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">테마</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">접속 유저</span>
                     </div>
                     <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {dashboard?.themes.total || 0}
+                        {status.realtime.wsClients}
                     </div>
                     <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
-                        네이버 {dashboard?.themes.fromNaver || 0} / 커스텀 {dashboard?.themes.custom || 0}
+                        구독 {status.realtime.wsGlobalSubs}종목
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                {/* KIS WebSocket */}
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                            <TrendingUp size={20} className="text-emerald-500" />
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${status.realtime.kisConnected ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                            {status.realtime.kisConnected ? (
+                                <Wifi size={20} className="text-emerald-500" />
+                            ) : (
+                                <WifiOff size={20} className="text-red-500" />
+                            )}
                         </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">종목</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">KIS WebSocket</span>
                     </div>
-                    <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {dashboard?.stocks.unique || 0}
+                    <div className="flex items-center gap-2">
+                        <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full ${
+                            status.realtime.kisConnected ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-500'
+                        }`}>
+                            {status.realtime.kisConnected ? '연결됨' : '끊김'}
+                        </span>
                     </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
-                        캐시 {dashboard?.stocks.cached ? '활성' : '비활성'}
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-2">
+                        {status.realtime.kisSubs} / {status.realtime.kisMaxSubs} 종목
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                            <Newspaper size={20} className="text-violet-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">뉴스</span>
-                    </div>
-                    <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {dashboard?.news.total?.toLocaleString() || 0}
-                    </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
-                        최근 {formatTime(dashboard?.news.lastCrawled || null)}
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                {/* 주도주 */}
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                            <Calendar size={20} className="text-amber-500" />
+                            <Zap size={20} className="text-amber-500" />
                         </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">일별 기록</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">주도주</span>
                     </div>
                     <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {dashboard?.dailyLeading.days || 0}일
+                        {status.hotStocks.total}
                     </div>
+                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                        {Object.entries(status.hotStocks.grades).map(([grade, count]) => (
+                            count > 0 && (
+                                <span key={grade} className={`text-[12px] font-semibold px-2 py-0.5 rounded-full ${
+                                    grade === 'S' ? 'bg-rose-500/10 text-rose-500' :
+                                    grade === 'A' ? 'bg-amber-500/10 text-amber-600' :
+                                    grade === 'B' ? 'bg-sky-500/10 text-sky-600' :
+                                    'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
+                                }`}>
+                                    {grade}:{count}
+                                </span>
+                            )
+                        ))}
+                    </div>
+                </div>
+
+                {/* 주가 캐시 */}
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                            <Database size={20} className="text-violet-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">주가 캐시</span>
+                    </div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">
+                        {status.priceCache.stocks}
+                    </div>
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
+                        {status.priceCache.themes}개 테마
+                    </div>
+                </div>
+            </div>
+
+            {/* 데이터 신선도 */}
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">데이터 신선도</h3>
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between py-2 border-b border-[var(--border-color)]">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full ${freshnessColor(status.freshness.lastNews, { green: 30000, yellow: 300000 })}`} />
+                            <span className="text-sm text-[var(--text-secondary)]">뉴스 크롤링</span>
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">{formatTime(status.freshness.lastNews)}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-[var(--border-color)]">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full ${freshnessColor(status.freshness.lastThemeCrawl, { green: 25 * 3600000, yellow: 48 * 3600000 })}`} />
+                            <span className="text-sm text-[var(--text-secondary)]">테마 크롤링</span>
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">{formatTime(status.freshness.lastThemeCrawl)}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-[var(--border-color)]">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full ${status.freshness.todayVolumeSnapshots > 0 ? 'bg-emerald-500' : 'bg-[var(--text-tertiary)]'}`} />
+                            <span className="text-sm text-[var(--text-secondary)]">오늘 거래량 스냅샷</span>
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">{status.freshness.todayVolumeSnapshots}건</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full ${status.freshness.todayLeadingSaved ? 'bg-emerald-500' : 'bg-[var(--text-tertiary)]'}`} />
+                            <span className="text-sm text-[var(--text-secondary)]">오늘 주도주 저장</span>
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">{status.freshness.todayLeadingSaved ? '완료' : '미완료'}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* DB 현황 */}
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">DB 현황</h3>
+                <div className="space-y-2">
+                    {[
+                        { label: '뉴스', count: status.db.news },
+                        { label: '테마 (활성)', count: status.db.themes },
+                        { label: '거래량 히스토리', count: status.db.volumeHistory },
+                        { label: '주도주 히스토리', count: status.db.hotnessHistory },
+                        { label: '유저', count: status.db.users },
+                    ].map((item) => (
+                        <div key={item.label} className="flex items-center justify-between py-2 border-b border-[var(--border-color)] last:border-0">
+                            <span className="text-sm text-[var(--text-secondary)]">{item.label}</span>
+                            <span className="text-sm font-medium text-[var(--text-primary)]">{item.count.toLocaleString()}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -318,21 +440,6 @@ function DataTab() {
                 {cacheMutation.isSuccess && (
                     <p className="text-sm text-emerald-500 mt-3">캐시 갱신이 시작되었습니다.</p>
                 )}
-            </div>
-
-            {/* 마지막 업데이트 */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">마지막 업데이트</h3>
-                <div className="space-y-3 text-sm">
-                    <div className="flex justify-between py-2 border-b border-[var(--border-color)]">
-                        <span className="text-[var(--text-tertiary)]">테마 크롤링</span>
-                        <span className="text-[var(--text-secondary)]">{formatTime(dashboard?.lastThemeUpdate || null)}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                        <span className="text-[var(--text-tertiary)]">뉴스 크롤링</span>
-                        <span className="text-[var(--text-secondary)]">{formatTime(dashboard?.news.lastCrawled || null)}</span>
-                    </div>
-                </div>
             </div>
         </div>
     );

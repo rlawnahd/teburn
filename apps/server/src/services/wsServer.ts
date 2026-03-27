@@ -219,3 +219,10 @@ export function getConnectedClientCount(): number {
     }
     return count;
 }
+
+/**
+ * 글로벌 구독 종목 수 반환
+ */
+export function getGlobalSubscriptionCount(): number {
+    return globalSubscriptions.size;
+}

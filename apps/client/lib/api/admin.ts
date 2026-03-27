@@ -15,6 +15,22 @@ export const fetchUserStats = async (): Promise<UserStats> => {
     return res.json();
 };
 
+// 시스템 상태 모니터링
+export interface SystemStatus {
+    market: { status: string; isHoliday: boolean };
+    realtime: { wsClients: number; wsGlobalSubs: number; kisConnected: boolean; kisSubs: number; kisMaxSubs: number };
+    hotStocks: { total: number; grades: Record<string, number> };
+    priceCache: { themes: number; stocks: number; lastUpdate: string | null };
+    freshness: { lastNews: string | null; lastThemeCrawl: string | null; todayVolumeSnapshots: number; todayLeadingSaved: boolean };
+    db: { news: number; themes: number; volumeHistory: number; hotnessHistory: number; users: number };
+}
+
+export async function fetchSystemStatus(): Promise<SystemStatus> {
+    const res = await fetch(`${API_BASE}/admin/system-status`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to fetch system status');
+    return res.json();
+}
+
 // 대시보드 데이터
 export interface DashboardData {
     themes: {

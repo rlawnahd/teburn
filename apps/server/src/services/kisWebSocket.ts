@@ -264,6 +264,20 @@ export function startKisWebSocket(): void {
 }
 
 /**
+ * KIS WebSocket 연결 상태 반환
+ */
+export function getKisConnectionStatus(): boolean {
+    return ws !== null && ws.readyState === WebSocket.OPEN;
+}
+
+/**
+ * KIS WebSocket 구독 종목 수 반환
+ */
+export function getKisSubscriptionCount(): number {
+    return subscribedStocks.size;
+}
+
+/**
  * WebSocket 중지
  */
 export function stopKisWebSocket(): void {

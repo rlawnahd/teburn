@@ -8,6 +8,11 @@ import StockVolumeHistory from '../models/StockVolumeHistory';
 import { updateAllThemes } from '../services/themeCrawler';
 import { themePriceCache } from '../services/themePriceCache';
 import { saveTodayVolumeHistory } from '../services/volumeSurgeService';
+import { getHotStocksCache } from '../services/hotnessService';
+import { getConnectedClientCount, getGlobalSubscriptionCount } from '../services/wsServer';
+import { getKisConnectionStatus, getKisSubscriptionCount } from '../services/kisWebSocket';
+import { getMarketStatus } from '../utils/marketStatus';
+import HotnessHistory from '../models/HotnessHistory';
 
 const router = Router();
 
@@ -20,6 +25,97 @@ async function requireAdmin(req: AuthRequest, res: Response, next: any) {
 
 router.use(requireAuth);
 router.use(requireAdmin);
+
+// ============================================
+// 시스템 상태 모니터링
+// ============================================
+router.get('/system-status', async (req: AuthRequest, res: Response) => {
+    try {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Price cache status
+        const cacheStatus = themePriceCache.getAllThemePrices();
+        const uniqueStocks = new Set<string>();
+        cacheStatus.themes.forEach(t => {
+            t.topStocks.forEach(s => uniqueStocks.add(s.stockCode));
+        });
+
+        // Hot stocks cache
+        const hotStocks = getHotStocksCache();
+        const gradeDistribution = { S: 0, A: 0, B: 0, C: 0, D: 0 };
+        hotStocks.forEach(s => {
+            if (gradeDistribution[s.grade as keyof typeof gradeDistribution] !== undefined) {
+                gradeDistribution[s.grade as keyof typeof gradeDistribution]++;
+            }
+        });
+
+        // Data freshness
+        const [latestNews, latestTheme, todayVolume, todayLeading] = await Promise.all([
+            News.findOne().sort({ crawledAt: -1 }).select('crawledAt').lean(),
+            Theme.findOne().sort({ lastCrawledAt: -1 }).select('lastCrawledAt').lean(),
+            StockVolumeHistory.countDocuments({ date: { $gte: todayStart } }),
+            DailyLeadingTheme.findOne({ date: { $gte: todayStart } }).lean(),
+        ]);
+
+        // DB document counts
+        const [newsCount, themeCount, volumeCount, hotnessCount, userCount] = await Promise.all([
+            News.countDocuments(),
+            Theme.countDocuments({ isActive: true }),
+            StockVolumeHistory.countDocuments(),
+            HotnessHistory.countDocuments(),
+            User.countDocuments(),
+        ]);
+
+        // Market status
+        const marketStatus = getMarketStatus();
+
+        // WebSocket & KIS status
+        const wsClients = getConnectedClientCount();
+        const wsGlobalSubs = getGlobalSubscriptionCount();
+        const kisConnected = getKisConnectionStatus();
+        const kisSubs = getKisSubscriptionCount();
+
+        res.json({
+            market: {
+                status: marketStatus.status,
+                isHoliday: (marketStatus as any).isHoliday || false,
+            },
+            realtime: {
+                wsClients,
+                wsGlobalSubs,
+                kisConnected,
+                kisSubs,
+                kisMaxSubs: 40,
+            },
+            hotStocks: {
+                total: hotStocks.length,
+                grades: gradeDistribution,
+            },
+            priceCache: {
+                themes: cacheStatus.themes.length,
+                stocks: uniqueStocks.size,
+                lastUpdate: cacheStatus.lastUpdateTime || null,
+            },
+            freshness: {
+                lastNews: (latestNews as any)?.crawledAt || null,
+                lastThemeCrawl: (latestTheme as any)?.lastCrawledAt || null,
+                todayVolumeSnapshots: todayVolume,
+                todayLeadingSaved: !!todayLeading,
+            },
+            db: {
+                news: newsCount,
+                themes: themeCount,
+                volumeHistory: volumeCount,
+                hotnessHistory: hotnessCount,
+                users: userCount,
+            },
+        });
+    } catch (err) {
+        console.error('시스템 상태 에러:', err);
+        res.status(500).json({ success: false, message: '서버 에러' });
+    }
+});
 
 // ============================================
 // 대시보드 - 데이터 현황
