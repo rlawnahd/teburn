@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { getHotStocksCache } from './hotnessService';
+import { fetchNaverNewsApi } from './naverApi';
 import News from '../models/News';
 import MarketThemeAnalysis, { IThemeItem } from '../models/MarketThemeAnalysis';
 import { getMarketStatus } from '../utils/marketStatus';
@@ -32,6 +33,24 @@ export async function analyzeMarketThemes(): Promise<IThemeItem[]> {
             n.title + (n.summary ? ' — ' + n.summary.slice(0, 150) : '')
         ).join('\n');
 
+        // 주도주 TOP 10 종목별 뉴스 수집 (네이버 검색 API)
+        const top10 = hotStocks.slice(0, 10);
+        let stockNewsList = '';
+        try {
+            for (const stock of top10) {
+                const stockNews = await fetchNaverNewsApi(stock.stockName);
+                const recent = stockNews.slice(0, 3);
+                if (recent.length > 0) {
+                    stockNewsList += `\n[${stock.stockName}]\n`;
+                    stockNewsList += recent.map(n => `- ${n.title}`).join('\n');
+                    stockNewsList += '\n';
+                }
+                await new Promise(r => setTimeout(r, 200)); // API 제한 방지
+            }
+        } catch (err) {
+            console.warn('종목별 뉴스 수집 일부 실패:', err);
+        }
+
         console.log('시장 테마 분석 시작...');
 
         const response = await openai.chat.completions.create({
@@ -44,7 +63,7 @@ export async function analyzeMarketThemes(): Promise<IThemeItem[]> {
                 },
                 {
                     role: 'user',
-                    content: `오늘 한국 주식시장 주도주 TOP 20과 최근 24시간 뉴스를 분석해서 "오늘의 시장 테마"를 3~5개 추출해주세요.\n\n각 테마:\n- name: 테마명 (4~8글자)\n- stocks: 관련 종목 (주도주 목록에서만)\n- reason: 상승 배경 (2~3문장, 구체적 이벤트/수치 포함. 뻔한 말 금지)\n\n[오늘 주도주 TOP 20]\n${stockList}\n\n[최근 24시간 뉴스]\n${newsList}\n\nJSON만:\n{ "themes": [{ "name": "테마명", "stocks": ["종목1"], "reason": "구체적 배경" }] }`,
+                    content: `오늘 한국 주식시장 주도주 TOP 20과 뉴스를 분석해서 "오늘의 시장 테마"를 3~5개 추출해주세요.\n\n각 테마:\n- name: 테마명 (4~8글자)\n- stocks: 관련 종목 (주도주 목록에서만)\n- reason: 상승 배경 (2~3문장, 구체적 이벤트/수치 포함. 뻔한 말 금지)\n\n[오늘 주도주 TOP 20]\n${stockList}\n\n[최근 24시간 시장 뉴스]\n${newsList}\n\n[종목별 최신 뉴스]\n${stockNewsList || '(종목별 뉴스 없음)'}\n\nJSON만:\n{ "themes": [{ "name": "테마명", "stocks": ["종목1"], "reason": "구체적 배경" }] }`,
                 },
             ],
             response_format: { type: 'json_object' },
