@@ -79,7 +79,7 @@ function StockRow({
                                 ? 'text-red-500 bg-red-500/15'
                                 : 'text-amber-600 bg-amber-500/15'
                         }`}>
-                            🔥{streakDays}일
+                            {streakDays}일 연속 주도주
                         </span>
                     )}
                     {isLimitUp && (
