@@ -199,7 +199,10 @@ router.post('/signup', authRateLimit, async (req: Request, res: Response) => {
         const token = generateToken(user._id.toString(), 'local');
         res.cookie('token', token, cookieOptions);
         res.status(201).json({ success: true, data: userToResponse(user) });
-    } catch (err) {
+    } catch (err: any) {
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, message: '이미 사용 중인 아이디입니다.' });
+        }
         console.error('회원가입 에러:', err);
         res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
     }
@@ -208,7 +211,7 @@ router.post('/signup', authRateLimit, async (req: Request, res: Response) => {
 router.post('/login', authRateLimit, async (req: Request, res: Response) => {
     try {
         const { username: rawUsername, password } = req.body;
-        if (!rawUsername || !password) {
+        if (!rawUsername || !password || typeof rawUsername !== 'string' || typeof password !== 'string') {
             return res.status(400).json({ success: false, message: '아이디와 비밀번호를 입력해주세요.' });
         }
         const username = rawUsername.toLowerCase();
