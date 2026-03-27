@@ -19,6 +19,8 @@ import {
     ChevronRight,
     X,
     AlertCircle,
+    Users,
+    UserPlus,
 } from 'lucide-react';
 import {
     fetchDashboard,
@@ -33,9 +35,11 @@ import {
     triggerCrawl,
     getCrawlStatus,
     refreshCache,
+    fetchUserStats,
     ThemeListItem,
     ThemeDetail,
 } from '@/lib/api/admin';
+import { useAuth } from '@/hooks/useAuth';
 
 type TabType = 'dashboard' | 'themes';
 
@@ -61,6 +65,12 @@ function DashboardTab() {
     const { data: dashboard, isLoading } = useQuery({
         queryKey: ['admin-dashboard'],
         queryFn: fetchDashboard,
+        refetchInterval: 30000,
+    });
+
+    const { data: userStats } = useQuery({
+        queryKey: ['admin-user-stats'],
+        queryFn: fetchUserStats,
         refetchInterval: 30000,
     });
 
@@ -91,6 +101,63 @@ function DashboardTab() {
 
     return (
         <div className="space-y-6">
+            {/* 유저 통계 */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center">
+                            <Users size={20} className="text-rose-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">전체 가입자</span>
+                    </div>
+                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                        {userStats?.total || 0}
+                    </div>
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
+                        카카오 {userStats?.byProvider?.kakao || 0} / 구글 {userStats?.byProvider?.google || 0} / 자체 {userStats?.byProvider?.local || 0}
+                    </div>
+                </div>
+
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                            <UserPlus size={20} className="text-sky-500" />
+                        </div>
+                        <span className="text-sm text-[var(--text-tertiary)]">오늘 가입</span>
+                    </div>
+                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                        {userStats?.today || 0}
+                    </div>
+                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
+                        이번 주 {userStats?.week || 0} / 이번 달 {userStats?.month || 0}
+                    </div>
+                </div>
+            </div>
+
+            {/* 최근 가입자 */}
+            {userStats?.recentUsers && userStats.recentUsers.length > 0 && (
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">최근 가입자</h3>
+                    <div className="space-y-2">
+                        {userStats.recentUsers.map((u, i) => (
+                            <div key={i} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[var(--text-primary)]">{u.name}</span>
+                                    <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
+                                        u.provider === 'kakao' ? 'bg-yellow-500/10 text-yellow-600' :
+                                        u.provider === 'google' ? 'bg-blue-500/10 text-blue-500' :
+                                        'bg-emerald-500/10 text-emerald-500'
+                                    }`}>
+                                        {u.provider}
+                                    </span>
+                                </div>
+                                <span className="text-[var(--text-tertiary)]">{formatTime(u.createdAt)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* 통계 카드 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
@@ -626,7 +693,27 @@ function ThemesTab() {
 
 // 메인 페이지
 export default function AdminPage() {
+    const { user, isLoggedIn, isLoading } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+
+    // admin 아이디만 접근 가능
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]">
+                <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
+            </div>
+        );
+    }
+    if (!isLoggedIn || user?.provider !== 'local' || user?.name !== 'admin') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]">
+                <div className="text-center">
+                    <p className="text-lg font-bold text-[var(--text-primary)] mb-2">접근 권한이 없습니다</p>
+                    <p className="text-sm text-[var(--text-tertiary)]">관리자 계정으로 로그인해주세요.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">

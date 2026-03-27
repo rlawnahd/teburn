@@ -1,5 +1,20 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
+export interface UserStats {
+    total: number;
+    today: number;
+    week: number;
+    month: number;
+    byProvider: Record<string, number>;
+    recentUsers: { name: string; provider: string; createdAt: string }[];
+}
+
+export const fetchUserStats = async (): Promise<UserStats> => {
+    const res = await fetch(`${API_BASE}/admin/users/stats`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to fetch user stats');
+    return res.json();
+};
+
 // 대시보드 데이터
 export interface DashboardData {
     themes: {
