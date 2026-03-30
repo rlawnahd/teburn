@@ -320,15 +320,17 @@ async function doRefresh(): Promise<void> {
 
         const scored = await calculateBatchHotness(candidates);
 
-        hotStocksCache = { data: scored, timestamp: Date.now() };
+        // TOP 30만 캐시에 저장 (전체 저장하면 WebSocket 구독 폭발)
+        const top30 = scored.slice(0, 30);
+        hotStocksCache = { data: top30, timestamp: Date.now() };
 
-        // 글로벌 구독 종목 업데이트 (WebSocket)
-        updateGlobalSubscriptions(scored.map(s => s.stockCode));
+        // 글로벌 구독 종목 업데이트 (WebSocket) — TOP 30만
+        updateGlobalSubscriptions(top30.map(s => s.stockCode));
 
         // 실시간 점수 배치 병합
-        mergeBatchScores(scored);
+        mergeBatchScores(top30);
 
-        console.log(`주도주 점수 계산 완료: ${scored.length}개 (${((Date.now() - startTime) / 1000).toFixed(1)}초)`);
+        console.log(`주도주 점수 계산 완료: ${top30.length}개 (후보 ${scored.length}개 중, ${((Date.now() - startTime) / 1000).toFixed(1)}초)`);
     } catch (error) {
         console.error('주도주 점수 계산 실패:', error);
     } finally {
