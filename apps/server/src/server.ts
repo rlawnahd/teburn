@@ -18,7 +18,7 @@ import { startThemeUpdateScheduler } from './services/themeCrawler';
 import Theme from './models/Theme';
 import { themePriceCache } from './services/themePriceCache';
 import { saveDailyLeadingThemes } from './services/leadingStockService';
-import { warmupHotStocks, saveDailyHotnessHistory, getTopHotStocks } from './services/hotnessService';
+import { warmupHotStocks, saveDailyHotnessHistory, getTopHotStocks, getHotStocksCache } from './services/hotnessService';
 import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
@@ -76,15 +76,12 @@ let lastNewsLinks: Set<string> = new Set();
 
 const backgroundCrawl = async () => {
     try {
-        console.log('🔄 백그라운드 크롤링 시작...');
         const crawledNews = await crawlNaverFinanceNews();
 
         // 새로운 뉴스 찾기
         const newNews = crawledNews.filter((news) => !lastNewsLinks.has(news.link));
 
         if (newNews.length > 0) {
-            console.log(`📰 새 뉴스 ${newNews.length}개 발견! DB 저장 중...`);
-
             // DB에 바로 저장 (AI 분석 없이)
             for (const news of newNews) {
                 try {
@@ -104,7 +101,6 @@ const backgroundCrawl = async () => {
                     console.error(`❌ 뉴스 저장 실패: ${news.title}`, err);
                 }
             }
-            console.log(`✅ ${newNews.length}개 뉴스 DB 저장 완료`);
         }
 
         // 링크 목록 업데이트
@@ -256,6 +252,8 @@ connectDB().then(async () => {
                     } catch (error) {
                         console.error('❌ 거래량 히스토리 저장 실패:', error);
                     }
+
+                    console.log(`📊 [일일 요약] 오늘 크롤링 뉴스: DB 확인 필요, 주도주 ${getHotStocksCache().length}개, 테마 280개`);
 
                     // 주도주 점수 히스토리 저장
                     try {

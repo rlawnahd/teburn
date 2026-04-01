@@ -76,7 +76,6 @@ const fetchNewsContent = async (url: string): Promise<string> => {
 
 export const crawlNaverFinanceNews = async (): Promise<CrawledNews[]> => {
     try {
-        console.log('🕷️ 네이버 금융 뉴스 리스트 접근 중...');
         const url = 'https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=258';
 
         const response = await axios.get(url, {
@@ -119,8 +118,6 @@ export const crawlNaverFinanceNews = async (): Promise<CrawledNews[]> => {
         const targetNews = initialList.slice(0, 5);
         const remainingNews = initialList.slice(5); // 나머지는 그냥 짧은 요약 그대로 씀
 
-        console.log(`🔍 상위 ${targetNews.length}개 뉴스 상세 수집 시작...`);
-
         const detailedNews = await Promise.all(
             targetNews.map(async (news) => {
                 const fullBody = await fetchNewsContent(news.link);
@@ -131,8 +128,6 @@ export const crawlNaverFinanceNews = async (): Promise<CrawledNews[]> => {
                 };
             })
         );
-
-        console.log('✅ 크롤링 완료');
 
         // 상세 조회한 5개 + 나머지 뉴스 합쳐서 반환
         return [...detailedNews, ...remainingNews];

@@ -89,7 +89,6 @@ export async function saveThemeSnapshot(): Promise<void> {
 
     try {
         await ThemeHistory.insertMany(documents);
-        console.log(`📊 테마 히스토리 DB 저장: ${documents.length}개 테마`);
     } catch (error: any) {
         console.error('테마 히스토리 저장 실패:', error.message);
     }

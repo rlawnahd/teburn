@@ -72,7 +72,6 @@ class ThemePriceCacheService {
 
             // 1. DB에서 모든 활성 테마 조회
             const themes = await Theme.find({ isActive: true }).lean();
-            console.log(`📋 총 ${themes.length}개 테마 발견`);
 
             // 2. 모든 고유 종목 코드 수집 (DB 코드 + stockCodes.json 폴백)
             const stockCodeSet = new Set<string>();
@@ -101,10 +100,8 @@ class ThemePriceCacheService {
                 }
             }
 
-            console.log(`📋 종목코드: DB에서 ${stockCodeSet.size - foundFromJson}개, JSON에서 ${foundFromJson}개 발견`);
 
             const stockCodes = Array.from(stockCodeSet);
-            console.log(`🔢 총 ${stockCodes.length}개 고유 종목 주가 조회 시작...`);
 
             // 3. 종목별 주가 조회 (rate limit 고려)
             let successCount = 0;
@@ -135,10 +132,6 @@ class ThemePriceCacheService {
                 }
 
                 // 진행률 로그 (100개마다)
-                if ((i + 1) % 100 === 0) {
-                    console.log(`📈 진행: ${i + 1}/${stockCodes.length} (${Math.round((i + 1) / stockCodes.length * 100)}%)`);
-                }
-
                 // API rate limit 방지 (초당 20건, 100ms 간격)
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
@@ -219,7 +212,6 @@ class ThemePriceCacheService {
                 { upsert: true }
             );
 
-            console.log(`💾 캐시 DB 저장 완료: ${stockPrices.length}개 종목, ${themePrices.length}개 테마`);
         } catch (error) {
             console.error('❌ 캐시 DB 저장 실패:', error);
         }
@@ -353,7 +345,6 @@ class ThemePriceCacheService {
 
         if (restored) {
             // 캐시 복원 성공 → 백그라운드에서 새로 업데이트
-            console.log('🔄 백그라운드에서 최신 데이터 갱신 시작...');
             this.updateAllPrices().catch(err => {
                 console.error('❌ 백그라운드 업데이트 실패:', err);
             });

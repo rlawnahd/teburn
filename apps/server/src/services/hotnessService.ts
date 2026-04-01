@@ -274,7 +274,6 @@ export async function calculateBatchHotness(
  */
 async function doRefresh(): Promise<void> {
     try {
-        console.log('주도주 점수 계산 시작...');
         const startTime = Date.now();
 
         const allPrices = themePriceCache.getAllThemePrices();
@@ -358,13 +357,11 @@ export function getHotStocksCache(): HotnessScore[] {
 export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[]> {
     // 캐시 유효 → 즉시 반환
     if (hotStocksCache && Date.now() - hotStocksCache.timestamp < HOT_STOCKS_CACHE_TTL) {
-        console.log('주도주 점수 캐시 사용');
         return hotStocksCache.data.slice(0, limit);
     }
 
     // 캐시 만료됐지만 데이터 있음 → 이전 데이터 즉시 반환 + 백그라운드 갱신
     if (hotStocksCache) {
-        console.log('주도주 점수 stale 캐시 반환 + 백그라운드 갱신');
         refreshHotStocks();
         return hotStocksCache.data.slice(0, limit);
     }

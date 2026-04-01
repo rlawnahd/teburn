@@ -132,15 +132,6 @@ export const getBatchStockNewsCountFromApi = async (
     const result = new Map<string, { count: number; latestNewsTitle: string | null }>();
     const targetStocks = stockNames.slice(0, limit);
 
-    console.log(`📰 네이버 API로 뉴스 검색: ${targetStocks.length}개 종목 (${targetStocks.slice(0, 3).join(', ')}...)`);
-
-    // 첫 번째 종목 상세 로그
-    if (targetStocks.length > 0) {
-        const firstStock = targetStocks[0];
-        const testResult = await getStockNewsCountFromApi(firstStock);
-        console.log(`📰 [테스트] ${firstStock}: ${testResult.count}건`);
-    }
-
     // 순차 처리 (API 제한 방지)
     for (const name of targetStocks) {
         const newsResult = await getStockNewsCountFromApi(name);
