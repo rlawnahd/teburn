@@ -92,7 +92,7 @@ async function connect(): Promise<void> {
                         return;
                     }
                     if (msg.body?.msg_cd === 'OPSP0000') {
-                        console.log('📡 KIS 실시간 구독 성공:', msg.body?.output?.iv_mksc_shrn_iscd || '');
+                        // 구독 성공 — 개별 로그 생략, subscribeStocks에서 요약 출력
                     } else if (msg.body?.msg1) {
                         console.log('📡 KIS 응답:', msg.body.msg1);
                     }
