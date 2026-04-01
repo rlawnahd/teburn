@@ -8,22 +8,34 @@ const BASE_URL = KIS_IS_MOCK
     : 'https://openapi.koreainvestment.com:9443';
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let tokenPromise: Promise<string> | null = null;
 
 export async function getKisToken(): Promise<string> {
     if (cachedToken && Date.now() < cachedToken.expiresAt) {
         return cachedToken.token;
     }
-    const { data } = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
-        grant_type: 'client_credentials',
-        appkey: KIS_APP_KEY,
-        appsecret: KIS_APP_SECRET,
-    });
-    cachedToken = {
-        token: data.access_token,
-        expiresAt: Date.now() + (data.expires_in - 60) * 1000,
-    };
-    console.log('🔑 KIS REST API 토큰 발급 완료');
-    return data.access_token;
+    // 동시 호출 시 하나의 Promise 공유 (1분당 1회 제한 대응)
+    if (tokenPromise) return tokenPromise;
+
+    tokenPromise = (async () => {
+        try {
+            const { data } = await axios.post(`${BASE_URL}/oauth2/tokenP`, {
+                grant_type: 'client_credentials',
+                appkey: KIS_APP_KEY,
+                appsecret: KIS_APP_SECRET,
+            });
+            cachedToken = {
+                token: data.access_token,
+                expiresAt: Date.now() + (data.expires_in - 60) * 1000,
+            };
+            console.log('🔑 KIS REST API 토큰 발급 완료');
+            return data.access_token;
+        } finally {
+            tokenPromise = null;
+        }
+    })();
+
+    return tokenPromise;
 }
 
 /** 토큰 만료 시 캐시 초기화 (에러 핸들링에서 호출) */
