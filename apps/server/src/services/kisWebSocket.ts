@@ -251,7 +251,7 @@ export function subscribeStocks(stockCodes: string[]): void {
 }
 
 /**
- * WebSocket 시작
+ * WebSocket 시작 + 장 시작 시 자동 재연결 스케줄러
  */
 export function startKisWebSocket(): void {
     if (!isKisConfigured()) {
@@ -261,6 +261,15 @@ export function startKisWebSocket(): void {
 
     console.log('🔌 KIS WebSocket 실시간 시세 시작');
     connect();
+
+    // 1분마다 장 상태 확인 → 장 중인데 연결 안 되어있으면 재연결
+    setInterval(() => {
+        const market = getMarketStatus();
+        if (market.status === 'regular' && (!ws || ws.readyState !== WebSocket.OPEN) && !isConnecting) {
+            console.log('🔌 KIS WebSocket 장 중 재연결 시도...');
+            connect();
+        }
+    }, 60 * 1000);
 }
 
 /**
