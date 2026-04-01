@@ -34,6 +34,7 @@ export interface StockPrice {
     high: number;              // 고가
     low: number;               // 저가
     open: number;              // 시가
+    marketCap: number;         // 시가총액 (억 단위)
 }
 
 // 주식현재가 조회 — KIS REST API (FHKST01010100)
@@ -78,6 +79,7 @@ export async function getStockPrice(stockCode: string, retries = 2): Promise<Sto
             high: Math.abs(parseInt(output.stck_hgpr)) || 0,
             low: Math.abs(parseInt(output.stck_lwpr)) || 0,
             open: Math.abs(parseInt(output.stck_oprc)) || 0,
+            marketCap: parseInt(output.hts_avls_amt) || 0,
         };
     } catch (error: any) {
         const errMsg = error.response?.data || error.message;

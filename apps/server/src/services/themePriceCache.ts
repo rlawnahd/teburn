@@ -17,6 +17,7 @@ export interface CachedStockPrice {
     changeRate: number;
     volume: number;
     tradingValue: number;
+    marketCap: number;         // 시가총액 (억 단위)
     updatedAt: Date;
 }
 
@@ -120,6 +121,7 @@ class ThemePriceCacheService {
                             changeRate: price.changeRate,
                             volume: price.volume,
                             tradingValue: price.currentPrice * price.volume,
+                            marketCap: price.marketCap || 0,
                             updatedAt: new Date(),
                         };
                         this.stockPriceCache.set(code, cached);
@@ -242,6 +244,7 @@ class ThemePriceCacheService {
             for (const stock of cached.stockPrices) {
                 this.stockPriceCache.set(stock.stockCode, {
                     ...stock,
+                    marketCap: (stock as any).marketCap || 0,
                     updatedAt: new Date(stock.updatedAt),
                 });
             }
@@ -252,6 +255,7 @@ class ThemePriceCacheService {
                     ...theme,
                     topStocks: theme.topStocks.map(s => ({
                         ...s,
+                        marketCap: (s as any).marketCap || 0,
                         updatedAt: new Date(s.updatedAt),
                     })),
                     updatedAt: new Date(theme.updatedAt),

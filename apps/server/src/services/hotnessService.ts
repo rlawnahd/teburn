@@ -51,16 +51,32 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~35)
-export function calculateTradingValueScore(tradingValue: number): number {
+// 거래대금 점수 (0~35) — 시총 대비 거래대금 비율 기반
+export function calculateTradingValueScore(tradingValue: number, marketCap: number = 0): number {
     const billion = tradingValue / 100000000; // 억 단위
-    if (billion >= 1000) return 35;  // 1000억 이상
-    if (billion >= 500) return 30;   // 500억 이상
-    if (billion >= 300) return 25;   // 300억 이상
-    if (billion >= 200) return 20;   // 200억 이상
-    if (billion >= 100) return 14;   // 100억 이상
-    if (billion >= 50) return 8;     // 50억 이상
-    return 3;                        // 50억 미만
+
+    // 시총 데이터가 있으면 시총 대비 비율로 계산
+    if (marketCap > 0) {
+        const tradingBillion = billion;
+        const ratio = (tradingBillion / marketCap) * 100; // 시총 대비 거래대금 비율(%)
+        // ratio 5% = 시총의 5%가 거래됨 → 매우 높음
+        if (ratio >= 10) return 35;
+        if (ratio >= 5) return 30;
+        if (ratio >= 3) return 25;
+        if (ratio >= 1.5) return 20;
+        if (ratio >= 0.8) return 14;
+        if (ratio >= 0.3) return 8;
+        return 3;
+    }
+
+    // 시총 없으면 절대값 기준 (fallback)
+    if (billion >= 1000) return 35;
+    if (billion >= 500) return 30;
+    if (billion >= 300) return 25;
+    if (billion >= 200) return 20;
+    if (billion >= 100) return 14;
+    if (billion >= 50) return 8;
+    return 3;
 }
 
 // 등락률 점수 (0~20)
@@ -225,7 +241,7 @@ export async function calculateBatchHotness(
         const newsCount = newsData.count;
 
         // 점수 계산
-        const tradingValueScore = calculateTradingValueScore(priceData.tradingValue);
+        const tradingValueScore = calculateTradingValueScore(priceData.tradingValue, priceData.marketCap);
         const momentumScore = calculateMomentumScore(priceData.changeRate);
         const volumeScore = calculateVolumeSurgeScore(volumeSurge);
         const newsScore = calculateNewsScore(newsCount);
