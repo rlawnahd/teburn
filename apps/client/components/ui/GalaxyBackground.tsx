@@ -41,6 +41,9 @@ export default function GalaxyBackground() {
             });
         }
 
+        interface ShootingStar { startX: number; startY: number; endX: number; endY: number; progress: number; speed: number; active: boolean; }
+        const shootingStars: ShootingStar[] = [];
+
         let t = 0;
         const draw = () => {
             t += 0.015;
@@ -74,6 +77,70 @@ export default function GalaxyBackground() {
                 ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
                 ctx.fill();
+            }
+
+            // 별똥별 (빨간 우상향 슈팅)
+            for (const s of shootingStars) {
+                if (!s.active) continue;
+                s.progress += s.speed;
+
+                if (s.progress > 1) {
+                    s.active = false;
+                    continue;
+                }
+
+                const cx = s.startX + (s.endX - s.startX) * s.progress;
+                const cy = s.startY + (s.endY - s.startY) * s.progress;
+
+                // 꼬리
+                const tailLen = 25;
+                for (let j = 0; j < tailLen; j++) {
+                    const tp = j / tailLen;
+                    const tailProgress = s.progress - tp * 0.15;
+                    if (tailProgress < 0) continue;
+                    const tx = s.startX + (s.endX - s.startX) * tailProgress;
+                    const ty = s.startY + (s.endY - s.startY) * tailProgress;
+                    const tailAlpha = (1 - tp) * (1 - s.progress * 0.5) * 0.6;
+                    const tailSize = (1 - tp) * 2;
+
+                    ctx.beginPath();
+                    ctx.arc(tx, ty, tailSize, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,${Math.round(100 + tp * 100)},${Math.round(50 + tp * 50)},${tailAlpha})`;
+                    ctx.fill();
+                }
+
+                // 헤드 글로우
+                const headGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 8);
+                headGlow.addColorStop(0, `rgba(255,200,150,${0.8 * (1 - s.progress)})`);
+                headGlow.addColorStop(0.5, `rgba(239,68,68,${0.4 * (1 - s.progress)})`);
+                headGlow.addColorStop(1, 'rgba(239,68,68,0)');
+                ctx.beginPath();
+                ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+                ctx.fillStyle = headGlow;
+                ctx.fill();
+
+                // 헤드 코어
+                ctx.beginPath();
+                ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,230,200,${1 - s.progress})`;
+                ctx.fill();
+            }
+
+            // 10~15초 간격으로 새 별똥별 생성
+            if (Math.random() < 0.005) { // ~매 200프레임(약 3초)마다 확률적 생성
+                const ww = w();
+                const hh = h();
+                shootingStars.push({
+                    startX: Math.random() * ww * 0.6,
+                    startY: Math.random() * hh * 0.5 + hh * 0.1,
+                    endX: Math.random() * ww * 0.4 + ww * 0.6,
+                    endY: Math.random() * hh * 0.3,
+                    progress: 0,
+                    speed: 0.015 + Math.random() * 0.01,
+                    active: true,
+                });
+                // 오래된 비활성 별똥별 정리
+                while (shootingStars.length > 5) shootingStars.shift();
             }
 
             frame = requestAnimationFrame(draw);
