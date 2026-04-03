@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { fetchThemePrice, StockPrice } from '@/lib/api/stocks';
-import { formatTradingValue, formatVolume } from '@/lib/utils/format';
+import { formatVolume } from '@/lib/utils/format';
 
 function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; onClick: () => void }) {
     const isPositive = stock.changeRate > 0;
@@ -84,7 +84,6 @@ export default function ThemeDetailPage() {
 
     const isPositive = theme.avgChangeRate > 0;
     const isNegative = theme.avgChangeRate < 0;
-    const leader = theme.leaderStock;
 
     const risingStocks = theme.stockPrices.filter((s) => s.changeRate > 0).sort((a, b) => b.changeRate - a.changeRate);
     const fallingStocks = theme.stockPrices.filter((s) => s.changeRate <= 0).sort((a, b) => a.changeRate - b.changeRate);
@@ -106,9 +105,7 @@ export default function ThemeDetailPage() {
                     </button>
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                         <h1 className="text-sm font-semibold text-[var(--text-primary)] truncate">{theme.themeName}</h1>
-                        <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">
-                            가격반영 {theme.stockCount} / {theme.totalStocks}
-                        </span>
+                        <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">{theme.stockCount}종목</span>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <span className={`text-sm font-bold ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -132,7 +129,7 @@ export default function ThemeDetailPage() {
 
                 {/* 요약 정보 */}
                 <div className="card">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border-color)]">
+                    <div className="grid grid-cols-3 gap-px bg-[var(--border-color)]">
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
                             <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">평균 등락률</div>
                             <div className={`text-[13px] font-semibold ${isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-primary)]'}`}>
@@ -140,15 +137,9 @@ export default function ThemeDetailPage() {
                             </div>
                         </div>
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
-                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">가격 반영</div>
+                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">종목 수</div>
                             <div className="text-[13px] font-semibold text-[var(--text-primary)]">
                                 {theme.stockCount} / {theme.totalStocks}
-                            </div>
-                        </div>
-                        <div className="bg-[var(--bg-primary)] px-3 py-2">
-                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">전체 거래대금</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-primary)]">
-                                {formatTradingValue(theme.totalTradingValue)}
                             </div>
                         </div>
                         <div className="bg-[var(--bg-primary)] px-3 py-2">
@@ -160,35 +151,6 @@ export default function ThemeDetailPage() {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {leader && (
-                    <div className="card px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                                <div className="text-[11px] text-[var(--text-tertiary)] mb-1">대표주</div>
-                                <div className="text-sm font-semibold text-[var(--text-primary)] truncate">{leader.stockName}</div>
-                                <div className="text-[11px] text-[var(--text-tertiary)]">{leader.stockCode}</div>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                                <div className={`text-base font-bold ${leader.changeRate >= 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                                    {leader.changeRate >= 0 ? '+' : ''}{leader.changeRate.toFixed(2)}%
-                                </div>
-                                <div className="text-[11px] text-[var(--text-tertiary)]">
-                                    {formatTradingValue(leader.tradingValue || 0)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div className="flex flex-wrap gap-1.5 text-[11px] text-[var(--text-tertiary)]">
-                    <span className="px-2 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-                        대표주는 등락률 기준
-                    </span>
-                    <span className="px-2 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-                        거래대금은 테마 전체 합산
-                    </span>
                 </div>
 
                 {/* 상승 종목 */}

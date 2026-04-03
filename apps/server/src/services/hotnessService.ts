@@ -118,12 +118,12 @@ function calculateThemeConcentrationScore(stockCode: string, themes: string[]): 
 
     for (const themeName of themes) {
         const themeData = themePriceCache.getThemePrice(themeName);
-        if (!themeData || themeData.allStocks.length === 0) continue;
+        if (!themeData || themeData.topStocks.length === 0) continue;
 
-        const totalTradingValue = themeData.totalTradingValue;
+        const totalTradingValue = themeData.topStocks.reduce((sum, s) => sum + s.tradingValue, 0);
         if (totalTradingValue === 0) continue;
 
-        const stockData = themeData.allStocks.find(s => s.stockCode === stockCode);
+        const stockData = themeData.topStocks.find(s => s.stockCode === stockCode);
         if (!stockData) continue;
 
         const concentration = (stockData.tradingValue / totalTradingValue) * 100;
@@ -298,7 +298,7 @@ async function doRefresh(): Promise<void> {
         const stockDataMap = new Map<string, { code: string; name: string; changeRate: number; tradingValue: number }>();
 
         for (const theme of allPrices.themes) {
-            for (const stock of theme.allStocks) {
+            for (const stock of theme.topStocks) {
                 const existing = stockDataMap.get(stock.stockCode);
                 if (!existing || stock.changeRate > existing.changeRate) {
                     const priceData = themePriceCache.getStockPrice(stock.stockCode);
@@ -457,7 +457,7 @@ export async function getThemeHotness(themeName: string): Promise<{
         };
     }
 
-    const stocks = themePrice.allStocks.map((s) => ({
+    const stocks = themePrice.topStocks.map((s) => ({
         stockCode: s.stockCode,
         stockName: s.stockName,
         themes: [themeName],

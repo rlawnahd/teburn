@@ -13,15 +13,12 @@ export interface StockPrice {
     high: number;
     low: number;
     open: number;
-    tradingValue?: number;
 }
 
 // 테마 가격 정보
 export interface ThemePriceInfo {
     themeName: string;
     avgChangeRate: number;
-    totalTradingValue: number;
-    leaderStock: StockPrice | null;
     topGainer: StockPrice | null;
     topLoser: StockPrice | null;
     stockPrices: StockPrice[];

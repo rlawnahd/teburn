@@ -22,8 +22,6 @@ export interface ThemeListItem {
     // 캐시된 가격 정보
     avgChangeRate: number | null;
     topStocks: CachedStockPrice[];
-    leaderStock?: CachedStockPrice | null;
-    totalTradingValue?: number;
     priceUpdatedAt: string | null;
 }
 

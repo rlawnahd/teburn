@@ -21,10 +21,19 @@ export async function saveTodayVolumeHistory(): Promise<number> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const allPrices = themePriceCache.getAllThemePrices();
     let savedCount = 0;
-    const stocksToSave = new Map<string, CachedStockPrice>(
-        themePriceCache.getAllStockPrices().map((stock) => [stock.stockCode, stock])
-    );
+
+    // 모든 종목의 거래량 저장
+    const stocksToSave = new Map<string, CachedStockPrice>();
+
+    for (const theme of allPrices.themes) {
+        for (const stock of theme.topStocks) {
+            if (!stocksToSave.has(stock.stockCode)) {
+                stocksToSave.set(stock.stockCode, stock);
+            }
+        }
+    }
 
     for (const [stockCode, stock] of stocksToSave) {
         try {

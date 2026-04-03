@@ -58,8 +58,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
             <div className="px-4 py-2.5 flex-1 flex flex-col">
                 <div className="flex items-center gap-3 text-sm mb-2">
                     <span className="text-[var(--text-tertiary)]">
-                        가격반영 <span className="text-[var(--text-secondary)] font-medium">{sector.stockCount}</span>
-                        <span className="text-[var(--text-tertiary)]"> / {sector.totalStockCount}</span>
+                        종목 <span className="text-[var(--text-secondary)] font-medium">{sector.stockCount}</span>
                     </span>
                     <span className="text-[var(--text-tertiary)]">
                         거래대금 <span className="text-[var(--text-secondary)] font-medium">{formatTradingValue(sector.totalTradingValue)}</span>
@@ -86,7 +85,6 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                 {sector.topStock && (
                     <div className="flex items-center gap-1.5 pt-2 border-t border-[var(--border-color)] text-sm mt-auto">
                         <Crown size={10} className="text-amber-500 flex-shrink-0" />
-                        <span className="text-[var(--text-tertiary)] flex-shrink-0">대표주</span>
                         <span className="text-[var(--text-secondary)] truncate flex-1">{sector.topStock.name}</span>
                         <span className={`font-medium flex-shrink-0 ${
                             sector.topStock.changeRate > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'
@@ -145,22 +143,13 @@ export default function LeadingSectorView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">주도섹터</h2>
-                    <span className="text-sm text-[var(--text-tertiary)]">전체 종목 기준 거래대금 + 평균 등락률</span>
+                    <span className="text-sm text-[var(--text-tertiary)]">거래대금 + 상승률 기반</span>
                 </div>
                 {data?.lastUpdateTime && (
                     <span className="hidden sm:inline text-sm text-[var(--text-tertiary)]">
                         {formatDataDate(data.lastUpdateTime)}
                     </span>
                 )}
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 text-[11px] text-[var(--text-tertiary)]">
-                <span className="px-2 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-                    대표주는 등락률 기준
-                </span>
-                <span className="px-2 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-                    거래대금은 테마 전체 합산
-                </span>
             </div>
 
             {risingSectors.length > 0 && (

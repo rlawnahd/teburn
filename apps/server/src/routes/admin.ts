@@ -45,6 +45,10 @@ router.get('/system-status', async (req: AuthRequest, res: Response) => {
 
         // Price cache status
         const cacheStatus = themePriceCache.getAllThemePrices();
+        const uniqueStocks = new Set<string>();
+        cacheStatus.themes.forEach(t => {
+            t.topStocks.forEach(s => uniqueStocks.add(s.stockCode));
+        });
 
         // Hot stocks cache
         const hotStocks = getHotStocksCache();
@@ -99,7 +103,7 @@ router.get('/system-status', async (req: AuthRequest, res: Response) => {
             },
             priceCache: {
                 themes: cacheStatus.themes.length,
-                stocks: cacheStatus.cachedStockCount,
+                stocks: uniqueStocks.size,
                 lastUpdate: cacheStatus.lastUpdateTime || null,
             },
             freshness: {
@@ -143,6 +147,10 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
 
         // 캐시 상태
         const cacheStatus = themePriceCache.getAllThemePrices();
+        const uniqueStocks = new Set<string>();
+        cacheStatus.themes.forEach(t => {
+            t.topStocks.forEach(s => uniqueStocks.add(s.stockCode));
+        });
 
         // 최근 뉴스
         const recentNews = await News.find()
@@ -163,7 +171,7 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
                 fromNaver: themeCount - customThemeCount,
             },
             stocks: {
-                unique: cacheStatus.cachedStockCount,
+                unique: uniqueStocks.size,
                 cached: cacheStatus.themes.length > 0,
             },
             news: {

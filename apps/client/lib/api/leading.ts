@@ -25,7 +25,6 @@ export interface LeadingSector {
         tradingValue: number;
     } | null;
     stockCount: number;
-    totalStockCount: number;
 }
 
 // 캘린더 날짜별 데이터 (주도주 기반)

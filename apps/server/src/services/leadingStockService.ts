@@ -25,8 +25,7 @@ export interface LeadingSector {
         changeRate: number;
         tradingValue: number;
     } | null;
-    stockCount: number;       // 가격 반영된 종목 수
-    totalStockCount: number;  // 테마 전체 종목 수
+    stockCount: number;
 }
 
 // 캘린더 데이터 (주도주 기반)
@@ -55,7 +54,7 @@ export function getLeadingStocks(minChangeRate: number = 4, limit: number = 50):
     const stockDataMap = new Map<string, CachedStockPrice>();
 
     for (const theme of allThemePrices.themes) {
-        for (const stock of theme.allStocks) {
+        for (const stock of theme.topStocks) {
             // 기존 데이터보다 거래대금이 높은 경우에만 업데이트
             const existing = stockDataMap.get(stock.stockCode);
             if (!existing || stock.tradingValue > existing.tradingValue) {
@@ -104,17 +103,17 @@ export function getLeadingSectors(limit: number = 20): LeadingSector[] {
     // 거래대금 최대값 (정규화용)
     let maxTradingValue = 0;
     for (const theme of allThemePrices.themes) {
-        const totalTradingValue = theme.totalTradingValue;
+        const totalTradingValue = theme.topStocks.reduce((sum, s) => sum + s.tradingValue, 0);
         if (totalTradingValue > maxTradingValue) {
             maxTradingValue = totalTradingValue;
         }
     }
 
     for (const theme of allThemePrices.themes) {
-        const totalTradingValue = theme.totalTradingValue;
+        const totalTradingValue = theme.topStocks.reduce((sum, s) => sum + s.tradingValue, 0);
 
-        // 대표 종목 (등락률 기준)
-        const topStock = theme.leaderStock;
+        // 대장주 (거래대금 1위)
+        const topStock = theme.topStocks[0];
 
         // 주도섹터 점수 계산
         // 상승률 50% + 거래대금 50% (정규화)
@@ -135,7 +134,6 @@ export function getLeadingSectors(limit: number = 20): LeadingSector[] {
                 tradingValue: topStock.tradingValue,
             } : null,
             stockCount: theme.stockCount,
-            totalStockCount: theme.totalStockCount,
         });
     }
 

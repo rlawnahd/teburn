@@ -74,10 +74,7 @@ router.get('/themes', async (req: Request, res: Response) => {
                 themeName: t.themeName,
                 avgChangeRate: t.avgChangeRate,
                 stockCount: t.stockCount,
-                totalStockCount: t.totalStockCount,
-                totalTradingValue: t.totalTradingValue,
-                leaderStock: t.leaderStock,
-                stockPrices: t.allStocks,
+                stockPrices: t.topStocks,
                 updatedAt: t.updatedAt,
             })),
             cached: true,
@@ -108,7 +105,7 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
             return;
         }
 
-        const stocks = cached.allStocks;
+        const stocks = cached.topStocks;
         const sorted = [...stocks].sort((a, b) => b.changeRate - a.changeRate);
 
         res.json({
@@ -116,16 +113,6 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
             data: {
                 themeName: cached.themeName,
                 avgChangeRate: cached.avgChangeRate,
-                totalTradingValue: cached.totalTradingValue,
-                leaderStock: cached.leaderStock ? {
-                    stockName: cached.leaderStock.stockName,
-                    stockCode: cached.leaderStock.stockCode,
-                    currentPrice: cached.leaderStock.currentPrice,
-                    changePrice: cached.leaderStock.changePrice,
-                    changeRate: cached.leaderStock.changeRate,
-                    volume: cached.leaderStock.volume,
-                    tradingValue: cached.leaderStock.tradingValue,
-                } : null,
                 topGainer: sorted[0] || null,
                 topLoser: sorted[sorted.length - 1] || null,
                 stockPrices: stocks.map(s => ({
@@ -138,7 +125,7 @@ router.get('/themes/:themeName', async (req: Request, res: Response) => {
                     tradingValue: s.tradingValue,
                 })),
                 stockCount: cached.stockCount,
-                totalStocks: cached.totalStockCount,
+                totalStocks: cached.stockCount,
                 updatedAt: cached.updatedAt,
             },
         });
