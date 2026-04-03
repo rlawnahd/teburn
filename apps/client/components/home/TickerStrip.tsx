@@ -60,6 +60,11 @@ export default function TickerStrip() {
                             <span className="text-[12px] font-medium text-[var(--text-primary)]">
                                 {stock.stockName}
                             </span>
+                            {stock.themes[0] && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]">
+                                    {stock.themes[0]}
+                                </span>
+                            )}
                             {isLimitUp && (
                                 <span className="text-[9px] font-bold text-white bg-[var(--rise-color)] px-1 rounded-sm">
                                     상한
@@ -70,6 +75,9 @@ export default function TickerStrip() {
                             </span>
                             <span className="text-xs text-[var(--text-tertiary)]">
                                 {stock.currentPrice.toLocaleString()}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-tertiary)]">
+                                {stock.totalScore}점
                             </span>
                         </button>
                     );

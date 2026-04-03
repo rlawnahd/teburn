@@ -203,7 +203,7 @@ export default function CalendarView() {
                 <div className="flex items-center justify-between px-4 py-3 bg-[var(--bg-primary)]">
                     <div className="flex items-center gap-2">
                         <h2 className="text-base font-semibold text-[var(--text-primary)]">캘린더</h2>
-                        <span className="text-sm text-[var(--text-tertiary)]">일별 주도주</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">장 마감 기준 주도주</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -231,6 +231,11 @@ export default function CalendarView() {
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 px-4 py-2 border-t border-[var(--border-color)] bg-[var(--bg-primary)]/70 text-[11px] text-[var(--text-tertiary)]">
+                    <span className="px-2 py-1 rounded-full bg-[var(--bg-secondary)]">장중 데이터는 30분마다 임시 반영</span>
+                    <span className="px-2 py-1 rounded-full bg-[var(--bg-secondary)]">마감 후 최종 순위로 저장</span>
                 </div>
 
                 {/* 요일 헤더 */}

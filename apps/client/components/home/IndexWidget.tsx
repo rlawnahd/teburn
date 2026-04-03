@@ -43,6 +43,7 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
     const isNegative = data.change < 0;
     const changeColor = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
     const bgTint = isPositive ? 'bg-[var(--rise-bg)]' : isNegative ? 'bg-[var(--fall-bg)]' : 'bg-[var(--bg-primary)]';
+    const sessionLabel = data.marketOpen ? (data.category === 'index' ? '장중' : '거래중') : (data.category === 'index' ? '마감' : '휴장');
 
     const flashClass = flash === 'rise' ? 'animate-flash-rise' : flash === 'fall' ? 'animate-flash-fall' : '';
 
@@ -52,7 +53,10 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
             className={`flex items-center justify-between px-3 py-2 ${bgTint} hover:brightness-95 transition-all cursor-pointer text-left ${flashClass}`}
         >
             <div className="min-w-0 flex-1">
-                <div className="text-[12px] text-[var(--text-tertiary)] truncate">{data.name}</div>
+                <div className="flex items-center gap-1">
+                    <div className="text-[12px] text-[var(--text-tertiary)] truncate">{data.name}</div>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">{sessionLabel}</span>
+                </div>
                 <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-[var(--text-primary)]">
                         {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
