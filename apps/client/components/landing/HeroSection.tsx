@@ -455,11 +455,11 @@ function GalaxyBackground() {
             [255, 200, 255], [180, 150, 255], [220, 220, 255],
         ];
 
-        for (let i = 0; i < 120; i++) {
+        for (let i = 0; i < 150; i++) {
             stars.push({
                 x: Math.random() * w(),
                 y: Math.random() * h(),
-                size: Math.random() * 1.2 + 0.3,
+                size: Math.random() * 2 + 0.5,
                 speed: Math.random() * 0.2 + 0.05,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 phase: Math.random() * Math.PI * 2,
@@ -473,7 +473,7 @@ function GalaxyBackground() {
 
             for (const star of stars) {
                 const twinkle = Math.sin(t * star.speed * 4 + star.phase) * 0.5 + 0.5;
-                const alpha = twinkle * 0.5 + 0.05;
+                const alpha = twinkle * 0.8 + 0.15;
 
                 star.x += Math.sin(t * star.speed + star.phase) * 0.08;
                 star.y += Math.cos(t * star.speed * 0.5 + star.phase) * 0.05;
@@ -508,7 +508,7 @@ function GalaxyBackground() {
         return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
     }, []);
 
-    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.6 }} />;
+    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
 }
 
 // ---- 메인 ----
