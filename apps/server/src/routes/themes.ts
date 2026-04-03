@@ -237,8 +237,10 @@ router.get('/timeline/today', async (_req: Request, res: Response) => {
 
             for (const item of history) {
                 const d = new Date(item.timestamp);
-                const hour = d.getHours();
-                const halfHour = d.getMinutes() < 30 ? '00' : '30';
+                // KST 변환 (UTC+9)
+                const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+                const hour = kst.getUTCHours();
+                const halfHour = kst.getUTCMinutes() < 30 ? '00' : '30';
                 const slotKey = `${String(hour).padStart(2, '0')}:${halfHour}`;
 
                 if (!slotMap.has(slotKey)) {
