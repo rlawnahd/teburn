@@ -60,20 +60,24 @@ function ChartLineBackground() {
                 return;
             }
 
+            // 라인 경로 그리기 함수
+            const drawLine = (count: number) => {
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < count; i++) {
+                    const prev = points[i - 1];
+                    const curr = points[i];
+                    const cpx = (prev.x + curr.x) / 2;
+                    ctx.quadraticCurveTo(prev.x, prev.y, cpx, (prev.y + curr.y) / 2);
+                }
+            };
+
             // 그라데이션 영역 (차트 아래 채우기)
             const gradient = ctx.createLinearGradient(0, 0, 0, h);
-            gradient.addColorStop(0, 'rgba(59,130,246,0.08)');
-            gradient.addColorStop(1, 'rgba(59,130,246,0)');
+            gradient.addColorStop(0, 'rgba(239,68,68,0.12)');
+            gradient.addColorStop(1, 'rgba(239,68,68,0)');
 
             ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < visibleCount; i++) {
-                const prev = points[i - 1];
-                const curr = points[i];
-                const cpx = (prev.x + curr.x) / 2;
-                ctx.quadraticCurveTo(prev.x, prev.y, cpx, (prev.y + curr.y) / 2);
-            }
-            // 영역 채우기
+            drawLine(visibleCount);
             const lastVisible = points[visibleCount - 1];
             ctx.lineTo(lastVisible.x, h);
             ctx.lineTo(points[0].x, h);
@@ -81,33 +85,42 @@ function ChartLineBackground() {
             ctx.fillStyle = gradient;
             ctx.fill();
 
-            // 메인 라인
+            // 글로우 라인 (넓고 흐린 빛)
             ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < visibleCount; i++) {
-                const prev = points[i - 1];
-                const curr = points[i];
-                const cpx = (prev.x + curr.x) / 2;
-                ctx.quadraticCurveTo(prev.x, prev.y, cpx, (prev.y + curr.y) / 2);
-            }
-            ctx.strokeStyle = 'rgba(59,130,246,0.3)';
-            ctx.lineWidth = 2;
+            drawLine(visibleCount);
+            ctx.strokeStyle = 'rgba(239,68,68,0.15)';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+
+            // 메인 라인 (밝고 선명)
+            ctx.beginPath();
+            drawLine(visibleCount);
+            ctx.strokeStyle = 'rgba(239,68,68,0.6)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // 코어 라인 (가장 밝음)
+            ctx.beginPath();
+            drawLine(visibleCount);
+            ctx.strokeStyle = 'rgba(255,120,120,0.8)';
+            ctx.lineWidth = 1;
             ctx.stroke();
 
             // 끝점 글로우
             if (progress < 1) {
                 const tip = points[visibleCount - 1];
-                const glow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 20);
-                glow.addColorStop(0, 'rgba(59,130,246,0.5)');
-                glow.addColorStop(1, 'rgba(59,130,246,0)');
+                const glow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 35);
+                glow.addColorStop(0, 'rgba(239,68,68,0.7)');
+                glow.addColorStop(0.5, 'rgba(239,68,68,0.2)');
+                glow.addColorStop(1, 'rgba(239,68,68,0)');
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 20, 0, Math.PI * 2);
+                ctx.arc(tip.x, tip.y, 35, 0, Math.PI * 2);
                 ctx.fillStyle = glow;
                 ctx.fill();
 
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59,130,246,0.8)';
+                ctx.arc(tip.x, tip.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,150,150,1)';
                 ctx.fill();
             }
 
@@ -124,7 +137,7 @@ function ChartLineBackground() {
                         const cpx = (prev.x + curr.x) / 2;
                         ctx.quadraticCurveTo(prev.x, prev.y + h * 0.15, cpx, (prev.y + curr.y) / 2 + h * 0.15);
                     }
-                    ctx.strokeStyle = 'rgba(239,68,68,0.15)';
+                    ctx.strokeStyle = 'rgba(59,130,246,0.2)';
                     ctx.lineWidth = 1.5;
                     ctx.stroke();
                 }
