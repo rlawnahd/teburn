@@ -108,46 +108,8 @@ function ChartLineBackground() {
             ctx.fillStyle = gradient;
             ctx.fill();
 
-            // 트레일: 급등 구간에서 노란→주황→빨강 (progress 0.7 이후 강하게)
-            const fireIntensity = Math.max(0, (progress - 0.6) / 0.4); // 0.6부터 시작, 1.0에서 최대
-            if (fireIntensity > 0) {
-                const trailLen = Math.min(Math.floor(8 + fireIntensity * 12), visibleCount);
-                for (let t2 = 0; t2 < trailLen - 1; t2++) {
-                    const idx = visibleCount - trailLen + t2;
-                    if (idx < 1) continue;
-                    const from = points[idx];
-                    const to = points[idx + 1];
-                    const tp = t2 / (trailLen - 1); // 0→1 (뒤→앞)
-                    const r = 255;
-                    const g = Math.round(60 + tp * 180); // 60→240 (빨강→노랑)
-                    const b = Math.round(20 + tp * 100); // 20→120
-                    const alpha = (0.4 + tp * 0.6) * fireIntensity;
-
-                    // 외부 글로우 (넓고 흐림)
-                    ctx.beginPath();
-                    ctx.moveTo(from.x, from.y);
-                    ctx.lineTo(to.x, to.y);
-                    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.25})`;
-                    ctx.lineWidth = 14 + tp * 10;
-                    ctx.stroke();
-
-                    // 메인 트레일
-                    ctx.beginPath();
-                    ctx.moveTo(from.x, from.y);
-                    ctx.lineTo(to.x, to.y);
-                    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
-                    ctx.lineWidth = 3 + tp * 3;
-                    ctx.stroke();
-
-                    // 코어 (가장 밝음)
-                    ctx.beginPath();
-                    ctx.moveTo(from.x, from.y);
-                    ctx.lineTo(to.x, to.y);
-                    ctx.strokeStyle = `rgba(255,${Math.round(200 + tp * 55)},${Math.round(150 + tp * 80)},${alpha * 0.8})`;
-                    ctx.lineWidth = 1 + tp * 1.5;
-                    ctx.stroke();
-                }
-            }
+            // fireIntensity (파티클용)
+            const fireIntensity = Math.max(0, (progress - 0.6) / 0.4);
 
             // 글로우 라인 (넓고 흐린 빛)
             ctx.beginPath();
