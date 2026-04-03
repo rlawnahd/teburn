@@ -50,15 +50,13 @@ function ChartLineBackground() {
                 points.push({ x, y: y1 });
             }
 
-            // 파란 라인: 다른 경로로 시작, 중간에 교차
-            let y2 = h * 0.45;
+            // 파란 라인: 빨간 라인을 기준으로 sin파 오프셋 → 여러 번 교차
             for (let i = 0; i < pointCount; i++) {
-                const x = (i / (pointCount - 1)) * w;
-                // 전반부는 아래로, 후반부는 위로 → 빨간 라인과 교차
-                const bias = i < pointCount * 0.4 ? 0.52 : 0.44;
-                y2 += (Math.random() - bias) * (h * 0.03);
-                y2 = Math.max(h * 0.15, Math.min(h * 0.85, y2));
-                points2.push({ x, y: y2 });
+                const x = points[i].x;
+                const phase = (i / pointCount) * Math.PI * 4; // 4번 교차 (2주기)
+                const offset = Math.sin(phase) * (h * 0.08) + (Math.random() - 0.5) * (h * 0.015);
+                const y2 = points[i].y + offset;
+                points2.push({ x, y: Math.max(h * 0.1, Math.min(h * 0.9, y2)) });
             }
         };
         generatePoints();
