@@ -218,6 +218,103 @@ function GlowOrbs() {
     );
 }
 
+// ---- 쓰레드 스포일러 (은하수 반짝이 canvas) ----
+function SpoilerOverlay() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let frame: number;
+        const resize = () => {
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+        };
+        resize();
+
+        interface Star { x: number; y: number; size: number; speed: number; alpha: number; color: [number, number, number]; phase: number; }
+        const stars: Star[] = [];
+        const w = () => canvas.offsetWidth;
+        const h = () => canvas.offsetHeight;
+
+        for (let i = 0; i < 50; i++) {
+            const colors: [number, number, number][] = [
+                [255, 255, 255],   // white
+                [200, 180, 255],   // lavender
+                [150, 180, 255],   // light blue
+                [255, 200, 255],   // pink
+                [180, 150, 255],   // purple
+            ];
+            stars.push({
+                x: Math.random() * w(),
+                y: Math.random() * h(),
+                size: Math.random() * 1.5 + 0.5,
+                speed: Math.random() * 0.3 + 0.1,
+                alpha: Math.random(),
+                color: colors[Math.floor(Math.random() * colors.length)],
+                phase: Math.random() * Math.PI * 2,
+            });
+        }
+
+        let t = 0;
+        const draw = () => {
+            t += 0.02;
+            ctx.clearRect(0, 0, w(), h());
+
+            for (const star of stars) {
+                // 반짝임
+                const twinkle = Math.sin(t * star.speed * 3 + star.phase) * 0.5 + 0.5;
+                const alpha = twinkle * 0.8 + 0.1;
+
+                // 느리게 떠다님
+                star.x += Math.sin(t * star.speed + star.phase) * 0.15;
+                star.y += Math.cos(t * star.speed * 0.7 + star.phase) * 0.1;
+
+                // 경계 처리
+                if (star.x < -5) star.x = w() + 5;
+                if (star.x > w() + 5) star.x = -5;
+                if (star.y < -5) star.y = h() + 5;
+                if (star.y > h() + 5) star.y = -5;
+
+                const [r, g, b] = star.color;
+
+                // 글로우
+                if (star.size > 0.8) {
+                    const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.size * 4);
+                    glow.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.3})`);
+                    glow.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size * 4, 0, Math.PI * 2);
+                    ctx.fillStyle = glow;
+                    ctx.fill();
+                }
+
+                // 별 본체
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+                ctx.fill();
+            }
+
+            frame = requestAnimationFrame(draw);
+        };
+        draw();
+
+        return () => cancelAnimationFrame(frame);
+    }, []);
+
+    return (
+        <div className="absolute inset-0 z-10 overflow-hidden rounded-none pointer-events-none">
+            <div className="absolute inset-0 spoiler-galaxy-bg" />
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+        </div>
+    );
+}
+
 // ---- 카운트업 ----
 function useCountUp(target: number, duration: number = 1200): number {
     const [value, setValue] = useState(0);
@@ -275,9 +372,7 @@ function LiveStockTable() {
                             }}
                         >
                             {/* 은하수 스포일러 오버레이 */}
-                            {isHidden && (
-                                <div className="absolute inset-0 z-10 spoiler-galaxy" />
-                            )}
+                            {isHidden && <SpoilerOverlay />}
                             <span className={`w-5 text-center text-sm font-bold ${i < 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>{i + 1}</span>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
