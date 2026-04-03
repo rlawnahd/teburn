@@ -18,7 +18,11 @@ interface CachedThemePrice {
     themeName: string;
     avgChangeRate: number;
     stockCount: number;
+    totalStockCount: number;
+    totalTradingValue: number;
+    leaderStock: CachedStockPrice | null;
     topStocks: CachedStockPrice[];
+    allStocks: CachedStockPrice[];
     updatedAt: Date;
 }
 
@@ -46,7 +50,11 @@ const CachedThemePriceSchema = new Schema({
     themeName: String,
     avgChangeRate: Number,
     stockCount: Number,
+    totalStockCount: Number,
+    totalTradingValue: Number,
+    leaderStock: { type: CachedStockPriceSchema, default: null },
     topStocks: [CachedStockPriceSchema],
+    allStocks: [CachedStockPriceSchema],
     updatedAt: Date,
 }, { _id: false });
 

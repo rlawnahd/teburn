@@ -25,8 +25,12 @@ export interface CachedStockPrice {
 export interface CachedThemePrice {
     themeName: string;
     avgChangeRate: number;
-    stockCount: number;
-    topStocks: CachedStockPrice[];  // 상위 4개 종목
+    stockCount: number;             // 가격 반영된 종목 수
+    totalStockCount: number;        // 테마 원본 종목 수
+    totalTradingValue: number;
+    leaderStock: CachedStockPrice | null;
+    topStocks: CachedStockPrice[];  // 표시용 상위 종목
+    allStocks: CachedStockPrice[];  // 테마 전체 종목
     updatedAt: Date;
 }
 
@@ -53,8 +57,15 @@ class ThemePriceCacheService {
 
     // 캐시 업데이트 주기 (5분)
     private readonly UPDATE_INTERVAL = 5 * 60 * 1000;
-    // 각 테마당 가져올 종목 수
-    private readonly STOCKS_PER_THEME = 4;
+    // UI에 노출할 상위 종목 수
+    private readonly DISPLAY_STOCKS_PER_THEME = 4;
+
+    private resolveStockCode(stock: { name: string; code?: string }): string {
+        if (stock.code && stock.code.length === 6) {
+            return stock.code;
+        }
+        return STOCK_CODE_MAP[stock.name] || '';
+    }
 
     /**
      * 모든 테마의 주가 배치 업데이트
@@ -77,23 +88,10 @@ class ThemePriceCacheService {
             // 2. 모든 고유 종목 코드 수집 (DB 코드 + stockCodes.json 폴백)
             const stockCodeSet = new Set<string>();
             const stockCodeToName = new Map<string, string>();
-            let foundFromJson = 0;
 
             for (const theme of themes) {
-                // 각 테마에서 상위 N개 종목만 (API 호출 최적화)
-                const stocks = theme.stocks.slice(0, this.STOCKS_PER_THEME);
-                for (const stock of stocks) {
-                    let code = stock.code;
-
-                    // DB에 코드가 없으면 stockCodes.json에서 찾기
-                    if (!code || code.length !== 6) {
-                        const lookupCode = STOCK_CODE_MAP[stock.name];
-                        if (lookupCode) {
-                            code = lookupCode;
-                            foundFromJson++;
-                        }
-                    }
-
+                for (const stock of theme.stocks) {
+                    const code = this.resolveStockCode(stock);
                     if (code && code.length === 6) {
                         stockCodeSet.add(code);
                         stockCodeToName.set(code, stock.name);
@@ -142,16 +140,10 @@ class ThemePriceCacheService {
 
             // 4. 테마별 가격 계산
             for (const theme of themes) {
-                const themeStocks = theme.stocks.slice(0, this.STOCKS_PER_THEME);
                 const prices: CachedStockPrice[] = [];
 
-                for (const stock of themeStocks) {
-                    // DB 코드 또는 JSON 폴백
-                    let code = stock.code;
-                    if (!code || code.length !== 6) {
-                        code = STOCK_CODE_MAP[stock.name] || '';
-                    }
-
+                for (const stock of theme.stocks) {
+                    const code = this.resolveStockCode(stock);
                     if (code) {
                         const cached = this.stockPriceCache.get(code);
                         if (cached) {
@@ -160,18 +152,26 @@ class ThemePriceCacheService {
                     }
                 }
 
-                // 거래대금 기준 정렬
-                prices.sort((a, b) => b.tradingValue - a.tradingValue);
+                const byTradingValue = [...prices].sort((a, b) => b.tradingValue - a.tradingValue);
+                const byChangeRate = [...prices].sort((a, b) => {
+                    if (b.changeRate !== a.changeRate) return b.changeRate - a.changeRate;
+                    return b.tradingValue - a.tradingValue;
+                });
 
                 const avgChangeRate = prices.length > 0
                     ? prices.reduce((sum, p) => sum + p.changeRate, 0) / prices.length
                     : 0;
+                const totalTradingValue = prices.reduce((sum, p) => sum + p.tradingValue, 0);
 
                 const themePrice: CachedThemePrice = {
                     themeName: theme.name,
                     avgChangeRate: Math.round(avgChangeRate * 100) / 100,
                     stockCount: prices.length,
-                    topStocks: prices,
+                    totalStockCount: theme.stocks.length,
+                    totalTradingValue,
+                    leaderStock: byChangeRate[0] || null,
+                    topStocks: byTradingValue.slice(0, this.DISPLAY_STOCKS_PER_THEME),
+                    allStocks: byChangeRate,
                     updatedAt: new Date(),
                 };
 
@@ -253,7 +253,17 @@ class ThemePriceCacheService {
             for (const theme of cached.themePrices) {
                 this.themePriceCache.set(theme.themeName, {
                     ...theme,
+                    leaderStock: theme.leaderStock ? {
+                        ...theme.leaderStock,
+                        marketCap: (theme.leaderStock as any).marketCap || 0,
+                        updatedAt: new Date(theme.leaderStock.updatedAt),
+                    } : null,
                     topStocks: theme.topStocks.map(s => ({
+                        ...s,
+                        marketCap: (s as any).marketCap || 0,
+                        updatedAt: new Date(s.updatedAt),
+                    })),
+                    allStocks: (theme.allStocks || []).map(s => ({
                         ...s,
                         marketCap: (s as any).marketCap || 0,
                         updatedAt: new Date(s.updatedAt),
@@ -304,6 +314,13 @@ class ThemePriceCacheService {
      */
     getStockPrice(stockCode: string): CachedStockPrice | undefined {
         return this.stockPriceCache.get(stockCode);
+    }
+
+    /**
+     * 전체 캐시 종목 조회
+     */
+    getAllStockPrices(): CachedStockPrice[] {
+        return Array.from(this.stockPriceCache.values());
     }
 
     /**

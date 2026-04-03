@@ -115,16 +115,9 @@ export async function collectDailySupply(): Promise<number> {
     console.log('📊 수급 데이터 수집 시작...');
 
     // 캐시된 모든 종목 가져오기
-    const allPrices = themePriceCache.getAllThemePrices();
-    const stockSet = new Map<string, string>(); // code → name
-
-    for (const theme of allPrices.themes) {
-        for (const stock of theme.topStocks) {
-            if (!stockSet.has(stock.stockCode)) {
-                stockSet.set(stock.stockCode, stock.stockName);
-            }
-        }
-    }
+    const stockSet = new Map<string, string>(
+        themePriceCache.getAllStockPrices().map((stock) => [stock.stockCode, stock.stockName])
+    );
 
     const stockCodes = Array.from(stockSet.keys());
     console.log(`📋 총 ${stockCodes.length}개 종목 수급 데이터 수집...`);

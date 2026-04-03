@@ -27,8 +27,8 @@ function saveRealtimeHistory(): void {
         const item: RealtimeHistoryItem = {
             timestamp,
             avgChangeRate: theme.avgChangeRate,
-            topStock: theme.topStocks[0]?.stockName || '',
-            topStockRate: theme.topStocks[0]?.changeRate || 0,
+            topStock: theme.leaderStock?.stockName || '',
+            topStockRate: theme.leaderStock?.changeRate || 0,
         };
 
         if (!realtimeHistoryCache.has(theme.themeName)) {
@@ -82,8 +82,8 @@ export async function saveThemeSnapshot(): Promise<void> {
     const documents = themePricesData.themes.map(theme => ({
         themeName: theme.themeName,
         avgChangeRate: theme.avgChangeRate,
-        topStock: theme.topStocks[0]?.stockName || '',
-        topStockRate: theme.topStocks[0]?.changeRate || 0,
+        topStock: theme.leaderStock?.stockName || '',
+        topStockRate: theme.leaderStock?.changeRate || 0,
         timestamp,
     }));
 

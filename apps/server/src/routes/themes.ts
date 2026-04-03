@@ -23,6 +23,8 @@ router.get('/', async (_req: Request, res: Response) => {
                 // 캐시된 가격 정보 추가
                 avgChangeRate: cachedPrice?.avgChangeRate ?? null,
                 topStocks: cachedPrice?.topStocks ?? [],
+                leaderStock: cachedPrice?.leaderStock ?? null,
+                totalTradingValue: cachedPrice?.totalTradingValue ?? 0,
                 priceUpdatedAt: cachedPrice?.updatedAt ?? null,
             };
         });
@@ -122,6 +124,11 @@ router.get('/:themeName', async (req: Request, res: Response) => {
                 isCustom: theme.isCustom,
                 lastCrawledAt: theme.lastCrawledAt,
                 avgChangeRate: cachedPrice?.avgChangeRate ?? null,
+                totalTradingValue: cachedPrice?.totalTradingValue ?? 0,
+                leaderStock: cachedPrice?.leaderStock ?? null,
+                topStocks: cachedPrice?.topStocks ?? [],
+                stockCount: cachedPrice?.stockCount ?? 0,
+                totalStockCount: cachedPrice?.totalStockCount ?? theme.stocks.length,
                 priceUpdatedAt: cachedPrice?.updatedAt ?? null,
             },
         });
@@ -225,10 +232,6 @@ router.get('/timeline/today', async (_req: Request, res: Response) => {
         // 현재 테마 가격에서 거래대금 상위 15개 테마 선정
         const pricesData = themePriceCache.getAllThemePrices();
         const topThemes = pricesData.themes
-            .map(t => ({
-                ...t,
-                totalTradingValue: t.topStocks.reduce((sum, s) => sum + (s.tradingValue || 0), 0),
-            }))
             .sort((a, b) => b.totalTradingValue - a.totalTradingValue)
             .slice(0, 15);
 
