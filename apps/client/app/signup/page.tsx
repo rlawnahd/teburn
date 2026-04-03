@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { signup as signupApi, checkUsername, getLoginUrl } from '@/lib/api/auth';
 import { useAuth } from '@/hooks/useAuth';
+import GalaxyBackground from '@/components/ui/GalaxyBackground';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -66,8 +67,9 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)] px-4">
-            <div className="w-full max-w-sm">
+        <div className="relative min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0e1a' }}>
+            <GalaxyBackground />
+            <div className="relative z-10 w-full max-w-sm" style={{ ['--text-primary' as any]: '#f0f0f0', ['--text-secondary' as any]: '#9ca3af', ['--text-tertiary' as any]: '#6b7280', ['--border-color' as any]: '#1e293b', ['--bg-primary' as any]: '#0f1629', ['--bg-secondary' as any]: '#131b30' }}>
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-block">
                         <h1 className="text-2xl font-bold tracking-wider text-[var(--text-primary)]">TEBURN</h1>
