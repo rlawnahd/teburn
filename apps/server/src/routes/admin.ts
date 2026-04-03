@@ -195,11 +195,24 @@ router.get('/users/stats', async (req: AuthRequest, res: Response) => {
         const trend14DaysStart = getKSTDayStart(13);
         const userFilter = { $nor: [{ provider: 'local', providerId: 'admin' }] };
 
-        const [totalUsers, todaySignups, weekSignups, monthSignups, providerStats, trendRows] = await Promise.all([
+        const [
+            totalUsers,
+            todaySignups,
+            weekSignups,
+            monthSignups,
+            activeToday,
+            activeWeek,
+            activeMonth,
+            providerStats,
+            trendRows,
+        ] = await Promise.all([
             User.countDocuments(userFilter),
             User.countDocuments({ ...userFilter, createdAt: { $gte: todayStart } }),
             User.countDocuments({ ...userFilter, createdAt: { $gte: last7DaysStart } }),
             User.countDocuments({ ...userFilter, createdAt: { $gte: last30DaysStart } }),
+            User.countDocuments({ ...userFilter, lastSeenAt: { $gte: todayStart } }),
+            User.countDocuments({ ...userFilter, lastSeenAt: { $gte: last7DaysStart } }),
+            User.countDocuments({ ...userFilter, lastSeenAt: { $gte: last30DaysStart } }),
             User.aggregate([
                 { $match: userFilter },
                 { $group: { _id: '$provider', count: { $sum: 1 } } },
@@ -235,7 +248,7 @@ router.get('/users/stats', async (req: AuthRequest, res: Response) => {
         const recentUsers = await User.find(userFilter)
             .sort({ createdAt: -1 })
             .limit(10)
-            .select('name provider createdAt')
+            .select('name provider createdAt lastSeenAt')
             .lean();
 
         res.json({
@@ -243,12 +256,19 @@ router.get('/users/stats', async (req: AuthRequest, res: Response) => {
             today: todaySignups,
             week: weekSignups,
             month: monthSignups,
+            activeUsers: {
+                today: activeToday,
+                week: activeWeek,
+                month: activeMonth,
+                monthlyRate: totalUsers > 0 ? Math.round((activeMonth / totalUsers) * 100) : 0,
+            },
             byProvider: Object.fromEntries(providerStats.map((p: any) => [p._id, p.count])),
             signupTrend14d,
             recentUsers: recentUsers.map((u: any) => ({
                 name: u.name,
                 provider: u.provider,
                 createdAt: u.createdAt,
+                lastSeenAt: u.lastSeenAt || null,
             })),
         });
     } catch (err) {

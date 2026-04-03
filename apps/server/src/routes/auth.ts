@@ -64,7 +64,10 @@ async function findOrCreateUser(provider: 'kakao', profile: any) {
 
     let user = await User.findOne({ provider, providerId });
     if (!user) {
-        user = await User.create({ name, email, profileImage, provider, providerId });
+        user = await User.create({ name, email, profileImage, provider, providerId, lastSeenAt: new Date() });
+    } else {
+        user.lastSeenAt = new Date();
+        await user.save();
     }
     return user;
 }
@@ -163,6 +166,7 @@ router.post('/signup', authRateLimit, async (req: Request, res: Response) => {
             provider: 'local',
             providerId: username,
             password: hashedPassword,
+            lastSeenAt: new Date(),
         });
 
         const token = generateToken(user._id.toString(), 'local');
@@ -194,6 +198,9 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
         if (!isMatch) {
             return res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
+
+        user.lastSeenAt = new Date();
+        await user.save();
 
         const token = generateToken(user._id.toString(), 'local');
         res.cookie('token', token, cookieOptions);

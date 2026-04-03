@@ -7,6 +7,7 @@ export interface IUser extends Document {
     provider: 'kakao' | 'google' | 'local';
     providerId: string;
     password?: string;
+    lastSeenAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -19,6 +20,7 @@ const userSchema = new Schema<IUser>(
         provider: { type: String, required: true, enum: ['kakao', 'google', 'local'] },
         providerId: { type: String, required: true },
         password: { type: String, select: false },
+        lastSeenAt: { type: Date, default: null },
     },
     { timestamps: true }
 );

@@ -5,9 +5,15 @@ export interface UserStats {
     today: number;
     week: number;
     month: number;
+    activeUsers: {
+        today: number;
+        week: number;
+        month: number;
+        monthlyRate: number;
+    };
     byProvider: Record<string, number>;
     signupTrend14d: { date: string; count: number }[];
-    recentUsers: { name: string; provider: string; createdAt: string }[];
+    recentUsers: { name: string; provider: string; createdAt: string; lastSeenAt: string | null }[];
 }
 
 export const fetchUserStats = async (): Promise<UserStats> => {

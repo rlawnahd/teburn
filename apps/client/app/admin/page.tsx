@@ -69,7 +69,7 @@ function formatDate(dateStr: string): string {
 }
 
 function formatShortDate(dateStr: string): string {
-    const [year, month, day] = dateStr.split('-');
+    const [, month, day] = dateStr.split('-');
     return `${month}/${day}`;
 }
 
@@ -93,114 +93,188 @@ function UsersTab() {
 
     const trend = userStats?.signupTrend14d || [];
     const maxTrendCount = Math.max(...trend.map((item) => item.count), 1);
+    const activeUsers = userStats?.activeUsers || { today: 0, week: 0, month: 0, monthlyRate: 0 };
 
     return (
         <div className="space-y-5">
-            {/* 핵심 지표 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-                            <Users size={20} className="text-rose-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">전체 가입자</span>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 className="text-lg font-semibold text-[var(--text-primary)]">가입자 현황</h2>
+                        <p className="text-sm text-[var(--text-tertiary)] mt-1">한국 시간 기준, 관리자 계정 제외</p>
                     </div>
-                    <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {userStats?.total || 0}
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                            <UserPlus size={20} className="text-sky-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">오늘 가입</span>
-                    </div>
-                    <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {userStats?.today || 0}
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                            <Calendar size={20} className="text-violet-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">최근 7일</span>
-                    </div>
-                    <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {userStats?.week || 0}
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                            <TrendingUp size={20} className="text-amber-500" />
-                        </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">최근 30일</span>
-                    </div>
-                    <div className="text-3xl font-bold text-[var(--text-primary)]">
-                        {userStats?.month || 0}
+                    <div className="px-3 py-1.5 rounded-full bg-[var(--bg-secondary)] text-sm text-[var(--text-secondary)]">
+                        최근 30일 활성률 {activeUsers.monthlyRate}%
                     </div>
                 </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">최근 14일 가입 추이</h3>
-                    <span className="text-xs text-[var(--text-tertiary)]">KST 기준, 관리자 제외</span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <UserPlus size={16} className="text-[var(--accent-blue)]" />
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">가입 지표</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
+                                    <Users size={20} className="text-rose-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">전체 가입자</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">
+                                {userStats?.total || 0}
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                                    <UserPlus size={20} className="text-sky-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">오늘 가입</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">
+                                {userStats?.today || 0}
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                                    <Calendar size={20} className="text-violet-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">최근 7일 가입</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">
+                                {userStats?.week || 0}
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                    <TrendingUp size={20} className="text-amber-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">최근 30일 가입</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">
+                                {userStats?.month || 0}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Activity size={16} className="text-emerald-500" />
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">활성 사용자</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                    <Activity size={20} className="text-emerald-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">오늘 활성</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">{activeUsers.today}</div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center">
+                                    <Users size={20} className="text-teal-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">최근 7일 활성</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">{activeUsers.week}</div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                                    <TrendingUp size={20} className="text-cyan-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">최근 30일 활성</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">{activeUsers.month}</div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                                    <Zap size={20} className="text-indigo-500" />
+                                </div>
+                                <span className="text-sm text-[var(--text-tertiary)]">30일 활성률</span>
+                            </div>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">{activeUsers.monthlyRate}%</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5">
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">최근 14일 가입 추이</h3>
+                        <span className="text-xs text-[var(--text-tertiary)]">일별 신규 가입자</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <div className="flex items-end gap-2 min-w-[560px] h-44">
+                            {trend.map((item) => {
+                                const height = `${Math.max((item.count / maxTrendCount) * 100, item.count > 0 ? 12 : 4)}%`;
+                                return (
+                                    <div key={item.date} className="flex-1 min-w-0 flex flex-col items-center gap-2">
+                                        <div className="text-[11px] font-medium text-[var(--text-secondary)] h-4">
+                                            {item.count > 0 ? item.count : ''}
+                                        </div>
+                                        <div className="w-full flex-1 flex items-end">
+                                            <div
+                                                className="w-full rounded-t-md bg-[var(--accent-blue)]/80 hover:bg-[var(--accent-blue)] transition-colors"
+                                                style={{ height }}
+                                                title={`${item.date}: ${item.count}명`}
+                                            />
+                                        </div>
+                                        <div className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
+                                            {formatShortDate(item.date)}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
-                <div className="overflow-x-auto">
-                    <div className="flex items-end gap-2 min-w-[560px] h-44">
-                        {trend.map((item) => {
-                            const height = `${Math.max((item.count / maxTrendCount) * 100, item.count > 0 ? 12 : 4)}%`;
+
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">가입 경로</h3>
+                    <div className="space-y-4">
+                        {[
+                            { label: '카카오', key: 'kakao', color: 'bg-yellow-500' },
+                            { label: '자체 가입', key: 'local', color: 'bg-emerald-500' },
+                        ].map((p) => {
+                            const count = userStats?.byProvider?.[p.key] || 0;
+                            const total = userStats?.total || 1;
+                            const pct = Math.round((count / total) * 100);
                             return (
-                                <div key={item.date} className="flex-1 min-w-0 flex flex-col items-center gap-2">
-                                    <div className="text-[11px] font-medium text-[var(--text-secondary)] h-4">
-                                        {item.count > 0 ? item.count : ''}
+                                <div key={p.key}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm text-[var(--text-secondary)]">{p.label}</span>
+                                        <div className="text-right">
+                                            <span className="text-sm font-semibold text-[var(--text-primary)]">{count}</span>
+                                            <span className="ml-2 text-xs text-[var(--text-tertiary)]">{pct}%</span>
+                                        </div>
                                     </div>
-                                    <div className="w-full flex-1 flex items-end">
-                                        <div
-                                            className="w-full rounded-t-md bg-[var(--accent-blue)]/80 hover:bg-[var(--accent-blue)] transition-colors"
-                                            style={{ height }}
-                                            title={`${item.date}: ${item.count}명`}
-                                        />
-                                    </div>
-                                    <div className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
-                                        {formatShortDate(item.date)}
+                                    <div className="h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                                        <div className={`h-full rounded-full ${p.color}`} style={{ width: `${pct}%` }} />
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-            </div>
-
-            {/* Provider 분포 */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">가입 경로</h3>
-                <div className="flex gap-4">
-                    {[
-                        { label: '카카오', key: 'kakao', color: 'bg-yellow-500', bg: 'bg-yellow-500/10' },
-                        { label: '자체 가입', key: 'local', color: 'bg-emerald-500', bg: 'bg-emerald-500/10' },
-                    ].map((p) => {
-                        const count = userStats?.byProvider?.[p.key] || 0;
-                        const total = userStats?.total || 1;
-                        const pct = Math.round((count / total) * 100);
-                        return (
-                            <div key={p.key} className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm text-[var(--text-secondary)]">{p.label}</span>
-                                    <span className="text-sm font-semibold text-[var(--text-primary)]">{count}</span>
-                                </div>
-                                <div className="h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                                    <div className={`h-full rounded-full ${p.color}`} style={{ width: `${pct}%` }} />
-                                </div>
-                            </div>
-                        );
-                    })}
                 </div>
             </div>
 
@@ -220,10 +294,13 @@ function UsersTab() {
                                         u.provider === 'kakao' ? 'bg-yellow-500/10 text-yellow-600' :
                                         'bg-emerald-500/10 text-emerald-500'
                                     }`}>
-                                        {u.provider}
+                                        {u.provider === 'kakao' ? '카카오' : '자체가입'}
                                     </span>
                                 </div>
-                                <span className="text-sm text-[var(--text-tertiary)]">{formatDate(u.createdAt)}</span>
+                                <div className="text-right">
+                                    <div className="text-sm text-[var(--text-tertiary)]">{formatDate(u.createdAt)}</div>
+                                    <div className="text-[11px] text-[var(--text-tertiary)]">마지막 활동 {formatTime(u.lastSeenAt)}</div>
+                                </div>
                             </div>
                         ))}
                     </div>

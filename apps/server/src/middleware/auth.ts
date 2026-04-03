@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'teburn-jwt-secret-change-in-prod';
+const LAST_SEEN_UPDATE_INTERVAL = 15 * 60 * 1000;
+const lastSeenUpdateCache = new Map<string, number>();
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -20,6 +22,21 @@ export function verifyToken(token: string): { userId: string; provider: string }
     }
 }
 
+async function touchLastSeen(userId: string): Promise<void> {
+    const now = Date.now();
+    const lastUpdated = lastSeenUpdateCache.get(userId) || 0;
+    if (now - lastUpdated < LAST_SEEN_UPDATE_INTERVAL) {
+        return;
+    }
+
+    lastSeenUpdateCache.set(userId, now);
+    try {
+        await User.updateOne({ _id: userId }, { $set: { lastSeenAt: new Date(now) } });
+    } catch {
+        lastSeenUpdateCache.delete(userId);
+    }
+}
+
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
     const token = req.cookies?.token;
     if (!token) return next();
@@ -30,6 +47,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     const user = await User.findById(payload.userId).lean();
     if (user) {
         req.user = user;
+        void touchLastSeen(String(user._id));
     }
     next();
 }
@@ -45,5 +63,6 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
 
     req.user = user;
+    void touchLastSeen(String(user._id));
     next();
 }
