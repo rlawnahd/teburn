@@ -108,6 +108,37 @@ function ChartLineBackground() {
             ctx.fillStyle = gradient;
             ctx.fill();
 
+            // 트레일: 끝 10개 포인트를 노란→주황→빨강 그라데이션
+            const trailLen = Math.min(12, visibleCount);
+            if (trailLen > 2 && progress > 0.5) {
+                for (let t2 = 0; t2 < trailLen - 1; t2++) {
+                    const idx = visibleCount - trailLen + t2;
+                    if (idx < 1) continue;
+                    const from = points[idx];
+                    const to = points[idx + 1];
+                    const trailProgress = t2 / (trailLen - 1); // 0→1 (뒤→앞)
+                    const r = 255;
+                    const g = Math.round(80 + trailProgress * 150); // 80→230
+                    const b = Math.round(40 + trailProgress * 120); // 40→160
+                    const alpha = 0.3 + trailProgress * 0.7;
+
+                    ctx.beginPath();
+                    ctx.moveTo(from.x, from.y);
+                    ctx.lineTo(to.x, to.y);
+                    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+                    ctx.lineWidth = 2 + trailProgress * 2;
+                    ctx.stroke();
+
+                    // 트레일 글로우
+                    ctx.beginPath();
+                    ctx.moveTo(from.x, from.y);
+                    ctx.lineTo(to.x, to.y);
+                    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.2})`;
+                    ctx.lineWidth = 8 + trailProgress * 6;
+                    ctx.stroke();
+                }
+            }
+
             // 글로우 라인 (넓고 흐린 빛)
             ctx.beginPath();
             drawLine(visibleCount);
@@ -129,35 +160,45 @@ function ChartLineBackground() {
             ctx.lineWidth = 1;
             ctx.stroke();
 
-            // 끝점 글로우
+            // 끝점 글로우 + 파티클 스파크
             if (progress < 1) {
                 const tip = points[visibleCount - 1];
-                // 외부 글로우 (큰 범위)
-                const outerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 60);
-                outerGlow.addColorStop(0, 'rgba(239,68,68,0.5)');
-                outerGlow.addColorStop(0.3, 'rgba(239,68,68,0.2)');
-                outerGlow.addColorStop(0.6, 'rgba(255,165,0,0.08)');
+
+                // 외부 글로우
+                const outerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 50);
+                outerGlow.addColorStop(0, 'rgba(255,180,80,0.6)');
+                outerGlow.addColorStop(0.3, 'rgba(239,68,68,0.3)');
                 outerGlow.addColorStop(1, 'rgba(239,68,68,0)');
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 60, 0, Math.PI * 2);
+                ctx.arc(tip.x, tip.y, 50, 0, Math.PI * 2);
                 ctx.fillStyle = outerGlow;
                 ctx.fill();
 
-                // 내부 글로우 (밝은 중심)
-                const innerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 15);
-                innerGlow.addColorStop(0, 'rgba(255,200,150,0.9)');
-                innerGlow.addColorStop(0.5, 'rgba(239,68,68,0.6)');
+                // 내부 글로우 (밝은 노란 중심)
+                const innerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 12);
+                innerGlow.addColorStop(0, 'rgba(255,240,200,1)');
+                innerGlow.addColorStop(0.4, 'rgba(255,180,80,0.8)');
                 innerGlow.addColorStop(1, 'rgba(239,68,68,0)');
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 15, 0, Math.PI * 2);
+                ctx.arc(tip.x, tip.y, 12, 0, Math.PI * 2);
                 ctx.fillStyle = innerGlow;
                 ctx.fill();
 
-                // 코어 점
-                ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,220,200,1)';
-                ctx.fill();
+                // 파티클 스파크 (위로 튀는 불꽃)
+                const sparkCount = 6;
+                for (let s = 0; s < sparkCount; s++) {
+                    const seed = (progress * 100 + s * 17) % 1;
+                    const lifetime = (seed * 0.8 + 0.2);
+                    const sx = tip.x + (Math.sin(seed * 30 + progress * 20) * 15);
+                    const sy = tip.y - lifetime * 40 - Math.random() * 10;
+                    const sparkAlpha = (1 - lifetime) * 0.8;
+                    const sparkSize = (1 - lifetime) * 2.5 + 0.5;
+
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, sparkSize, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,${Math.round(150 + lifetime * 100)},${Math.round(50 + lifetime * 100)},${sparkAlpha})`;
+                    ctx.fill();
+                }
             }
 
             // 두 번째 라인 (파란, 교차)
