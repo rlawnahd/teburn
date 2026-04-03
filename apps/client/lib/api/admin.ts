@@ -6,6 +6,7 @@ export interface UserStats {
     week: number;
     month: number;
     byProvider: Record<string, number>;
+    signupTrend14d: { date: string; count: number }[];
     recentUsers: { name: string; provider: string; createdAt: string }[];
 }
 

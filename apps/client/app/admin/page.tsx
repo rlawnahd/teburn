@@ -68,6 +68,11 @@ function formatDate(dateStr: string): string {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+function formatShortDate(dateStr: string): string {
+    const [year, month, day] = dateStr.split('-');
+    return `${month}/${day}`;
+}
+
 // ============================================
 // 유저 탭
 // ============================================
@@ -85,6 +90,9 @@ function UsersTab() {
             </div>
         );
     }
+
+    const trend = userStats?.signupTrend14d || [];
+    const maxTrendCount = Math.max(...trend.map((item) => item.count), 1);
 
     return (
         <div className="space-y-5">
@@ -119,7 +127,7 @@ function UsersTab() {
                         <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                             <Calendar size={20} className="text-violet-500" />
                         </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">이번 주</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">최근 7일</span>
                     </div>
                     <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {userStats?.week || 0}
@@ -131,10 +139,41 @@ function UsersTab() {
                         <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                             <TrendingUp size={20} className="text-amber-500" />
                         </div>
-                        <span className="text-sm text-[var(--text-tertiary)]">이번 달</span>
+                        <span className="text-sm text-[var(--text-tertiary)]">최근 30일</span>
                     </div>
                     <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {userStats?.month || 0}
+                    </div>
+                </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">최근 14일 가입 추이</h3>
+                    <span className="text-xs text-[var(--text-tertiary)]">KST 기준, 관리자 제외</span>
+                </div>
+                <div className="overflow-x-auto">
+                    <div className="flex items-end gap-2 min-w-[560px] h-44">
+                        {trend.map((item) => {
+                            const height = `${Math.max((item.count / maxTrendCount) * 100, item.count > 0 ? 12 : 4)}%`;
+                            return (
+                                <div key={item.date} className="flex-1 min-w-0 flex flex-col items-center gap-2">
+                                    <div className="text-[11px] font-medium text-[var(--text-secondary)] h-4">
+                                        {item.count > 0 ? item.count : ''}
+                                    </div>
+                                    <div className="w-full flex-1 flex items-end">
+                                        <div
+                                            className="w-full rounded-t-md bg-[var(--accent-blue)]/80 hover:bg-[var(--accent-blue)] transition-colors"
+                                            style={{ height }}
+                                            title={`${item.date}: ${item.count}명`}
+                                        />
+                                    </div>
+                                    <div className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
+                                        {formatShortDate(item.date)}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -145,7 +184,6 @@ function UsersTab() {
                 <div className="flex gap-4">
                     {[
                         { label: '카카오', key: 'kakao', color: 'bg-yellow-500', bg: 'bg-yellow-500/10' },
-                        { label: 'Google', key: 'google', color: 'bg-blue-500', bg: 'bg-blue-500/10' },
                         { label: '자체 가입', key: 'local', color: 'bg-emerald-500', bg: 'bg-emerald-500/10' },
                     ].map((p) => {
                         const count = userStats?.byProvider?.[p.key] || 0;
@@ -180,7 +218,6 @@ function UsersTab() {
                                     <span className="text-sm font-medium text-[var(--text-primary)]">{u.name}</span>
                                     <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
                                         u.provider === 'kakao' ? 'bg-yellow-500/10 text-yellow-600' :
-                                        u.provider === 'google' ? 'bg-blue-500/10 text-blue-500' :
                                         'bg-emerald-500/10 text-emerald-500'
                                     }`}>
                                         {u.provider}

@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
 import { Strategy as KakaoStrategy } from 'passport-kakao';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { generateToken, AuthRequest, authMiddleware, requireAuth } from '../middleware/auth';
@@ -57,15 +56,11 @@ const cookieOptions = {
     ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
 };
 
-async function findOrCreateUser(provider: 'kakao' | 'google', profile: any) {
+async function findOrCreateUser(provider: 'kakao', profile: any) {
     const providerId = profile.id;
-    const email = provider === 'kakao'
-        ? profile._json?.kakao_account?.email || ''
-        : profile.emails?.[0]?.value || '';
+    const email = profile._json?.kakao_account?.email || '';
     const name = profile.displayName || profile._json?.properties?.nickname || '';
-    const profileImage = provider === 'kakao'
-        ? profile._json?.properties?.profile_image
-        : profile.photos?.[0]?.value;
+    const profileImage = profile._json?.properties?.profile_image;
 
     let user = await User.findOne({ provider, providerId });
     if (!user) {
@@ -114,36 +109,6 @@ if (process.env.KAKAO_CLIENT_ID) {
             }
         })(req, res, next);
     });
-}
-
-if (process.env.GOOGLE_CLIENT_ID) {
-    passport.use(new GoogleStrategy(
-        {
-            clientID: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            callbackURL: process.env.GOOGLE_CALLBACK_URL || `${CLIENT_URL}/api/auth/google/callback`,
-        },
-        async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
-            try {
-                const user = await findOrCreateUser('google', profile);
-                done(null, user);
-            } catch (err) {
-                done(err);
-            }
-        }
-    ));
-
-    router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
-
-    router.get('/google/callback',
-        passport.authenticate('google', { session: false, failureRedirect: `${CLIENT_URL}?auth=failed` }),
-        (req: Request, res: Response) => {
-            const user = req.user as any;
-            const token = generateToken(user._id.toString(), user.provider);
-            res.cookie('token', token, cookieOptions);
-            res.redirect(CLIENT_URL);
-        }
-    );
 }
 
 router.get('/me', authMiddleware, (req: AuthRequest, res: Response) => {

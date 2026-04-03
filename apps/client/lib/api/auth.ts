@@ -48,6 +48,6 @@ export const logout = async (): Promise<void> => {
     await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
 };
 
-export const getLoginUrl = (provider: 'kakao' | 'google'): string => {
+export const getLoginUrl = (provider: 'kakao'): string => {
     return `${API_URL}/auth/${provider}`;
 };

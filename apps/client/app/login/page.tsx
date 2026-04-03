@@ -126,12 +126,6 @@ export default function LoginPage() {
                         >
                             카카오로 시작하기
                         </a>
-                        <a
-                            href={getLoginUrl('google')}
-                            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium border border-[var(--border-color)] hover:bg-[var(--bg-secondary)]"
-                        >
-                            Google로 시작하기
-                        </a>
                     </div>
                 </div>
             </div>

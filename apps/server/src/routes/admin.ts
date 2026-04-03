@@ -15,6 +15,15 @@ import { getMarketStatus } from '../utils/marketStatus';
 import HotnessHistory from '../models/HotnessHistory';
 
 const router = Router();
+const KST_OFFSET = 9 * 60 * 60 * 1000;
+
+function getKSTDayStart(daysAgo = 0): Date {
+    const kstNow = new Date(Date.now() + KST_OFFSET);
+    const year = kstNow.getUTCFullYear();
+    const month = kstNow.getUTCMonth();
+    const day = kstNow.getUTCDate() - daysAgo;
+    return new Date(Date.UTC(year, month, day) - KST_OFFSET);
+}
 
 async function requireAdmin(req: AuthRequest, res: Response, next: any) {
     if (!req.user || req.user.provider !== 'local' || req.user.providerId !== 'admin') {
@@ -180,22 +189,50 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
 // ============================================
 router.get('/users/stats', async (req: AuthRequest, res: Response) => {
     try {
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const monthAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const todayStart = getKSTDayStart(0);
+        const last7DaysStart = getKSTDayStart(6);
+        const last30DaysStart = getKSTDayStart(29);
+        const trend14DaysStart = getKSTDayStart(13);
+        const userFilter = { $nor: [{ provider: 'local', providerId: 'admin' }] };
 
-        const [totalUsers, todaySignups, weekSignups, monthSignups, providerStats] = await Promise.all([
-            User.countDocuments(),
-            User.countDocuments({ createdAt: { $gte: todayStart } }),
-            User.countDocuments({ createdAt: { $gte: weekAgo } }),
-            User.countDocuments({ createdAt: { $gte: monthAgo } }),
+        const [totalUsers, todaySignups, weekSignups, monthSignups, providerStats, trendRows] = await Promise.all([
+            User.countDocuments(userFilter),
+            User.countDocuments({ ...userFilter, createdAt: { $gte: todayStart } }),
+            User.countDocuments({ ...userFilter, createdAt: { $gte: last7DaysStart } }),
+            User.countDocuments({ ...userFilter, createdAt: { $gte: last30DaysStart } }),
             User.aggregate([
+                { $match: userFilter },
                 { $group: { _id: '$provider', count: { $sum: 1 } } },
+            ]),
+            User.aggregate([
+                { $match: { ...userFilter, createdAt: { $gte: trend14DaysStart } } },
+                {
+                    $group: {
+                        _id: {
+                            $dateToString: {
+                                format: '%Y-%m-%d',
+                                date: '$createdAt',
+                                timezone: 'Asia/Seoul',
+                            },
+                        },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
             ]),
         ]);
 
-        const recentUsers = await User.find()
+        const trendMap = new Map<string, number>(trendRows.map((row: any) => [row._id, row.count]));
+        const signupTrend14d = Array.from({ length: 14 }, (_, index) => {
+            const start = getKSTDayStart(13 - index);
+            const label = new Date(start.getTime() + KST_OFFSET).toISOString().split('T')[0];
+            return {
+                date: label,
+                count: trendMap.get(label) || 0,
+            };
+        });
+
+        const recentUsers = await User.find(userFilter)
             .sort({ createdAt: -1 })
             .limit(10)
             .select('name provider createdAt')
@@ -207,6 +244,7 @@ router.get('/users/stats', async (req: AuthRequest, res: Response) => {
             week: weekSignups,
             month: monthSignups,
             byProvider: Object.fromEntries(providerStats.map((p: any) => [p._id, p.count])),
+            signupTrend14d,
             recentUsers: recentUsers.map((u: any) => ({
                 name: u.name,
                 provider: u.provider,
