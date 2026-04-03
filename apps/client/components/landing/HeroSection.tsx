@@ -162,14 +162,14 @@ function ParticleNetwork() {
         }
 
         const particles: Particle[] = [];
-        const count = 40;
+        const count = 60;
         for (let i = 0; i < count; i++) {
             particles.push({
                 x: Math.random() * W(),
                 y: Math.random() * H(),
                 vx: (Math.random() - 0.5) * 0.3,
                 vy: (Math.random() - 0.5) * 0.3,
-                r: Math.random() * 1.5 + 0.5,
+                r: Math.random() * 2.5 + 1,
             });
         }
 
@@ -186,7 +186,7 @@ function ParticleNetwork() {
 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59,130,246,0.3)';
+                ctx.fillStyle = 'rgba(59,130,246,0.6)';
                 ctx.fill();
             }
 
@@ -196,11 +196,11 @@ function ParticleNetwork() {
                     const dx = particles[i].x - particles[j].x;
                     const dy = particles[i].y - particles[j].y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 120) {
+                    if (dist < 160) {
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(59,130,246,${0.08 * (1 - dist / 120)})`;
+                        ctx.strokeStyle = `rgba(59,130,246,${0.25 * (1 - dist / 160)})`;
                         ctx.lineWidth = 0.5;
                         ctx.stroke();
                     }
@@ -221,7 +221,7 @@ function ParticleNetwork() {
         <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ opacity: 0.5 }}
+            style={{ opacity: 0.8 }}
         />
     );
 }
