@@ -41,12 +41,22 @@ function ChartLineBackground() {
             const w = W();
             const h = H();
 
-            // 빨간 라인: 우상향
-            let y1 = h * 0.65;
+            // 빨간 라인: 전반 횡보 → 후반 급등
+            let y1 = h * 0.55;
             for (let i = 0; i < pointCount; i++) {
                 const x = (i / (pointCount - 1)) * w;
-                y1 += (Math.random() - 0.56) * (h * 0.025);
-                y1 = Math.max(h * 0.15, Math.min(h * 0.85, y1));
+                const ratio = i / pointCount;
+
+                if (ratio < 0.7) {
+                    // 전반 70%: 완만한 등락 (횡보)
+                    y1 += (Math.random() - 0.5) * (h * 0.02);
+                } else {
+                    // 후반 30%: 급격히 치솟음
+                    const rocketPhase = (ratio - 0.7) / 0.3; // 0→1
+                    y1 -= (h * 0.008) * (1 + rocketPhase * 4);
+                    y1 += (Math.random() - 0.5) * (h * 0.008);
+                }
+                y1 = Math.max(h * 0.08, Math.min(h * 0.85, y1));
                 points.push({ x, y: y1 });
             }
 
@@ -122,18 +132,31 @@ function ChartLineBackground() {
             // 끝점 글로우
             if (progress < 1) {
                 const tip = points[visibleCount - 1];
-                const glow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 35);
-                glow.addColorStop(0, 'rgba(239,68,68,0.7)');
-                glow.addColorStop(0.5, 'rgba(239,68,68,0.2)');
-                glow.addColorStop(1, 'rgba(239,68,68,0)');
+                // 외부 글로우 (큰 범위)
+                const outerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 60);
+                outerGlow.addColorStop(0, 'rgba(239,68,68,0.5)');
+                outerGlow.addColorStop(0.3, 'rgba(239,68,68,0.2)');
+                outerGlow.addColorStop(0.6, 'rgba(255,165,0,0.08)');
+                outerGlow.addColorStop(1, 'rgba(239,68,68,0)');
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 35, 0, Math.PI * 2);
-                ctx.fillStyle = glow;
+                ctx.arc(tip.x, tip.y, 60, 0, Math.PI * 2);
+                ctx.fillStyle = outerGlow;
                 ctx.fill();
 
+                // 내부 글로우 (밝은 중심)
+                const innerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 15);
+                innerGlow.addColorStop(0, 'rgba(255,200,150,0.9)');
+                innerGlow.addColorStop(0.5, 'rgba(239,68,68,0.6)');
+                innerGlow.addColorStop(1, 'rgba(239,68,68,0)');
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 4, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,150,150,1)';
+                ctx.arc(tip.x, tip.y, 15, 0, Math.PI * 2);
+                ctx.fillStyle = innerGlow;
+                ctx.fill();
+
+                // 코어 점
+                ctx.beginPath();
+                ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,220,200,1)';
                 ctx.fill();
             }
 
