@@ -273,11 +273,16 @@ function LiveStockTable() {
 
                 {stocks.map((stock, i) => {
                     const isUp = stock.changeRate > 0;
+                    const isBlurred = i >= 3;
                     return (
                         <div
                             key={stock.stockCode}
-                            className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border-color)] last:border-b-0"
-                            style={{ animation: `heroFadeIn 0.5s ease-out ${0.4 + i * 0.08}s both` }}
+                            className={`flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border-color)] last:border-b-0 ${isBlurred ? 'select-none' : ''}`}
+                            style={{
+                                animation: `heroFadeIn 0.5s ease-out ${0.4 + i * 0.08}s both`,
+                                filter: isBlurred ? 'blur(5px)' : 'none',
+                                opacity: isBlurred ? 0.6 : 1,
+                            }}
                         >
                             <span className="w-5 text-center text-sm font-bold text-[var(--text-tertiary)]">{i + 1}</span>
                             <div className="flex-1 min-w-0">
