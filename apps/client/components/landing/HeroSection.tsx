@@ -59,8 +59,8 @@ function CandleBackground() {
 
             for (const c of candles) {
                 const isUp = c.c >= c.o;
-                ctx.strokeStyle = isUp ? 'rgba(239,68,68,0.08)' : 'rgba(59,130,246,0.08)';
-                ctx.fillStyle = isUp ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)';
+                ctx.strokeStyle = isUp ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)';
+                ctx.fillStyle = isUp ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)';
                 ctx.lineWidth = 1;
 
                 const x = c.x;
@@ -108,8 +108,8 @@ function GlowOrbs() {
                 className="absolute w-[600px] h-[600px] rounded-full"
                 style={{
                     top: '10%', left: '20%',
-                    background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)',
-                    filter: 'blur(80px)',
+                    background: 'radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)',
+                    filter: 'blur(60px)',
                     animation: 'orbFloat1 12s ease-in-out infinite',
                 }}
             />
@@ -117,8 +117,8 @@ function GlowOrbs() {
                 className="absolute w-[500px] h-[500px] rounded-full"
                 style={{
                     top: '40%', right: '10%',
-                    background: 'radial-gradient(circle, rgba(239,68,68,0.1) 0%, transparent 70%)',
-                    filter: 'blur(80px)',
+                    background: 'radial-gradient(circle, rgba(239,68,68,0.25) 0%, transparent 70%)',
+                    filter: 'blur(60px)',
                     animation: 'orbFloat2 15s ease-in-out infinite',
                 }}
             />
@@ -126,8 +126,8 @@ function GlowOrbs() {
                 className="absolute w-[400px] h-[400px] rounded-full"
                 style={{
                     bottom: '10%', left: '40%',
-                    background: 'radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%)',
-                    filter: 'blur(80px)',
+                    background: 'radial-gradient(circle, rgba(168,85,247,0.2) 0%, transparent 70%)',
+                    filter: 'blur(60px)',
                     animation: 'orbFloat3 18s ease-in-out infinite',
                 }}
             />
