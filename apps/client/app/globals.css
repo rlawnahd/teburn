@@ -537,8 +537,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 은하수 스포일러 - 배경만 (canvas가 위에 올라감) */
 .spoiler-galaxy-bg {
-  backdrop-filter: blur(12px);
-  background: linear-gradient(135deg, rgba(40,15,80,0.8) 0%, rgba(15,30,70,0.7) 50%, rgba(50,20,90,0.8) 100%);
+  backdrop-filter: blur(16px);
+  background: linear-gradient(135deg, rgba(40,15,80,0.92) 0%, rgba(15,30,70,0.88) 50%, rgba(50,20,90,0.92) 100%);
 }
 
 /* ============================

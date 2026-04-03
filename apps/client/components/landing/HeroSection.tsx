@@ -356,7 +356,7 @@ function LiveStockTable() {
 
                 {stocks.map((stock, i) => {
                     const isUp = stock.changeRate > 0;
-                    const isHidden = i >= 3;
+                    const isHidden = i >= 2;
                     const isSGrade = stock.grade === 'S';
 
                     return (
