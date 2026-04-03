@@ -222,10 +222,14 @@ router.get('/:themeName/history', async (req: Request, res: Response) => {
 // 테마 흐름 타임라인 — 상위 테마들의 장중 시간대별 활성도
 router.get('/timeline/today', async (_req: Request, res: Response) => {
     try {
-        // 현재 테마 가격에서 상위 15개 테마 선정
+        // 현재 테마 가격에서 거래대금 상위 15개 테마 선정
         const pricesData = themePriceCache.getAllThemePrices();
         const topThemes = pricesData.themes
-            .sort((a, b) => Math.abs(b.avgChangeRate) - Math.abs(a.avgChangeRate))
+            .map(t => ({
+                ...t,
+                totalTradingValue: t.topStocks.reduce((sum, s) => sum + (s.tradingValue || 0), 0),
+            }))
+            .sort((a, b) => b.totalTradingValue - a.totalTradingValue)
             .slice(0, 15);
 
         const timeline = topThemes.map(theme => {
