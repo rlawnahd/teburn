@@ -177,25 +177,23 @@ function ChartLineBackground() {
             // 라벨 표시 (progress 0.8 이후 페이드인)
             const labelAlpha = Math.max(0, (progress - 0.8) / 0.2);
             if (labelAlpha > 0) {
-                ctx.font = '11px "Pretendard Variable", sans-serif';
+                ctx.font = 'bold 12px "Pretendard Variable", sans-serif';
 
                 // 빨간 라인 라벨: 주도주
                 const redTip = points[visibleCount - 1];
                 ctx.fillStyle = `rgba(239,68,68,${labelAlpha})`;
-                ctx.fillText('주도주', redTip.x + 8, redTip.y + 4);
+                ctx.fillText('주도주', redTip.x - 50, redTip.y - 10);
 
                 // 파란 라인 라벨: KOSPI
                 const p2Count = Math.floor(Math.min((progress - 0.15) / 0.85, 1) * points2.length);
                 if (p2Count >= 2) {
                     const blueTip = points2[p2Count - 1];
                     ctx.fillStyle = `rgba(100,160,255,${labelAlpha * 0.7})`;
-                    ctx.fillText('KOSPI', blueTip.x + 8, blueTip.y + 4);
+                    ctx.fillText('KOSPI', blueTip.x - 50, blueTip.y + 20);
                 }
             }
 
-            if (progress < 1) {
-                frame = requestAnimationFrame(draw);
-            }
+            frame = requestAnimationFrame(draw);
         };
 
         draw();
