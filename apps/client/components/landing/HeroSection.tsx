@@ -259,25 +259,25 @@ function LiveStockTable() {
 
                 {stocks.map((stock, i) => {
                     const isUp = stock.changeRate > 0;
-                    const isBlurred = i >= 3;
+                    const isHidden = i >= 3;
                     const isSGrade = stock.grade === 'S';
 
                     return (
                         <div
                             key={stock.stockCode}
-                            className={`flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border-color)] last:border-b-0 ${isBlurred ? 'select-none' : ''} ${
-                                isSGrade && !isBlurred ? 'relative' : ''
-                            }`}
+                            className={`relative flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border-color)] last:border-b-0 ${isHidden ? 'select-none overflow-hidden' : ''}`}
                             style={{
                                 animation: `heroFadeIn 0.5s ease-out ${0.4 + i * 0.08}s both`,
-                                filter: isBlurred ? 'blur(5px)' : 'none',
-                                opacity: isBlurred ? 0.6 : 1,
-                                ...(isSGrade && !isBlurred ? {
+                                ...(isSGrade && !isHidden ? {
                                     background: 'linear-gradient(90deg, rgba(239,68,68,0.05) 0%, transparent 100%)',
                                     boxShadow: 'inset 3px 0 0 var(--rise-color)',
                                 } : {}),
                             }}
                         >
+                            {/* 은하수 스포일러 오버레이 */}
+                            {isHidden && (
+                                <div className="absolute inset-0 z-10 spoiler-galaxy" />
+                            )}
                             <span className={`w-5 text-center text-sm font-bold ${i < 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>{i + 1}</span>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
