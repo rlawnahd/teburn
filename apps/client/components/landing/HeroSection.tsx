@@ -41,32 +41,34 @@ function ChartLineBackground() {
             const w = W();
             const h = H();
 
-            // 빨간 라인: 전반 횡보 → 후반 급등
-            let y1 = h * 0.55;
+            // 빨간 라인 (주도주): 전반 파란선과 비슷 → 후반 급등
+            let y1 = h * 0.53;
             for (let i = 0; i < pointCount; i++) {
                 const x = (i / (pointCount - 1)) * w;
                 const ratio = i / pointCount;
 
-                if (ratio < 0.7) {
-                    // 전반 70%: 완만한 등락 (횡보)
-                    y1 += (Math.random() - 0.5) * (h * 0.02);
+                if (ratio < 0.6) {
+                    // 전반 60%: 파란선과 비슷하게 등락 (교차)
+                    const wave = Math.sin(ratio * Math.PI * 5) * (h * 0.03);
+                    y1 += (Math.random() - 0.5) * (h * 0.015) + wave * 0.3;
                 } else {
-                    // 후반 30%: 급격히 치솟음
-                    const rocketPhase = (ratio - 0.7) / 0.3; // 0→1
-                    y1 -= (h * 0.008) * (1 + rocketPhase * 4);
-                    y1 += (Math.random() - 0.5) * (h * 0.008);
+                    // 후반 40%: 급격히 치솟음
+                    const rocketPhase = (ratio - 0.6) / 0.4; // 0→1
+                    y1 -= (h * 0.01) * (1 + rocketPhase * 5);
+                    y1 += (Math.random() - 0.5) * (h * 0.006);
                 }
-                y1 = Math.max(h * 0.08, Math.min(h * 0.85, y1));
+                y1 = Math.max(h * 0.06, Math.min(h * 0.85, y1));
                 points.push({ x, y: y1 });
             }
 
-            // 파란 라인: 빨간 라인을 기준으로 sin파 오프셋 → 여러 번 교차
+            // 파란 라인 (시장 평균): 완만한 횡보, 약간의 등락만
+            let y2 = h * 0.55;
             for (let i = 0; i < pointCount; i++) {
-                const x = points[i].x;
-                const phase = (i / pointCount) * Math.PI * 4; // 4번 교차 (2주기)
-                const offset = Math.sin(phase) * (h * 0.08) + (Math.random() - 0.5) * (h * 0.015);
-                const y2 = points[i].y + offset;
-                points2.push({ x, y: Math.max(h * 0.1, Math.min(h * 0.9, y2)) });
+                const x = (i / (pointCount - 1)) * w;
+                y2 += (Math.random() - 0.5) * (h * 0.012);
+                // 후반에도 횡보 유지 (빨간 선만 치솟음)
+                y2 = Math.max(h * 0.4, Math.min(h * 0.65, y2));
+                points2.push({ x, y: y2 });
             }
         };
         generatePoints();
