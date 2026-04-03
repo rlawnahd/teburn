@@ -24,17 +24,6 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
     const dateLabel = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     const dayName = dayNames[dateObj.getDay()];
-    const themeCounts = new Map<string, number>();
-
-    (stocks || []).forEach((stock) => {
-        stock.themes.forEach((theme) => {
-            themeCounts.set(theme, (themeCounts.get(theme) || 0) + 1);
-        });
-    });
-
-    const topThemes = Array.from(themeCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
 
     const handleStockClick = (stockCode: string) => {
         if (stockCode) {
@@ -91,73 +80,58 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                             <p className="text-sm">데이터가 없습니다</p>
                         </div>
                     ) : (
-                        <>
-                            <div className="px-3 py-2 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-                                <div className="flex flex-wrap gap-1.5">
-                                    {topThemes.map(([theme, count]) => (
-                                        <button
-                                            key={theme}
-                                            onClick={(e) => handleThemeClick(theme, e)}
-                                            className="px-2 py-1 rounded-full bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] text-[11px]"
-                                        >
-                                            {theme} · {count}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            {stocks.map((stock) => {
-                                const isPositive = stock.changeRate > 0;
-                                return (
-                                    <div
-                                        key={`${stock.stockCode || stock.stockName}-${stock.rank}`}
-                                        onClick={() => handleStockClick(stock.stockCode)}
-                                        className={`px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors ${stock.stockCode ? 'cursor-pointer' : ''}`}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-xs font-semibold w-5 text-center flex-shrink-0 ${
-                                                stock.rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'
-                                            }`}>
-                                                {stock.rank}
-                                            </span>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
-                                                    {stock.changeRate >= 29.9 && (
-                                                        <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
-                                                            상한가
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {stock.themes.length > 0 && (
-                                                    <div className="flex items-center gap-1 mt-0.5">
-                                                        {stock.themes.slice(0, 2).map((theme) => (
-                                                            <button
-                                                                key={theme}
-                                                                onClick={(e) => handleThemeClick(theme, e)}
-                                                                className="text-[10px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
-                                                            >
-                                                                {theme}
-                                                            </button>
-                                                        ))}
-                                                        {stock.themes.length > 2 && (
-                                                            <span className="text-[10px] text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
-                                                        )}
-                                                    </div>
+                        stocks.map((stock) => {
+                            const isPositive = stock.changeRate > 0;
+                            return (
+                                <div
+                                    key={`${stock.stockCode || stock.stockName}-${stock.rank}`}
+                                    onClick={() => handleStockClick(stock.stockCode)}
+                                    className={`px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors ${stock.stockCode ? 'cursor-pointer' : ''}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-semibold w-5 text-center flex-shrink-0 ${
+                                            stock.rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'
+                                        }`}>
+                                            {stock.rank}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                                                {stock.changeRate >= 29.9 && (
+                                                    <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
+                                                        상한가
+                                                    </span>
                                                 )}
                                             </div>
-                                            <span className="text-xs text-[var(--text-tertiary)] w-14 text-right flex-shrink-0">
-                                                {formatTradingValue(stock.tradingValue)}
-                                            </span>
-                                            <span className={`text-base font-bold w-16 text-right flex-shrink-0 ${
-                                                isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'
-                                            }`}>
-                                                {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
-                                            </span>
+                                            {stock.themes.length > 0 && (
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    {stock.themes.slice(0, 2).map((theme) => (
+                                                        <button
+                                                            key={theme}
+                                                            onClick={(e) => handleThemeClick(theme, e)}
+                                                            className="text-[10px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
+                                                        >
+                                                            {theme}
+                                                        </button>
+                                                    ))}
+                                                    {stock.themes.length > 2 && (
+                                                        <span className="text-[10px] text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
+                                        <span className="text-xs text-[var(--text-tertiary)] w-14 text-right flex-shrink-0">
+                                            {formatTradingValue(stock.tradingValue)}
+                                        </span>
+                                        <span className={`text-base font-bold w-16 text-right flex-shrink-0 ${
+                                            isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'
+                                        }`}>
+                                            {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                                        </span>
                                     </div>
-                                );
-                            })}
-                        </>
+                                </div>
+                            );
+                        })
                     )}
                 </div>
             </div>

@@ -14,11 +14,6 @@ import {
     ReferenceLine,
 } from 'recharts';
 
-function getSessionLabel(data: IndexData): string {
-    if (data.marketOpen) return data.category === 'index' ? '장중' : '거래중';
-    return data.category === 'index' ? '마감' : '휴장';
-}
-
 function IndexChart({ data, color }: { data: IndexData; color: string }) {
     const chartData = data.chartData.map((p) => {
         const d = new Date(p.time);
@@ -108,10 +103,6 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
 
     const isPositive = data.change >= 0;
     const changeColor = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
-    const sessionLabel = getSessionLabel(data);
-    const sessionClass = data.marketOpen
-        ? 'text-[var(--accent-blue)] bg-[var(--accent-blue)]/10'
-        : 'text-[var(--text-tertiary)] bg-[var(--bg-secondary)]';
 
     return (
         <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] overflow-hidden">
@@ -121,9 +112,6 @@ function IndexDetailCard({ data, color }: { data: IndexData | null; color: strin
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
                             <span className="text-base font-semibold text-[var(--text-primary)] truncate">{data.name}</span>
-                            <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${sessionClass}`}>
-                                {sessionLabel}
-                            </span>
                         </div>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -195,7 +183,6 @@ export default function IndexView() {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">지수 현황</h2>
-                    <span className="text-sm text-[var(--text-tertiary)]">1분 캐시</span>
                     {updatedTime && (
                         <span className="text-sm text-[var(--text-tertiary)]">
                             {updatedTime}

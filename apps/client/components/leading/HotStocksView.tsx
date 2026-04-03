@@ -16,21 +16,6 @@ import MarketThemeCard from './MarketThemeCard';
 
 type PriceFlash = 'rise' | 'fall' | null;
 type RankChange = { delta: number; isNew: boolean };
-type DriverChip = { label: string; score: number };
-
-function getPrimaryDrivers(stock: HotStock): DriverChip[] {
-    return [
-        { label: '거래대금', score: stock.tradingValueScore },
-        { label: '모멘텀', score: stock.momentumScore },
-        { label: '거래량', score: stock.volumeScore },
-        { label: '뉴스', score: stock.newsScore },
-        { label: '집중도', score: stock.themeConcentrationScore },
-        { label: '연속성', score: stock.streakScore },
-    ]
-        .filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
-}
 
 function StockRow({
     stock,
@@ -53,7 +38,6 @@ function StockRow({
     const isLimitUp = stock.changeRate >= 29.9;
     const streakDays = stock.sStreak || 0;
     const isStreaking = streakDays >= 2;
-    const drivers = getPrimaryDrivers(stock);
 
     // 순위 변동 시에만 행 전체 깜빡임 (가격 변동은 깜빡임 없음)
     const rankFlashClass = rankChange && rankChange.delta !== 0 && !rankChange.isNew
@@ -127,18 +111,6 @@ function StockRow({
                         {stock.latestNews}
                     </p>
                 )}
-                {drivers.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                        {drivers.map((driver) => (
-                            <span
-                                key={driver.label}
-                                className="px-1.5 py-0.5 text-[10px] rounded-md bg-[var(--bg-secondary)] text-[var(--text-tertiary)]"
-                            >
-                                {driver.label} {driver.score}
-                            </span>
-                        ))}
-                    </div>
-                )}
             </div>
 
             <div className="text-right flex-shrink-0">
@@ -179,25 +151,21 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
     const aCount = stocks.filter(s => s.grade === 'A').length;
     const limitUpCount = stocks.filter(s => s.changeRate >= 29.9).length;
 
-    // Highest-conviction theme among current hot stocks
-    const weightedStocks = stocks.slice(0, 10);
-    const themeMap = new Map<string, { count: number; totalChange: number; totalScore: number }>();
-    weightedStocks.forEach(s => {
+    // Most common theme among S-grade stocks
+    const sStocks = stocks.filter(s => s.grade === 'S');
+    const themeMap = new Map<string, { count: number; totalChange: number }>();
+    sStocks.forEach(s => {
         s.themes.forEach(theme => {
-            const entry = themeMap.get(theme) ?? { count: 0, totalChange: 0, totalScore: 0 };
-            themeMap.set(theme, {
-                count: entry.count + 1,
-                totalChange: entry.totalChange + s.changeRate,
-                totalScore: entry.totalScore + s.totalScore,
-            });
+            const entry = themeMap.get(theme) ?? { count: 0, totalChange: 0 };
+            themeMap.set(theme, { count: entry.count + 1, totalChange: entry.totalChange + s.changeRate });
         });
     });
     let topTheme: string | null = null;
-    let topThemeScore = 0;
+    let topThemeCount = 0;
     let topThemeAvgChange = 0;
     themeMap.forEach((val, key) => {
-        if (val.totalScore > topThemeScore) {
-            topThemeScore = val.totalScore;
+        if (val.count > topThemeCount) {
+            topThemeCount = val.count;
             topTheme = key;
             topThemeAvgChange = val.totalChange / val.count;
         }
@@ -229,7 +197,7 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
                     <div className="text-lg font-bold" style={{ color: limitUpCount > 0 ? 'var(--rise-color)' : 'var(--text-primary)' }}>{limitUpCount}</div>
                     <div className="text-xs text-[var(--text-tertiary)]">상한가</div>
                 </div>
-                {/* 주도 테마 */}
+                {/* 오늘의 테마 */}
                 <div className="bg-[var(--bg-primary)] px-4 py-3 text-center col-span-2 sm:col-span-1">
                     {topTheme ? (
                         <>
@@ -237,12 +205,12 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
                             <div className="text-xs" style={{ color: topThemeAvgChange >= 0 ? 'var(--rise-color)' : 'var(--fall-color)' }}>
                                 {topThemeAvgChange >= 0 ? '+' : ''}{topThemeAvgChange.toFixed(1)}% avg
                             </div>
-                            <div className="text-xs text-[var(--text-tertiary)]">주도 테마</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">오늘의 테마</div>
                         </>
                     ) : (
                         <>
                             <div className="text-lg font-bold text-[var(--text-tertiary)]">—</div>
-                            <div className="text-xs text-[var(--text-tertiary)]">주도 테마</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">오늘의 테마</div>
                         </>
                     )}
                 </div>
@@ -406,7 +374,7 @@ export default function HotStocksView() {
                         <span className="w-7 text-center">#</span>
                         <span className="flex-1">종목</span>
                         <span className="text-right">현재가</span>
-                        <span className="hidden sm:block w-12 text-right">추정대금</span>
+                        <span className="hidden sm:block w-12 text-right">거래대금</span>
                         <span className="hidden sm:block w-10 text-right">점수</span>
                     </div>
                     <AnimatePresence mode="popLayout">
@@ -433,22 +401,13 @@ export default function HotStocksView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">주도주 분석</h2>
-                    <span className="text-xs text-[var(--text-tertiary)]">실시간 체결 + 5분 배치 보정</span>
+                    <span className="text-xs text-[var(--text-tertiary)]">거래대금 + 등락률 + 거래량 + 뉴스 + 대장주집중도</span>
                 </div>
                 {data?.lastUpdateTime && (
                     <span className="hidden sm:inline text-xs text-[var(--text-tertiary)]">
                         {formatDataDate(data.lastUpdateTime)}
                     </span>
                 )}
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 text-[11px] text-[var(--text-tertiary)]">
-                <span className="px-2 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-                    거래대금은 장중 실시간 추정치
-                </span>
-                <span className="px-2 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-                    배치 갱신 시 정확한 누적값으로 보정
-                </span>
             </div>
 
             {stocks.length > 0 && <MarketKpiStrip stocks={stocks} />}

@@ -9,7 +9,6 @@ interface CachedStockPrice {
     changeRate: number;
     volume: number;
     tradingValue: number;
-    marketCap: number;
     updatedAt: Date;
 }
 
@@ -38,7 +37,6 @@ const CachedStockPriceSchema = new Schema({
     changeRate: Number,
     volume: Number,
     tradingValue: Number,
-    marketCap: Number,
     updatedAt: Date,
 }, { _id: false });
 
