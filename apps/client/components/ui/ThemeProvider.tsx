@@ -27,11 +27,11 @@ function subscribeTheme(listener: () => void) {
 }
 
 function getThemeSnapshot(): Theme {
-  return (localStorage.getItem('teburn-theme') as Theme) || 'light';
+  return (localStorage.getItem('teburn-theme') as Theme) || 'dark';
 }
 
 function getThemeServerSnapshot(): Theme {
-  return 'light';
+  return 'dark';
 }
 
 // --- mounted store ---
