@@ -138,26 +138,6 @@ function ChartLineBackground() {
             if (progress < 1) {
                 const tip = points[visibleCount - 1];
 
-                // 외부 글로우
-                const outerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 50);
-                outerGlow.addColorStop(0, 'rgba(255,180,80,0.6)');
-                outerGlow.addColorStop(0.3, 'rgba(239,68,68,0.3)');
-                outerGlow.addColorStop(1, 'rgba(239,68,68,0)');
-                ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 50, 0, Math.PI * 2);
-                ctx.fillStyle = outerGlow;
-                ctx.fill();
-
-                // 내부 글로우 (밝은 노란 중심)
-                const innerGlow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 12);
-                innerGlow.addColorStop(0, 'rgba(255,240,200,1)');
-                innerGlow.addColorStop(0.4, 'rgba(255,180,80,0.8)');
-                innerGlow.addColorStop(1, 'rgba(239,68,68,0)');
-                ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 12, 0, Math.PI * 2);
-                ctx.fillStyle = innerGlow;
-                ctx.fill();
-
                 // 파티클 스파크 — progress에 비례해서 점점 많고 크게
                 const sparkIntensity = Math.max(0, (progress - 0.5) / 0.5); // 0.5부터 시작
                 const sparkCount = Math.floor(sparkIntensity * 12); // 최대 12개
