@@ -81,7 +81,12 @@ export default function StockDetailPage() {
         if (update.stockCode !== stockCode) return;
         queryClient.setQueryData(['stockDetail', stockCode], (old: any) => {
             if (!old) return old;
-            return { ...old, currentPrice: update.price, changeRate: update.changeRate };
+            return {
+                ...old,
+                currentPrice: update.price,
+                changeRate: update.changeRate,
+                tradingValue: (old.tradingValue || 0) + (update.price * update.volume),
+            };
         });
     }, [stockCode, queryClient]));
 

@@ -292,7 +292,12 @@ export default function HotStocksView() {
                 ...old,
                 stocks: old.stocks.map((s: any) =>
                     s.stockCode === update.stockCode
-                        ? { ...s, currentPrice: update.price, changeRate: update.changeRate }
+                        ? {
+                            ...s,
+                            currentPrice: update.price,
+                            changeRate: update.changeRate,
+                            tradingValue: s.tradingValue + (update.price * update.volume),
+                        }
                         : s
                 ),
             };
