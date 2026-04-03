@@ -100,7 +100,7 @@ export default function GradeShowcase() {
     const isInView = useInView(ref, { once: true, margin: '-100px' });
 
     return (
-        <section ref={ref} className="py-16 sm:py-24 bg-[var(--bg-secondary)] border-t border-[var(--border-color)]">
+        <section ref={ref} className="py-16 sm:py-24 border-t border-[#1e293b]" style={{ background: '#0d1220' }}>
             <div className="max-w-[800px] mx-auto px-4 sm:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

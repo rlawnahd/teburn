@@ -273,11 +273,11 @@ function StatsBar() {
 // ---- 메인 ----
 export default function HeroSection() {
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[var(--bg-primary)] py-20">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20" style={{ background: '#0a0e1a' }}>
             <ChartLineBackground />
             <GlowOrbs />
 
-            <div className="relative z-10 w-full max-w-2xl mx-auto px-6">
+            <div className="relative z-10 w-full max-w-2xl mx-auto px-6 text-white" style={{ ['--text-primary' as any]: '#f0f0f0', ['--text-secondary' as any]: '#9ca3af', ['--text-tertiary' as any]: '#6b7280', ['--border-color' as any]: '#1e293b', ['--bg-primary' as any]: '#0f1629', ['--bg-secondary' as any]: '#131b30' }}>
                 <div className="text-center" style={{ animation: 'heroFadeIn 0.6s ease-out both' }}>
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)]/70 backdrop-blur-sm text-xs text-[var(--text-secondary)]">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -289,7 +289,7 @@ export default function HeroSection() {
                     style={{ animation: 'heroFadeIn 0.8s ease-out 0.1s both' }}>
                     돈이 몰리는 종목을
                     <br />
-                    <span style={{ color: 'var(--accent-blue)' }}>실시간</span>으로
+                    <span style={{ color: '#ef4444' }}>실시간</span>으로
                 </h1>
 
                 <p className="text-center mt-4 text-base sm:text-lg text-[var(--text-secondary)] max-w-md mx-auto"
@@ -305,7 +305,7 @@ export default function HeroSection() {
                 <div className="text-center mt-8" style={{ animation: 'heroFadeIn 0.8s ease-out 0.5s both' }}>
                     <Link href="/login"
                         className="inline-flex items-center h-12 px-8 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
-                        style={{ background: 'var(--accent-blue)' }}>
+                        style={{ background: '#ef4444', boxShadow: '0 4px 24px rgba(239,68,68,0.4)' }}>
                         무료로 시작하기
                     </Link>
                     <p className="mt-3 text-xs text-[var(--text-tertiary)]">가입 10초 · 완전 무료</p>
