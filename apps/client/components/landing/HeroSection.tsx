@@ -33,17 +33,32 @@ function ChartLineBackground() {
         const pointCount = 80;
         const points: { x: number; y: number }[] = [];
 
+        const points2: { x: number; y: number }[] = [];
+
         const generatePoints = () => {
             points.length = 0;
+            points2.length = 0;
             const w = W();
             const h = H();
-            let y = h * 0.7;
+
+            // 빨간 라인: 우상향
+            let y1 = h * 0.65;
             for (let i = 0; i < pointCount; i++) {
                 const x = (i / (pointCount - 1)) * w;
-                // 전반적으로 우상향 + 노이즈
-                y += (Math.random() - 0.55) * (h * 0.03);
-                y = Math.max(h * 0.15, Math.min(h * 0.85, y));
-                points.push({ x, y });
+                y1 += (Math.random() - 0.56) * (h * 0.025);
+                y1 = Math.max(h * 0.15, Math.min(h * 0.85, y1));
+                points.push({ x, y: y1 });
+            }
+
+            // 파란 라인: 다른 경로로 시작, 중간에 교차
+            let y2 = h * 0.45;
+            for (let i = 0; i < pointCount; i++) {
+                const x = (i / (pointCount - 1)) * w;
+                // 전반부는 아래로, 후반부는 위로 → 빨간 라인과 교차
+                const bias = i < pointCount * 0.4 ? 0.52 : 0.44;
+                y2 += (Math.random() - bias) * (h * 0.03);
+                y2 = Math.max(h * 0.15, Math.min(h * 0.85, y2));
+                points2.push({ x, y: y2 });
             }
         };
         generatePoints();
@@ -124,21 +139,40 @@ function ChartLineBackground() {
                 ctx.fill();
             }
 
-            // 두 번째 라인 (빨간, 더 아래쪽)
-            if (progress > 0.2) {
-                const p2 = Math.min((progress - 0.2) / 0.8, 1);
-                const count2 = Math.floor(p2 * points.length);
+            // 두 번째 라인 (파란, 교차)
+            if (progress > 0.15) {
+                const p2 = Math.min((progress - 0.15) / 0.85, 1);
+                const count2 = Math.floor(p2 * points2.length);
                 if (count2 >= 2) {
+                    const drawLine2 = (count: number) => {
+                        ctx.moveTo(points2[0].x, points2[0].y);
+                        for (let i = 1; i < count; i++) {
+                            const prev = points2[i - 1];
+                            const curr = points2[i];
+                            const cpx = (prev.x + curr.x) / 2;
+                            ctx.quadraticCurveTo(prev.x, prev.y, cpx, (prev.y + curr.y) / 2);
+                        }
+                    };
+
+                    // 글로우
                     ctx.beginPath();
-                    ctx.moveTo(points[0].x, points[0].y + h * 0.15);
-                    for (let i = 1; i < count2; i++) {
-                        const prev = points[i - 1];
-                        const curr = points[i];
-                        const cpx = (prev.x + curr.x) / 2;
-                        ctx.quadraticCurveTo(prev.x, prev.y + h * 0.15, cpx, (prev.y + curr.y) / 2 + h * 0.15);
-                    }
-                    ctx.strokeStyle = 'rgba(59,130,246,0.2)';
-                    ctx.lineWidth = 1.5;
+                    drawLine2(count2);
+                    ctx.strokeStyle = 'rgba(59,130,246,0.1)';
+                    ctx.lineWidth = 6;
+                    ctx.stroke();
+
+                    // 메인
+                    ctx.beginPath();
+                    drawLine2(count2);
+                    ctx.strokeStyle = 'rgba(59,130,246,0.35)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // 코어
+                    ctx.beginPath();
+                    drawLine2(count2);
+                    ctx.strokeStyle = 'rgba(100,160,255,0.5)';
+                    ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }
             }
