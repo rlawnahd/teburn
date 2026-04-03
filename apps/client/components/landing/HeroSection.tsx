@@ -108,33 +108,43 @@ function ChartLineBackground() {
             ctx.fillStyle = gradient;
             ctx.fill();
 
-            // 트레일: 끝 10개 포인트를 노란→주황→빨강 그라데이션
-            const trailLen = Math.min(12, visibleCount);
-            if (trailLen > 2 && progress > 0.5) {
+            // 트레일: 급등 구간에서 노란→주황→빨강 (progress 0.7 이후 강하게)
+            const fireIntensity = Math.max(0, (progress - 0.6) / 0.4); // 0.6부터 시작, 1.0에서 최대
+            if (fireIntensity > 0) {
+                const trailLen = Math.min(Math.floor(8 + fireIntensity * 12), visibleCount);
                 for (let t2 = 0; t2 < trailLen - 1; t2++) {
                     const idx = visibleCount - trailLen + t2;
                     if (idx < 1) continue;
                     const from = points[idx];
                     const to = points[idx + 1];
-                    const trailProgress = t2 / (trailLen - 1); // 0→1 (뒤→앞)
+                    const tp = t2 / (trailLen - 1); // 0→1 (뒤→앞)
                     const r = 255;
-                    const g = Math.round(80 + trailProgress * 150); // 80→230
-                    const b = Math.round(40 + trailProgress * 120); // 40→160
-                    const alpha = 0.3 + trailProgress * 0.7;
+                    const g = Math.round(60 + tp * 180); // 60→240 (빨강→노랑)
+                    const b = Math.round(20 + tp * 100); // 20→120
+                    const alpha = (0.4 + tp * 0.6) * fireIntensity;
 
+                    // 외부 글로우 (넓고 흐림)
+                    ctx.beginPath();
+                    ctx.moveTo(from.x, from.y);
+                    ctx.lineTo(to.x, to.y);
+                    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.25})`;
+                    ctx.lineWidth = 14 + tp * 10;
+                    ctx.stroke();
+
+                    // 메인 트레일
                     ctx.beginPath();
                     ctx.moveTo(from.x, from.y);
                     ctx.lineTo(to.x, to.y);
                     ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
-                    ctx.lineWidth = 2 + trailProgress * 2;
+                    ctx.lineWidth = 3 + tp * 3;
                     ctx.stroke();
 
-                    // 트레일 글로우
+                    // 코어 (가장 밝음)
                     ctx.beginPath();
                     ctx.moveTo(from.x, from.y);
                     ctx.lineTo(to.x, to.y);
-                    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.2})`;
-                    ctx.lineWidth = 8 + trailProgress * 6;
+                    ctx.strokeStyle = `rgba(255,${Math.round(200 + tp * 55)},${Math.round(150 + tp * 80)},${alpha * 0.8})`;
+                    ctx.lineWidth = 1 + tp * 1.5;
                     ctx.stroke();
                 }
             }
@@ -184,19 +194,33 @@ function ChartLineBackground() {
                 ctx.fillStyle = innerGlow;
                 ctx.fill();
 
-                // 파티클 스파크 (위로 튀는 불꽃)
-                const sparkCount = 6;
+                // 파티클 스파크 — progress에 비례해서 점점 많고 크게
+                const sparkIntensity = Math.max(0, (progress - 0.5) / 0.5); // 0.5부터 시작
+                const sparkCount = Math.floor(sparkIntensity * 12); // 최대 12개
                 for (let s = 0; s < sparkCount; s++) {
-                    const seed = (progress * 100 + s * 17) % 1;
-                    const lifetime = (seed * 0.8 + 0.2);
-                    const sx = tip.x + (Math.sin(seed * 30 + progress * 20) * 15);
-                    const sy = tip.y - lifetime * 40 - Math.random() * 10;
-                    const sparkAlpha = (1 - lifetime) * 0.8;
-                    const sparkSize = (1 - lifetime) * 2.5 + 0.5;
+                    const seed = ((progress * 137 + s * 23) % 100) / 100;
+                    const lifetime = seed;
+                    const spread = 10 + sparkIntensity * 20; // 점점 넓게 퍼짐
+                    const height = 20 + sparkIntensity * 50; // 점점 높이 올라감
+                    const sx = tip.x + Math.sin(seed * 50 + progress * 15 + s) * spread;
+                    const sy = tip.y - lifetime * height;
+                    const sparkAlpha = (1 - lifetime) * sparkIntensity;
+                    const sparkSize = (1 - lifetime) * (1.5 + sparkIntensity * 2.5);
+
+                    // 파티클 글로우
+                    if (sparkSize > 1.5) {
+                        const pGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, sparkSize * 3);
+                        pGlow.addColorStop(0, `rgba(255,200,100,${sparkAlpha * 0.3})`);
+                        pGlow.addColorStop(1, 'rgba(255,200,100,0)');
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, sparkSize * 3, 0, Math.PI * 2);
+                        ctx.fillStyle = pGlow;
+                        ctx.fill();
+                    }
 
                     ctx.beginPath();
                     ctx.arc(sx, sy, sparkSize, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,${Math.round(150 + lifetime * 100)},${Math.round(50 + lifetime * 100)},${sparkAlpha})`;
+                    ctx.fillStyle = `rgba(255,${Math.round(180 + lifetime * 75)},${Math.round(80 + lifetime * 120)},${sparkAlpha})`;
                     ctx.fill();
                 }
             }
