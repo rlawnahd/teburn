@@ -134,40 +134,7 @@ function ChartLineBackground() {
             ctx.lineWidth = 1;
             ctx.stroke();
 
-            // 끝점 글로우 + 파티클 스파크
-            if (progress < 1) {
-                const tip = points[visibleCount - 1];
-
-                // 파티클 스파크 — progress에 비례해서 점점 많고 크게
-                const sparkIntensity = Math.max(0, (progress - 0.5) / 0.5); // 0.5부터 시작
-                const sparkCount = Math.floor(sparkIntensity * 12); // 최대 12개
-                for (let s = 0; s < sparkCount; s++) {
-                    const seed = ((progress * 137 + s * 23) % 100) / 100;
-                    const lifetime = seed;
-                    const spread = 10 + sparkIntensity * 20; // 점점 넓게 퍼짐
-                    const height = 20 + sparkIntensity * 50; // 점점 높이 올라감
-                    const sx = tip.x + Math.sin(seed * 50 + progress * 15 + s) * spread;
-                    const sy = tip.y - lifetime * height;
-                    const sparkAlpha = (1 - lifetime) * sparkIntensity;
-                    const sparkSize = (1 - lifetime) * (1.5 + sparkIntensity * 2.5);
-
-                    // 파티클 글로우
-                    if (sparkSize > 1.5) {
-                        const pGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, sparkSize * 3);
-                        pGlow.addColorStop(0, `rgba(255,200,100,${sparkAlpha * 0.3})`);
-                        pGlow.addColorStop(1, 'rgba(255,200,100,0)');
-                        ctx.beginPath();
-                        ctx.arc(sx, sy, sparkSize * 3, 0, Math.PI * 2);
-                        ctx.fillStyle = pGlow;
-                        ctx.fill();
-                    }
-
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, sparkSize, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,${Math.round(180 + lifetime * 75)},${Math.round(80 + lifetime * 120)},${sparkAlpha})`;
-                    ctx.fill();
-                }
-            }
+            // (글로우/파티클 제거됨)
 
             // 두 번째 라인 (파란, 교차)
             if (progress > 0.15) {
@@ -371,7 +338,6 @@ export default function HeroSection() {
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20" style={{ background: '#0a0e1a' }}>
             <ChartLineBackground />
-            <GlowOrbs />
 
             <div className="relative z-10 w-full max-w-2xl mx-auto px-6 text-white" style={{ ['--text-primary' as any]: '#f0f0f0', ['--text-secondary' as any]: '#9ca3af', ['--text-tertiary' as any]: '#6b7280', ['--border-color' as any]: '#1e293b', ['--bg-primary' as any]: '#0f1629', ['--bg-secondary' as any]: '#131b30' }}>
                 <div className="text-center" style={{ animation: 'heroFadeIn 0.6s ease-out both' }}>
