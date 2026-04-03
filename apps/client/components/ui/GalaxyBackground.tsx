@@ -136,7 +136,7 @@ export default function GalaxyBackground() {
                     endX: Math.random() * ww * 0.4 + ww * 0.6,
                     endY: Math.random() * hh * 0.3,
                     progress: 0,
-                    speed: 0.015 + Math.random() * 0.01,
+                    speed: 0.004 + Math.random() * 0.003,
                     active: true,
                 });
                 // 오래된 비활성 별똥별 정리
