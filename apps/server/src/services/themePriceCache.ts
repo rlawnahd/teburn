@@ -56,7 +56,7 @@ class ThemePriceCacheService {
     // 캐시 업데이트 주기 (5분)
     private readonly UPDATE_INTERVAL = 5 * 60 * 1000;
     // 각 테마당 가져올 종목 수
-    private readonly STOCKS_PER_THEME = 4;
+    private readonly STOCKS_PER_THEME = 10;
 
     /**
      * 모든 테마의 주가 배치 업데이트
