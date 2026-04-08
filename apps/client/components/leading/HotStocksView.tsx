@@ -16,12 +16,14 @@ import MarketThemeCard from './MarketThemeCard';
 
 type PriceFlash = 'rise' | 'fall' | null;
 type RankChange = { delta: number; isNew: boolean };
+type ScoreChange = { delta: number };
 
 function StockRow({
     stock,
     rank,
     priceFlash,
     rankChange,
+    scoreChange,
     staggerIndex,
     onStockClick,
     onThemeClick,
@@ -30,6 +32,7 @@ function StockRow({
     rank: number;
     priceFlash: PriceFlash;
     rankChange: RankChange | null;
+    scoreChange: ScoreChange | null;
     staggerIndex: number;
     onStockClick: (stockCode: string) => void;
     onThemeClick: (theme: string) => void;
@@ -37,16 +40,19 @@ function StockRow({
     const isPositive = stock.changeRate > 0;
     const isLimitUp = stock.changeRate >= 29.9;
     const streakDays = stock.sStreak || 0;
-    const isStreaking = streakDays >= 2;
 
-    // 순위 변동 시에만 행 전체 깜빡임 (가격 변동은 깜빡임 없음)
-    const rankFlashClass = rankChange && rankChange.delta !== 0 && !rankChange.isNew
-        ? (rankChange.delta > 0 ? 'animate-flash-rise' : 'animate-flash-fall')
-        : '';
+    // 시그널 감지
+    const isNewEntry = rankChange?.isNew === true;
+    const rankJump = rankChange && !rankChange.isNew && rankChange.delta >= 5;
+    const rankDrop = rankChange && !rankChange.isNew && rankChange.delta <= -5;
+    const scoreJump = scoreChange && scoreChange.delta >= 20;
+    const volumeExplosion = (stock.volumeSurgeRate || 0) >= 10;
+    const isLongRunner = streakDays >= 5; // 진짜 대장주
 
-    const streakClass = streakDays >= 3
+    // 발광은 1가지만: 신규 진입 (최우선) > 장기 주도 (5일+)
+    const glowClass = isNewEntry
         ? 'streak-glow-intense my-0.5'
-        : isStreaking
+        : isLongRunner
         ? 'streak-glow my-0.5'
         : 'border-b border-[var(--border-color)]';
 
@@ -56,33 +62,58 @@ function StockRow({
             layoutId={stock.stockCode}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             onClick={() => onStockClick(stock.stockCode)}
-            className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${rankFlashClass} ${streakClass}`}
+            className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${glowClass}`}
         >
-            <div className="w-7 flex-shrink-0 text-center">
+            <div className="w-8 flex-shrink-0 text-center">
                 <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                     {rank}
                 </span>
-                {rankChange?.isNew ? (
+                {isNewEntry ? (
                     <span className="text-[9px] font-bold text-amber-500 ml-0.5">N</span>
+                ) : rankJump ? (
+                    <span className="text-[10px] font-bold ml-0.5 text-[var(--rise-color)]">
+                        ▲▲{Math.abs(rankChange.delta)}
+                    </span>
+                ) : rankDrop ? (
+                    <span className="text-[10px] font-bold ml-0.5 text-[var(--fall-color)]">
+                        ▼▼{Math.abs(rankChange.delta)}
+                    </span>
                 ) : rankChange && rankChange.delta !== 0 ? (
-                    <span className={`text-[9px] font-semibold ml-0.5 ${rankChange.delta > 0 ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                    <span className={`text-[9px] font-semibold ml-0.5 ${rankChange.delta > 0 ? 'text-[var(--rise-color)]/70' : 'text-[var(--fall-color)]/70'}`}>
                         {rankChange.delta > 0 ? '▲' : '▼'}{Math.abs(rankChange.delta)}
                     </span>
                 ) : null}
             </div>
 
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
-                    {isStreaking && (
+
+                    {/* 거래량 폭발 */}
+                    {volumeExplosion && (
+                        <span className="text-[11px] font-bold flex-shrink-0" title={`거래량 ${stock.volumeSurgeRate}배`}>
+                            🔥
+                        </span>
+                    )}
+
+                    {/* 점수 급상승 */}
+                    {scoreJump && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">
+                            +{scoreChange.delta}점
+                        </span>
+                    )}
+
+                    {/* 연속 주도 (3일+, 발광은 5일+만) */}
+                    {streakDays >= 3 && (
                         <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${
-                            streakDays >= 3
+                            streakDays >= 5
                                 ? 'text-red-500 bg-red-500/15'
                                 : 'text-amber-600 bg-amber-500/15'
                         }`}>
-                            {streakDays}일 연속 주도주
+                            {streakDays}일 연속
                         </span>
                     )}
+
                     {isLimitUp && (
                         <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
                             상한가
@@ -220,11 +251,12 @@ function MarketKpiStrip({ stocks }: { stocks: HotStock[] }) {
     );
 }
 
-// 이전 데이터와 비교하여 가격 플래시/순위 변동 계산
+// 이전 데이터와 비교하여 가격 플래시/순위 변동/점수 변동 계산
 function usePriceFlashAndRank(stocks: HotStock[]) {
     const prevStocksRef = useRef<HotStock[]>([]);
     const [flashes, setFlashes] = useState<Record<string, PriceFlash>>({});
     const [rankChanges, setRankChanges] = useState<Record<string, RankChange>>({});
+    const [scoreChanges, setScoreChanges] = useState<Record<string, ScoreChange>>({});
 
     useEffect(() => {
         const prev = prevStocksRef.current;
@@ -235,9 +267,11 @@ function usePriceFlashAndRank(stocks: HotStock[]) {
 
         const prevPriceMap = new Map(prev.map(s => [s.stockCode, s.currentPrice]));
         const prevRankMap = new Map(prev.map((s, i) => [s.stockCode, i]));
+        const prevScoreMap = new Map(prev.map(s => [s.stockCode, s.totalScore]));
 
         const newFlashes: Record<string, PriceFlash> = {};
         const newRankChanges: Record<string, RankChange> = {};
+        const newScoreChanges: Record<string, ScoreChange> = {};
 
         stocks.forEach((stock, i) => {
             const prevPrice = prevPriceMap.get(stock.stockCode);
@@ -251,21 +285,26 @@ function usePriceFlashAndRank(stocks: HotStock[]) {
             } else {
                 newRankChanges[stock.stockCode] = { delta: prevRank - i, isNew: false };
             }
+
+            const prevScore = prevScoreMap.get(stock.stockCode);
+            if (prevScore !== undefined) {
+                newScoreChanges[stock.stockCode] = { delta: stock.totalScore - prevScore };
+            }
         });
 
         setFlashes(newFlashes);
         setRankChanges(newRankChanges);
+        setScoreChanges(newScoreChanges);
         prevStocksRef.current = stocks;
 
-        // 1.5초 후 플래시 + 순위 변동 해제
+        // 1.5초 후 플래시 해제 (배지/스코어 변동은 유지)
         const timer = setTimeout(() => {
             setFlashes({});
-            setRankChanges({});
         }, 1500);
         return () => clearTimeout(timer);
     }, [stocks]);
 
-    return { flashes, rankChanges };
+    return { flashes, rankChanges, scoreChanges };
 }
 
 export default function HotStocksView() {
@@ -319,7 +358,7 @@ export default function HotStocksView() {
     }, [queryClient]));
 
     const stocks = data?.stocks || [];
-    const { flashes, rankChanges } = usePriceFlashAndRank(stocks);
+    const { flashes, rankChanges, scoreChanges } = usePriceFlashAndRank(stocks);
 
     const handleStockClick = (stockCode: string) => {
         router.push(`/stocks/${encodeURIComponent(stockCode)}`);
@@ -385,6 +424,7 @@ export default function HotStocksView() {
                                 rank={startRank + i}
                                 priceFlash={flashes[stock.stockCode] || null}
                                 rankChange={rankChanges[stock.stockCode] || null}
+                                scoreChange={scoreChanges[stock.stockCode] || null}
                                 staggerIndex={i}
                                 onStockClick={handleStockClick}
                                 onThemeClick={(theme) => router.push(`/themes/${encodeURIComponent(theme)}`)}
