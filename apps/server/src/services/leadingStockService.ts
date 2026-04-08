@@ -200,6 +200,32 @@ export async function getCalendarData(year: number, month: number): Promise<Cale
         return { date: dateStr, topStocks: fallbackStocks };
     });
 
+    // 각 날짜의 1위 종목에 AI 이유 붙이기 (캐시된 것만, 없으면 생략)
+    try {
+        const StockReasonCache = (await import('../models/StockReasonCache')).default;
+        const cacheKeys = results
+            .map(r => r.topStocks[0])
+            .filter(s => s && s.stockCode)
+            .map(s => `${results.find(r => r.topStocks[0] === s)!.date}:${s.stockCode}`);
+
+        if (cacheKeys.length > 0) {
+            const cached = await StockReasonCache.find({ cacheKey: { $in: cacheKeys } }).lean();
+            const reasonMap = new Map(cached.map(c => [c.cacheKey, c.reason]));
+
+            for (const result of results) {
+                const top = result.topStocks[0];
+                if (top && top.stockCode) {
+                    const reason = reasonMap.get(`${result.date}:${top.stockCode}`);
+                    if (reason) {
+                        (top as any).reason = reason;
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        // AI 이유 가져오기 실패해도 나머지 데이터는 그대로 반환
+    }
+
     return results;
 }
 

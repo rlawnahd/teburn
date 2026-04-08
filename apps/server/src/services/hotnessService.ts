@@ -11,6 +11,7 @@ import HotnessHistory from '../models/HotnessHistory';
 import { updateGlobalSubscriptions } from './wsServer';
 import { mergeBatchScores } from './realtimeHotness';
 import { getKospiIndexData, getKosdaqIndexData } from './indexService';
+import { getBatchStockAiReasons } from './stockReasonService';
 
 export interface HotnessScore {
     stockCode: string;
@@ -546,6 +547,33 @@ async function doRefresh(): Promise<void> {
 
         // TOP 30만 캐시에 저장 (전체 저장하면 WebSocket 구독 폭발)
         const top30 = scored.slice(0, 30);
+
+        // TOP 10에 AI 기반 주도 이유 붙이기 (지표 이유를 덮어씀)
+        try {
+            const top10 = top30.slice(0, 10);
+            const aiReasons = await getBatchStockAiReasons(
+                top10.map(s => ({
+                    stockCode: s.stockCode,
+                    stockName: s.stockName,
+                    changeRate: s.changeRate,
+                    tradingValue: s.tradingValue,
+                    grade: s.grade,
+                    themes: s.themes,
+                    volumeSurgeRate: s.volumeSurgeRate,
+                    relativeStrengthScore: s.relativeStrengthScore,
+                }))
+            );
+            for (const stock of top30) {
+                const aiReason = aiReasons.get(stock.stockCode);
+                if (aiReason) {
+                    stock.reason = aiReason; // AI 이유가 있으면 기존 지표 이유 덮어씀
+                }
+            }
+            console.log(`🤖 AI 주도 이유 생성 완료: ${aiReasons.size}개`);
+        } catch (err) {
+            console.error('AI 주도 이유 생성 실패 (계속 진행):', err);
+        }
+
         hotStocksCache = { data: top30, timestamp: Date.now() };
 
         // 글로벌 구독 종목 업데이트 (WebSocket) — TOP 30만

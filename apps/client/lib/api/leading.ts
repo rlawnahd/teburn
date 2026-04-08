@@ -37,6 +37,7 @@ export interface CalendarDay {
         changeRate: number;
         tradingValue: number;
         themes: string[];
+        reason?: string;  // AI 생성 주도 이유 (1위 종목에만)
     }>;
 }
 

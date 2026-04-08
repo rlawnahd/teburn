@@ -65,6 +65,7 @@ function DateCell({
                         const themeTag = stock.themes?.[0] || null;
 
                         if (isTop) {
+                            const aiReason = (stock as any).reason as string | undefined;
                             return (
                                 <div key={`${stock.stockCode || stock.stockName}-${idx}`} className="mb-1">
                                     <div className="flex items-baseline gap-1">
@@ -78,6 +79,11 @@ function DateCell({
                                     {themeTag && (
                                         <div className="text-[10px] font-medium text-[var(--accent-blue)] truncate mt-0.5">
                                             #{themeTag}
+                                        </div>
+                                    )}
+                                    {aiReason && (
+                                        <div className="text-[10px] text-[var(--text-secondary)] line-clamp-2 mt-0.5 leading-tight">
+                                            💡 {aiReason}
                                         </div>
                                     )}
                                     {/* 구분선 */}
