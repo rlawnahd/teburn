@@ -169,7 +169,31 @@ export interface HotStock {
 
     grade: 'S' | 'A' | 'B' | 'C' | 'D';
     sStreak?: number;                  // 연속 S등급 일수
+
+    reason?: string;                   // 자동 생성된 주도 이유 한 줄
+    confidence?: number;               // 확실함 점수 (0~100)
 }
+
+// 오늘의 Hero
+export interface HeroTheme {
+    themeName: string;
+    avgChangeRate: number;
+    sCount: number;
+    aCount: number;
+    topStocks: { stockCode: string; stockName: string; changeRate: number }[];
+    confidence: number;
+}
+
+export interface HeroData {
+    stock: HotStock | null;
+    theme: HeroTheme | null;
+    marketStatus: MarketStatusInfo;
+}
+
+export const fetchHero = async (): Promise<HeroData> => {
+    const { data } = await axios.get<{ success: boolean; data: HeroData }>(`${API_URL}/leading/hero`);
+    return data.data;
+};
 
 interface HotStocksResponse {
     success: boolean;

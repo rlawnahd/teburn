@@ -8,12 +8,26 @@ import {
 } from '../services/leadingStockService';
 import { getMarketStatus } from '../utils/marketStatus';
 import { themePriceCache } from '../services/themePriceCache';
-import { getTopHotStocks, getThemeHotness } from '../services/hotnessService';
+import { getTopHotStocks, getThemeHotness, getHeroData } from '../services/hotnessService';
 import { getLatestThemeAnalysis } from '../services/marketThemeService';
 import HotnessHistory from '../models/HotnessHistory';
 import DailyLeadingTheme from '../models/DailyLeadingTheme';
 
 const router = Router();
+
+// 오늘의 Hero — 주도주 1종목 + 주도 테마 1개 (확실한 것만)
+router.get('/hero', async (req: Request, res: Response) => {
+    try {
+        const data = await getHeroData();
+        res.json({
+            success: true,
+            data: { ...data, marketStatus: getMarketStatus() },
+        });
+    } catch (error: any) {
+        console.error('Hero 데이터 조회 에러:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 // 전체 데이터 조회 (대금상위 + 주도섹터)
 router.get('/', async (req: Request, res: Response) => {

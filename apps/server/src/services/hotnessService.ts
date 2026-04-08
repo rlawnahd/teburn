@@ -32,6 +32,10 @@ export interface HotnessScore {
     streakScore: number;                 // 연속성 (0~30) 보너스
     streakDays: number;                  // 연속 상위권 일수
 
+    // 자동 생성 메타
+    reason: string;                      // "주도 이유" 한 줄 (자동 생성)
+    confidence: number;                  // 확실함 점수 (0~100, 신뢰도)
+
     // 원본 데이터
     volumeSurgeRate: number | null;  // 거래량 급증률 (배수)
     newsCount: number;               // 뉴스 건수
@@ -274,6 +278,99 @@ async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<str
 }
 
 /**
+ * 종목별 "주도 이유" 한 줄 자동 생성
+ * 가장 두드러진 시그널 1~2개를 뽑아 문장화
+ */
+function generateReason(params: {
+    relativeStrengthScore: number;
+    themeConcentrationScore: number;
+    themeConcentration: number;
+    volumeSurgeRate: number | null;
+    streakDays: number;
+    patternScore: number;
+    tradingValueScore: number;
+    changeRate: number;
+    themes: string[];
+}): string {
+    const reasons: { priority: number; text: string }[] = [];
+
+    // 1. 시장 대비 압도적 강도 (최우선)
+    if (params.relativeStrengthScore >= 14) {
+        reasons.push({ priority: 1, text: '시장 대비 압도적 강도' });
+    } else if (params.relativeStrengthScore >= 8) {
+        reasons.push({ priority: 5, text: '시장 대비 강세' });
+    }
+
+    // 2. 거래량 폭증
+    if (params.volumeSurgeRate && params.volumeSurgeRate >= 5) {
+        reasons.push({ priority: 2, text: `거래량 ${Math.round(params.volumeSurgeRate)}배 급증` });
+    } else if (params.volumeSurgeRate && params.volumeSurgeRate >= 3) {
+        reasons.push({ priority: 6, text: `거래량 ${params.volumeSurgeRate.toFixed(1)}배` });
+    }
+
+    // 3. 테마 대장주
+    if (params.themeConcentrationScore >= 12 && params.themes[0]) {
+        reasons.push({ priority: 3, text: `${params.themes[0]} 대장주` });
+    } else if (params.themeConcentration >= 20 && params.themes[0]) {
+        reasons.push({ priority: 7, text: `${params.themes[0]} 주도` });
+    }
+
+    // 4. 연속 주도주
+    if (params.streakDays >= 3) {
+        reasons.push({ priority: 4, text: `${params.streakDays}일 연속 주도주` });
+    }
+
+    // 5. 시세 패턴 (눌림목 재반등)
+    if (params.patternScore >= 8) {
+        reasons.push({ priority: 8, text: '눌림목 재반등' });
+    }
+
+    // 6. 거래대금 폭증
+    if (params.tradingValueScore >= 22) {
+        reasons.push({ priority: 9, text: '거래대금 집중' });
+    }
+
+    // 7. 상한가 임박
+    if (params.changeRate >= 20) {
+        reasons.push({ priority: 0, text: '상한가 근접' });
+    }
+
+    // 우선순위 정렬 후 상위 2개
+    reasons.sort((a, b) => a.priority - b.priority);
+    const top = reasons.slice(0, 2).map(r => r.text);
+
+    if (top.length === 0) return '시장 관심 종목';
+    return top.join(' · ');
+}
+
+/**
+ * 확실함 점수 (0~100) — 7개 지표 중 얼마나 골고루 충족되었는가
+ * 단순 총점이 아닌, 여러 지표가 동시에 강한지를 측정
+ */
+function calculateConfidence(params: {
+    tradingValueScore: number;
+    relativeStrengthScore: number;
+    volumeScore: number;
+    themeConcentrationScore: number;
+    patternScore: number;
+    momentumScore: number;
+    newsScore: number;
+}): number {
+    // 각 지표가 만점 기준 60% 이상이면 "강함"으로 카운트
+    const checks = [
+        params.tradingValueScore >= 15,        // 25 * 0.6
+        params.relativeStrengthScore >= 12,    // 20 * 0.6
+        params.volumeScore >= 9,               // 15 * 0.6
+        params.themeConcentrationScore >= 9,   // 15 * 0.6
+        params.patternScore >= 6,              // 10 * 0.6
+        params.momentumScore >= 6,             // 10 * 0.6
+        params.newsScore >= 3,                 // 5 * 0.6
+    ];
+    const strongCount = checks.filter(Boolean).length;
+    return Math.round((strongCount / checks.length) * 100);
+}
+
+/**
  * 코스피/코스닥 등락률 조회 (상대 강도 계산용)
  * 종목코드는 6자리 — 코스피와 코스닥 구분 어려우므로 둘 다 가져와서 평균/최소 사용
  */
@@ -337,6 +434,28 @@ export async function calculateBatchHotness(
                          themeConcentrationScore + patternScore + momentumScore + newsScore;
         const totalScore = baseScore + streak.score; // 연속성 보너스
 
+        // 자동 생성: 주도 이유 + 확실함 점수
+        const reason = generateReason({
+            relativeStrengthScore,
+            themeConcentrationScore,
+            themeConcentration,
+            volumeSurgeRate: volumeSurge,
+            streakDays: streak.days,
+            patternScore,
+            tradingValueScore,
+            changeRate: priceData.changeRate,
+            themes: stock.themes,
+        });
+        const confidence = calculateConfidence({
+            tradingValueScore,
+            relativeStrengthScore,
+            volumeScore,
+            themeConcentrationScore,
+            patternScore,
+            momentumScore,
+            newsScore,
+        });
+
         results.push({
             stockCode: stock.stockCode,
             stockName: stock.stockName,
@@ -360,6 +479,9 @@ export async function calculateBatchHotness(
             newsCount,
             latestNews: newsData.latestNewsTitle,
             themeConcentration,
+
+            reason,
+            confidence,
 
             grade: getGrade(baseScore), // 등급은 기본 100점 기준
         });
@@ -472,6 +594,87 @@ export async function getTopHotStocks(limit: number = 30): Promise<HotnessScore[
     // 캐시 아예 없음 (첫 요청) → 계산 후 반환
     await refreshHotStocks();
     return hotStocksCache ? hotStocksCache.data.slice(0, limit) : [];
+}
+
+/**
+ * 오늘의 주도주 Hero 1종목 선정
+ * S등급 + 확실함 점수 60% 이상 + 총점 최상위
+ * 조건 미달이면 null (오늘은 확실한 주도주 없음)
+ */
+export interface HeroData {
+    stock: HotnessScore | null;
+    theme: {
+        themeName: string;
+        avgChangeRate: number;
+        sCount: number;
+        aCount: number;
+        topStocks: { stockCode: string; stockName: string; changeRate: number }[];
+        confidence: number;
+    } | null;
+}
+
+export async function getHeroData(): Promise<HeroData> {
+    const stocks = await getTopHotStocks(30);
+    if (stocks.length === 0) return { stock: null, theme: null };
+
+    // === Hero 종목 선정 ===
+    // S등급 + 확실함 60%+ 중 총점 최상위
+    const heroCandidate = stocks.find(s => s.grade === 'S' && s.confidence >= 60);
+    const heroStock = heroCandidate || null;
+
+    // === Hero 테마 선정 ===
+    // S/A 등급 종목이 2개 이상 + 평균 등락률 5%+ 인 테마
+    const themeMap = new Map<string, {
+        themeName: string;
+        stocks: HotnessScore[];
+    }>();
+
+    for (const stock of stocks) {
+        if (stock.grade !== 'S' && stock.grade !== 'A') continue;
+        for (const themeName of stock.themes) {
+            if (!themeMap.has(themeName)) {
+                themeMap.set(themeName, { themeName, stocks: [] });
+            }
+            themeMap.get(themeName)!.stocks.push(stock);
+        }
+    }
+
+    let bestTheme: HeroData['theme'] = null;
+    let bestThemeScore = 0;
+
+    for (const [themeName, data] of themeMap) {
+        const sCount = data.stocks.filter(s => s.grade === 'S').length;
+        const aCount = data.stocks.filter(s => s.grade === 'A').length;
+        if (data.stocks.length < 2) continue;
+
+        const avgChangeRate = data.stocks.reduce((sum, s) => sum + s.changeRate, 0) / data.stocks.length;
+        if (avgChangeRate < 5) continue;
+
+        // 테마 점수 = S등급 가중치 3 + A등급 1 + 평균 등락률
+        const themeScore = sCount * 3 + aCount + avgChangeRate / 10;
+
+        if (themeScore > bestThemeScore) {
+            bestThemeScore = themeScore;
+            // 테마 신뢰도: S/A 종목 평균 confidence
+            const avgConfidence = Math.round(
+                data.stocks.reduce((sum, s) => sum + s.confidence, 0) / data.stocks.length
+            );
+            bestTheme = {
+                themeName,
+                avgChangeRate: Math.round(avgChangeRate * 100) / 100,
+                sCount,
+                aCount,
+                topStocks: data.stocks.slice(0, 4).map(s => ({
+                    stockCode: s.stockCode,
+                    stockName: s.stockName,
+                    changeRate: s.changeRate,
+                })),
+                confidence: avgConfidence,
+            };
+        }
+    }
+
+    return { stock: heroStock, theme: bestTheme };
 }
 
 /**

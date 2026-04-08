@@ -13,6 +13,7 @@ import { useOnPriceUpdate, useOnHotnessUpdate } from '@/hooks/useRealtimePrice';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatePresence, motion } from 'framer-motion';
 import MarketThemeCard from './MarketThemeCard';
+import HeroCard from './HeroCard';
 
 type PriceFlash = 'rise' | 'fall' | null;
 type RankChange = { delta: number; isNew: boolean };
@@ -136,6 +137,11 @@ function StockRow({
                             <span className="text-sm text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
                         )}
                     </div>
+                )}
+                {stock.reason && (
+                    <p className="text-[12px] text-[var(--text-secondary)] truncate mt-0.5 font-medium">
+                        💡 {stock.reason}
+                    </p>
                 )}
                 {stock.latestNews && (
                     <p className="text-sm text-[var(--text-tertiary)] truncate mt-0.5">
@@ -449,6 +455,8 @@ export default function HotStocksView() {
                     </span>
                 )}
             </div>
+
+            <HeroCard />
 
             {stocks.length > 0 && <MarketKpiStrip stocks={stocks} />}
 
