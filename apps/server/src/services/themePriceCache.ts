@@ -50,6 +50,7 @@ class ThemePriceCacheService {
     private lastUpdateTime: Date | null = null;
     // 업데이트 진행 중 플래그
     private isUpdating = false;
+    private updateStartTime: number | null = null;
     // 스케줄러 타이머
     private updateTimer: NodeJS.Timeout | null = null;
 
@@ -63,11 +64,19 @@ class ThemePriceCacheService {
      */
     async updateAllPrices(): Promise<void> {
         if (this.isUpdating) {
-            console.log('⏳ 주가 배치 업데이트 이미 진행 중...');
-            return;
+            // 5분 이상 stuck 상태면 강제 리셋
+            const stuckTime = this.updateStartTime ? Date.now() - this.updateStartTime : 0;
+            if (stuckTime > 5 * 60 * 1000) {
+                console.log(`⚠️ 주가 배치 업데이트가 ${Math.round(stuckTime / 1000)}초간 stuck — 강제 리셋`);
+                this.isUpdating = false;
+            } else {
+                console.log('⏳ 주가 배치 업데이트 이미 진행 중...');
+                return;
+            }
         }
 
         this.isUpdating = true;
+        this.updateStartTime = Date.now();
         const startTime = Date.now();
 
         try {
@@ -106,58 +115,67 @@ class ThemePriceCacheService {
 
             const stockCodes = Array.from(stockCodeSet);
 
-            // 3. 종목별 주가 조회 (rate limit 고려)
+            // 3. 종목별 주가 조회 — 병렬 배치 처리 (KIS rate limit 초당 20건 준수)
+            // 10개 동시 호출 + 배치 사이 500ms 대기 = 초당 20건
             let successCount = 0;
             let failCount = 0;
+            const BATCH_SIZE = 10;
+            const BATCH_DELAY_MS = 500;
 
-            for (let i = 0; i < stockCodes.length; i++) {
-                const code = stockCodes[i];
+            const processStockPrice = async (code: string) => {
                 try {
                     const price = await getStockPrice(code);
-                    if (price) {
-                        // 기존 캐시에서 intraday high 가져오기 (날짜 바뀌면 리셋)
-                        const prev = this.stockPriceCache.get(code);
-                        const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
-                        const prevDate = prev?.updatedAt
-                            ? new Date(prev.updatedAt.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0]
-                            : null;
-                        const isSameDay = prevDate === todayKST;
-
-                        const intradayHigh = isSameDay && prev
-                            ? Math.max(prev.intradayHigh, price.currentPrice)
-                            : price.currentPrice;
-                        const intradayHighRate = isSameDay && prev
-                            ? Math.max(prev.intradayHighRate, price.changeRate)
-                            : price.changeRate;
-
-                        const cached: CachedStockPrice = {
-                            stockCode: code,
-                            stockName: stockCodeToName.get(code) || price.stockName,
-                            currentPrice: price.currentPrice,
-                            changePrice: price.changePrice,
-                            changeRate: price.changeRate,
-                            volume: price.volume,
-                            tradingValue: price.currentPrice * price.volume,
-                            marketCap: price.marketCap || 0,
-                            intradayHigh,
-                            intradayHighRate,
-                            updatedAt: new Date(),
-                        };
-                        this.stockPriceCache.set(code, cached);
-                        successCount++;
-                    } else {
+                    if (!price) {
                         failCount++;
+                        return;
                     }
+
+                    // 기존 캐시에서 intraday high 가져오기 (날짜 바뀌면 리셋)
+                    const prev = this.stockPriceCache.get(code);
+                    const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    const prevDate = prev?.updatedAt
+                        ? new Date(prev.updatedAt.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0]
+                        : null;
+                    const isSameDay = prevDate === todayKST;
+
+                    const intradayHigh = isSameDay && prev
+                        ? Math.max(prev.intradayHigh, price.currentPrice)
+                        : price.currentPrice;
+                    const intradayHighRate = isSameDay && prev
+                        ? Math.max(prev.intradayHighRate, price.changeRate)
+                        : price.changeRate;
+
+                    const cached: CachedStockPrice = {
+                        stockCode: code,
+                        stockName: stockCodeToName.get(code) || price.stockName,
+                        currentPrice: price.currentPrice,
+                        changePrice: price.changePrice,
+                        changeRate: price.changeRate,
+                        volume: price.volume,
+                        tradingValue: price.currentPrice * price.volume,
+                        marketCap: price.marketCap || 0,
+                        intradayHigh,
+                        intradayHighRate,
+                        updatedAt: new Date(),
+                    };
+                    this.stockPriceCache.set(code, cached);
+                    successCount++;
                 } catch (error) {
                     failCount++;
                 }
+            };
 
-                // 진행률 로그 (100개마다)
-                // API rate limit 방지 (초당 20건, 100ms 간격)
-                await new Promise(resolve => setTimeout(resolve, 100));
+            for (let i = 0; i < stockCodes.length; i += BATCH_SIZE) {
+                const batch = stockCodes.slice(i, i + BATCH_SIZE);
+                await Promise.all(batch.map(processStockPrice));
+
+                // 마지막 배치가 아니면 대기
+                if (i + BATCH_SIZE < stockCodes.length) {
+                    await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+                }
             }
 
-            console.log(`✅ 종목 주가 조회 완료: ${successCount}개 성공, ${failCount}개 실패`);
+            console.log(`✅ 종목 주가 조회 완료: ${successCount}개 성공, ${failCount}개 실패 (병렬 ${BATCH_SIZE}개 배치)`);
 
             // 4. 테마별 가격 계산
             for (const theme of themes) {
@@ -210,6 +228,7 @@ class ThemePriceCacheService {
             console.error('❌ 테마 주가 배치 업데이트 실패:', error);
         } finally {
             this.isUpdating = false;
+            this.updateStartTime = null;
         }
     }
 
