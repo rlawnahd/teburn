@@ -57,29 +57,31 @@ function DateCell({
             </div>
 
             {hasData ? (
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                     {dayData.topStocks.slice(0, 3).map((stock, idx) => {
                         const isPositive = stock.changeRate > 0;
                         const isTop = idx === 0;
-                        const colorClass = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
+                        const rateColor = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
                         const themeTag = stock.themes?.[0] || null;
 
                         if (isTop) {
                             return (
-                                <div key={`${stock.stockCode || stock.stockName}-${idx}`}>
+                                <div key={`${stock.stockCode || stock.stockName}-${idx}`} className="mb-1">
                                     <div className="flex items-baseline gap-1">
-                                        <span className={`text-sm font-semibold truncate ${colorClass}`}>
+                                        <span className="text-[13px] font-bold truncate text-[var(--text-primary)]">
                                             {stock.stockName}
                                         </span>
-                                        <span className={`text-[10px] font-medium flex-shrink-0 ${colorClass}`}>
+                                        <span className={`text-[11px] font-semibold flex-shrink-0 ${rateColor}`}>
                                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                                         </span>
                                     </div>
                                     {themeTag && (
-                                        <div className="text-[11px] text-[var(--text-tertiary)] truncate">
-                                            {themeTag}
+                                        <div className="text-[10px] font-medium text-[var(--accent-blue)] truncate mt-0.5">
+                                            #{themeTag}
                                         </div>
                                     )}
+                                    {/* 구분선 */}
+                                    <div className="border-t border-[var(--border-color)]/40 mt-1" />
                                 </div>
                             );
                         }
@@ -87,10 +89,18 @@ function DateCell({
                         return (
                             <div
                                 key={`${stock.stockCode || stock.stockName}-${idx}`}
-                                className="flex items-baseline gap-1"
+                                className="flex items-baseline justify-between gap-1"
                             >
-                                <span className="text-xs text-[var(--text-tertiary)] truncate">
-                                    {stock.stockName}
+                                <div className="flex items-baseline gap-0.5 min-w-0">
+                                    <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">
+                                        {idx + 1}
+                                    </span>
+                                    <span className="text-xs text-[var(--text-secondary)] truncate">
+                                        {stock.stockName}
+                                    </span>
+                                </div>
+                                <span className={`text-[10px] font-medium flex-shrink-0 ${rateColor}`}>
+                                    {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                                 </span>
                             </div>
                         );
