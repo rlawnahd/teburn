@@ -10,6 +10,7 @@ function ConfidenceGauge({ value }: { value: number }) {
     const color = value >= 85 ? 'var(--rise-color)' : value >= 70 ? '#f59e0b' : 'var(--text-tertiary)';
     return (
         <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-[var(--text-tertiary)]">신뢰도</span>
             <div className="w-16 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
                 <div
                     className="h-full rounded-full transition-all"
