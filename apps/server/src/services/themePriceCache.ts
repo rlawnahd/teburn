@@ -18,6 +18,8 @@ export interface CachedStockPrice {
     volume: number;
     tradingValue: number;
     marketCap: number;         // 시가총액 (억 단위)
+    intradayHigh: number;      // 당일 장중 최고가 (시세 패턴 분석용)
+    intradayHighRate: number;  // 당일 최고가 등락률 (장 시작 대비)
     updatedAt: Date;
 }
 
@@ -113,6 +115,21 @@ class ThemePriceCacheService {
                 try {
                     const price = await getStockPrice(code);
                     if (price) {
+                        // 기존 캐시에서 intraday high 가져오기 (날짜 바뀌면 리셋)
+                        const prev = this.stockPriceCache.get(code);
+                        const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+                        const prevDate = prev?.updatedAt
+                            ? new Date(prev.updatedAt.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0]
+                            : null;
+                        const isSameDay = prevDate === todayKST;
+
+                        const intradayHigh = isSameDay && prev
+                            ? Math.max(prev.intradayHigh, price.currentPrice)
+                            : price.currentPrice;
+                        const intradayHighRate = isSameDay && prev
+                            ? Math.max(prev.intradayHighRate, price.changeRate)
+                            : price.changeRate;
+
                         const cached: CachedStockPrice = {
                             stockCode: code,
                             stockName: stockCodeToName.get(code) || price.stockName,
@@ -122,6 +139,8 @@ class ThemePriceCacheService {
                             volume: price.volume,
                             tradingValue: price.currentPrice * price.volume,
                             marketCap: price.marketCap || 0,
+                            intradayHigh,
+                            intradayHighRate,
                             updatedAt: new Date(),
                         };
                         this.stockPriceCache.set(code, cached);
@@ -245,6 +264,8 @@ class ThemePriceCacheService {
                 this.stockPriceCache.set(stock.stockCode, {
                     ...stock,
                     marketCap: (stock as any).marketCap || 0,
+                    intradayHigh: (stock as any).intradayHigh || stock.currentPrice,
+                    intradayHighRate: (stock as any).intradayHighRate || stock.changeRate,
                     updatedAt: new Date(stock.updatedAt),
                 });
             }
@@ -256,6 +277,8 @@ class ThemePriceCacheService {
                     topStocks: theme.topStocks.map(s => ({
                         ...s,
                         marketCap: (s as any).marketCap || 0,
+                        intradayHigh: (s as any).intradayHigh || s.currentPrice,
+                        intradayHighRate: (s as any).intradayHighRate || s.changeRate,
                         updatedAt: new Date(s.updatedAt),
                     })),
                     updatedAt: new Date(theme.updatedAt),

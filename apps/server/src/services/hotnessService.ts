@@ -1,5 +1,7 @@
 // 주도주 점수 통합 서비스
-// 주도주 점수 = 거래대금(35) + 등락률(20) + 거래량급증(15) + 뉴스(15) + 대장주집중도(15) = 총 100점
+// 천이요 트레이더의 5원칙 + 우리 시스템 강점을 결합한 점수 체계
+// 주도주 점수 = 거래대금(25) + 상대강도(20) + 거래량급증(15) + 대장주집중도(15) +
+//              시세패턴(10) + 등락률(10) + 시장시선(5) = 총 100점
 // 연속성 보너스: 최대 +30점 (100점 초과 가능)
 
 import { themePriceCache } from './themePriceCache';
@@ -8,6 +10,7 @@ import { getBatchStockNewsCountFromApi } from './naverApi';
 import HotnessHistory from '../models/HotnessHistory';
 import { updateGlobalSubscriptions } from './wsServer';
 import { mergeBatchScores } from './realtimeHotness';
+import { getKospiIndexData, getKosdaqIndexData } from './indexService';
 
 export interface HotnessScore {
     stockCode: string;
@@ -18,14 +21,16 @@ export interface HotnessScore {
     themes: string[];
 
     // 주도주 점수 상세
-    totalScore: number;                // 총점 (0~100)
-    tradingValueScore: number;         // 거래대금 (0~30)
-    momentumScore: number;             // 등락률 (0~20)
-    volumeScore: number;               // 거래량 급증 (0~15)
-    newsScore: number;                 // 뉴스 노출 (0~10)
-    themeConcentrationScore: number;   // 대장주 집중도 (0~10)
-    streakScore: number;               // 연속성 (0~15)
-    streakDays: number;                // 연속 상위권 일수
+    totalScore: number;                  // 총점 (0~100)
+    tradingValueScore: number;           // 거래대금 (0~25) — 거래대금 > 상승률
+    relativeStrengthScore: number;       // 상대 강도 (0~20) — 지수 대비
+    volumeScore: number;                 // 거래량 급증 (0~15)
+    themeConcentrationScore: number;     // 대장주 집중도 (0~15) — 첫 반응 종목
+    patternScore: number;                // 시세 패턴 (0~10) — 당일 두 번 시세
+    momentumScore: number;               // 등락률 (0~10)
+    newsScore: number;                   // 시장 시선 (0~5) — 뉴스/조회수
+    streakScore: number;                 // 연속성 (0~30) 보너스
+    streakDays: number;                  // 연속 상위권 일수
 
     // 원본 데이터
     volumeSurgeRate: number | null;  // 거래량 급증률 (배수)
@@ -51,47 +56,99 @@ let hotStocksCache: { data: HotnessScore[]; timestamp: number } | null = null;
 const HOT_STOCKS_CACHE_TTL = 5 * 60 * 1000; // 5분
 let refreshPromise: Promise<void> | null = null;
 
-// 거래대금 점수 (0~35) — 시총 대비 거래대금 비율 기반
+// === 천이요 원칙 ③: 거래대금 > 상승률 ===
+// 거래대금 점수 (0~25) — 시총 대비 거래대금 비율 기반
 export function calculateTradingValueScore(tradingValue: number, marketCap: number = 0): number {
     const billion = tradingValue / 100000000; // 억 단위
 
     // 시총 데이터가 있으면 시총 대비 비율로 계산
     if (marketCap > 0) {
-        const tradingBillion = billion;
-        const ratio = (tradingBillion / marketCap) * 100; // 시총 대비 거래대금 비율(%)
-        // ratio 5% = 시총의 5%가 거래됨 → 매우 높음
-        if (ratio >= 10) return 35;
-        if (ratio >= 5) return 30;
-        if (ratio >= 3) return 25;
-        if (ratio >= 1.5) return 20;
-        if (ratio >= 0.8) return 14;
-        if (ratio >= 0.3) return 8;
-        return 3;
+        const ratio = (billion / marketCap) * 100; // 시총 대비 거래대금 비율(%)
+        if (ratio >= 10) return 25;
+        if (ratio >= 5) return 22;
+        if (ratio >= 3) return 18;
+        if (ratio >= 1.5) return 14;
+        if (ratio >= 0.8) return 10;
+        if (ratio >= 0.3) return 5;
+        return 2;
     }
 
     // 시총 없으면 절대값 기준 (fallback)
-    if (billion >= 1000) return 35;
-    if (billion >= 500) return 30;
-    if (billion >= 300) return 25;
-    if (billion >= 200) return 20;
-    if (billion >= 100) return 14;
-    if (billion >= 50) return 8;
-    return 3;
+    if (billion >= 1000) return 25;
+    if (billion >= 500) return 22;
+    if (billion >= 300) return 18;
+    if (billion >= 200) return 14;
+    if (billion >= 100) return 10;
+    if (billion >= 50) return 5;
+    return 2;
 }
 
-// 등락률 점수 (0~20)
-export function calculateMomentumScore(changeRate: number): number {
-    if (changeRate >= 20) return 20;  // 상한가 근접
-    if (changeRate >= 15) return 17;
-    if (changeRate >= 10) return 14;
-    if (changeRate >= 7) return 11;
-    if (changeRate >= 5) return 8;
-    if (changeRate >= 3) return 5;
-    if (changeRate >= 1) return 3;
+// === 천이요 원칙 ⑤: 지수 대비 강함 ===
+// 상대 강도 점수 (0~20) — 종목 등락률 - 시장 등락률 (alpha)
+export function calculateRelativeStrengthScore(stockChangeRate: number, marketChangeRate: number): number {
+    const alpha = stockChangeRate - marketChangeRate;
+
+    // 코스피 -2%일 때 종목 +5% → alpha +7% → 매우 강함
+    // 코스피 +2%일 때 종목 +5% → alpha +3% → 평범
+    if (alpha >= 15) return 20;   // 시장 대비 압도적
+    if (alpha >= 10) return 17;
+    if (alpha >= 7) return 14;
+    if (alpha >= 5) return 11;
+    if (alpha >= 3) return 8;
+    if (alpha >= 1) return 5;
+    if (alpha >= 0) return 2;
+    return 0; // 시장보다 약함
+}
+
+// === 천이요 원칙 ①: 시세 두 번 (당일 패턴) ===
+// 시세 패턴 점수 (0~10) — 장중 고점 찍고 눌렸다가 재반등 패턴
+export function calculatePatternScore(currentRate: number, intradayHighRate: number): number {
+    // 한 번도 시세 안 났으면 0점 (intradayHigh == currentRate)
+    if (intradayHighRate <= 0) return 0;
+
+    // 장중 최고점 - 현재 등락률 = 눌림 정도
+    const pullback = intradayHighRate - currentRate;
+
+    // 처음 시세 (한 번 강하게 움직임): 5%+ 도달
+    if (intradayHighRate < 5) return 0;
+
+    // Case A: 첫 시세 후 약간 눌렸다가 재반등 중 (가장 이상적)
+    // 고점 대비 1~3% 눌린 상태 + 현재도 충분히 강함
+    if (pullback >= 1 && pullback <= 3 && currentRate >= 5) {
+        return 10; // 두 번째 시세 직전 — 매수 적기
+    }
+
+    // Case B: 첫 시세 후 깊게 눌림 (3~5%)
+    if (pullback > 3 && pullback <= 5 && currentRate >= 3) {
+        return 7;
+    }
+
+    // Case C: 한 번 강하게 시세 났는데 거의 안 눌림 (이미 큰 시세 진행 중)
+    if (pullback < 1 && intradayHighRate >= 7) {
+        return 5;
+    }
+
+    // Case D: 너무 깊게 눌림 (5%+) — 약화 가능성
+    if (pullback > 5) {
+        return 0;
+    }
+
     return 0;
 }
 
-// 거래량 급증률 점수 (0~15)
+// === 등락률 점수 (0~10) — 비중 축소 ===
+export function calculateMomentumScore(changeRate: number): number {
+    if (changeRate >= 20) return 10;  // 상한가 근접
+    if (changeRate >= 15) return 8;
+    if (changeRate >= 10) return 7;
+    if (changeRate >= 7) return 5;
+    if (changeRate >= 5) return 4;
+    if (changeRate >= 3) return 2;
+    if (changeRate >= 1) return 1;
+    return 0;
+}
+
+// === 거래량 급증률 점수 (0~15) — 유지 ===
 function calculateVolumeSurgeScore(surgeRate: number | null): number {
     if (surgeRate === null) return 0;
     if (surgeRate >= 10) return 15;
@@ -102,15 +159,17 @@ function calculateVolumeSurgeScore(surgeRate: number | null): number {
     return 0;
 }
 
-// 뉴스 점수 (0~15)
+// === 천이요 원칙 ②: 시장 시선 (조회수/뉴스) ===
+// 뉴스 점수 (0~5) — 비중 축소 (간접 지표라 가중치 낮춤)
 function calculateNewsScore(newsCount: number): number {
-    if (newsCount >= 10) return 15;
-    if (newsCount >= 5) return 12;
-    if (newsCount >= 3) return 9;
-    if (newsCount >= 1) return 4;
+    if (newsCount >= 10) return 5;
+    if (newsCount >= 5) return 4;
+    if (newsCount >= 3) return 3;
+    if (newsCount >= 1) return 2;
     return 0;
 }
 
+// === 천이요 원칙 ④: 테마 대장주 ===
 // 대장주 집중도 점수 (0~15)
 // 테마 내 거래대금 점유율로 자금이 집중되는 대장주 식별
 function calculateThemeConcentrationScore(stockCode: string, themes: string[]): { score: number; concentration: number } {
@@ -215,6 +274,27 @@ async function calculateBatchStreakScores(stockCodes: string[]): Promise<Map<str
 }
 
 /**
+ * 코스피/코스닥 등락률 조회 (상대 강도 계산용)
+ * 종목코드는 6자리 — 코스피와 코스닥 구분 어려우므로 둘 다 가져와서 평균/최소 사용
+ */
+async function getMarketChangeRate(): Promise<number> {
+    try {
+        const [kospi, kosdaq] = await Promise.all([
+            getKospiIndexData().catch(() => null),
+            getKosdaqIndexData().catch(() => null),
+        ]);
+        const rates: number[] = [];
+        if (kospi) rates.push(kospi.changePercent);
+        if (kosdaq) rates.push(kosdaq.changePercent);
+        if (rates.length === 0) return 0;
+        // 코스피/코스닥 평균 (종목별 정확한 시장 매칭은 추후 개선)
+        return rates.reduce((a, b) => a + b, 0) / rates.length;
+    } catch {
+        return 0;
+    }
+}
+
+/**
  * 여러 종목의 주도주 점수 일괄 계산
  */
 export async function calculateBatchHotness(
@@ -223,11 +303,12 @@ export async function calculateBatchHotness(
     const stockCodes = stocks.map((s) => s.stockCode);
     const stockNames = stocks.map((s) => s.stockName);
 
-    // 모든 지표 병렬 조회
-    const [volumeSurges, newsCounts, streakScores] = await Promise.all([
+    // 모든 지표 병렬 조회 + 시장 등락률
+    const [volumeSurges, newsCounts, streakScores, marketChangeRate] = await Promise.all([
         getBatchVolumeSurgeRates(stockCodes),
-        getBatchStockNewsCountFromApi(stockNames, 30), // 상위 30개만 API 검색
+        getBatchStockNewsCountFromApi(stockNames, 30),
         calculateBatchStreakScores(stockCodes),
+        getMarketChangeRate(),
     ]);
 
     const results: HotnessScore[] = [];
@@ -242,15 +323,19 @@ export async function calculateBatchHotness(
 
         // 점수 계산
         const tradingValueScore = calculateTradingValueScore(priceData.tradingValue, priceData.marketCap);
-        const momentumScore = calculateMomentumScore(priceData.changeRate);
+        const relativeStrengthScore = calculateRelativeStrengthScore(priceData.changeRate, marketChangeRate);
         const volumeScore = calculateVolumeSurgeScore(volumeSurge);
-        const newsScore = calculateNewsScore(newsCount);
         const { score: themeConcentrationScore, concentration: themeConcentration } =
             calculateThemeConcentrationScore(stock.stockCode, stock.themes);
+        const patternScore = calculatePatternScore(priceData.changeRate, priceData.intradayHighRate || priceData.changeRate);
+        const momentumScore = calculateMomentumScore(priceData.changeRate);
+        const newsScore = calculateNewsScore(newsCount);
         const streak = streakScores.get(stock.stockCode) || { score: 0, days: 0 };
 
-        const baseScore = tradingValueScore + momentumScore + volumeScore + newsScore + themeConcentrationScore;
-        const totalScore = baseScore + streak.score; // 보너스 포함, 100점 초과 가능
+        // 기본 100점 = 거래대금(25) + 상대강도(20) + 거래량(15) + 집중도(15) + 패턴(10) + 등락률(10) + 뉴스(5)
+        const baseScore = tradingValueScore + relativeStrengthScore + volumeScore +
+                         themeConcentrationScore + patternScore + momentumScore + newsScore;
+        const totalScore = baseScore + streak.score; // 연속성 보너스
 
         results.push({
             stockCode: stock.stockCode,
@@ -262,10 +347,12 @@ export async function calculateBatchHotness(
 
             totalScore,
             tradingValueScore,
-            momentumScore,
+            relativeStrengthScore,
             volumeScore,
-            newsScore,
             themeConcentrationScore,
+            patternScore,
+            momentumScore,
+            newsScore,
             streakScore: streak.score,
             streakDays: streak.days,
 

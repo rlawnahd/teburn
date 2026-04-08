@@ -152,12 +152,14 @@ export interface HotStock {
     themes: string[];
 
     totalScore: number;                // 총점 (0~100)
-    tradingValueScore: number;         // 거래대금 점수 (0~30)
-    momentumScore: number;             // 등락률 점수 (0~20)
-    volumeScore: number;               // 거래량 급증 점수 (0~15)
-    newsScore: number;                 // 뉴스 점수 (0~10)
-    themeConcentrationScore: number;   // 대장주 집중도 점수 (0~10)
-    streakScore: number;               // 연속성 점수 (0~15)
+    tradingValueScore: number;         // 거래대금 (0~25)
+    relativeStrengthScore: number;     // 상대 강도 (0~20)
+    volumeScore: number;               // 거래량 급증 (0~15)
+    themeConcentrationScore: number;   // 대장주 집중도 (0~15)
+    patternScore: number;              // 시세 패턴 (0~10)
+    momentumScore: number;             // 등락률 (0~10)
+    newsScore: number;                 // 시장 시선 (0~5)
+    streakScore: number;               // 연속성 (0~30) 보너스
     streakDays: number;                // 연속 상위권 일수
 
     volumeSurgeRate: number | null;
