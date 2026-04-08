@@ -441,7 +441,7 @@ export default function HotStocksView() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">주도주 분석</h2>
-                    <span className="text-xs text-[var(--text-tertiary)]">거래대금 + 상대강도 + 거래량 + 대장주 + 시세패턴 + 등락률 + 시장시선</span>
+                    <span className="text-xs text-[var(--text-tertiary)]">시장 흐름 종합 평가</span>
                 </div>
                 {data?.lastUpdateTime && (
                     <span className="hidden sm:inline text-xs text-[var(--text-tertiary)]">
