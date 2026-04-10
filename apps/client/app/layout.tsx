@@ -20,6 +20,14 @@ export const metadata: Metadata = {
         locale: 'ko_KR',
         type: 'website',
     },
+    twitter: {
+        card: 'summary',
+        title: 'TEBURN - 오늘의 주도주를 찾아라',
+        description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+    },
+    alternates: {
+        canonical: 'https://teburn.com',
+    },
     verification: {
         other: {
             'naver-site-verification': '72e602ddfe3c7bd2e3b1398dc2a52605edb88a3b',
@@ -35,6 +43,9 @@ export default function RootLayout({
     return (
         <html lang="ko" suppressHydrationWarning>
             <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+                <meta name="apple-mobile-web-app-capable" content="yes" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <link
                     rel="stylesheet"
                     as="style"
@@ -43,6 +54,21 @@ export default function RootLayout({
                 />
             </head>
             <body className="antialiased">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'WebApplication',
+                        name: 'TEBURN',
+                        url: 'https://teburn.com',
+                        description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+                        applicationCategory: 'FinanceApplication',
+                        operatingSystem: 'Web',
+                        inLanguage: 'ko',
+                        offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+                        publisher: { '@type': 'Organization', name: 'TEBURN', url: 'https://teburn.com' },
+                    }) }}
+                />
                 {/* 카카오톡/네이버/인스타 인앱 브라우저 → 외부 브라우저로 리다이렉트 */}
                 <Script id="inapp-bounce" strategy="beforeInteractive">{`
 (function(){
@@ -90,6 +116,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     strategy="afterInteractive"
                     crossOrigin="anonymous"
                 />
+                <Script id="sw-register" strategy="afterInteractive">{`
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
+`}</Script>
                 <Analytics />
                 <GoogleAnalytics gaId="G-MMMVGBL8ZP" />
             </body>
