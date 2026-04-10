@@ -57,6 +57,14 @@ function StockRow({
         ? 'streak-glow my-0.5'
         : 'border-b border-[var(--border-color)]';
 
+    // 모바일: 가장 중요한 시그널 1개만, 데스크탑: 전부 표시
+    const primarySignal: 'limitUp' | 'volume' | 'score' | 'streak' | null =
+        isLimitUp ? 'limitUp'
+        : volumeExplosion ? 'volume'
+        : scoreJump ? 'score'
+        : streakDays >= 3 ? 'streak'
+        : null;
+
     return (
         <motion.button
             layout
@@ -65,6 +73,7 @@ function StockRow({
             onClick={() => onStockClick(stock.stockCode)}
             className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${glowClass}`}
         >
+            {/* 순위 */}
             <div className="w-8 flex-shrink-0 text-center">
                 <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
                     {rank}
@@ -86,70 +95,81 @@ function StockRow({
                 ) : null}
             </div>
 
+            {/* 종목 정보 */}
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                {/* 1행: 종목명 + 등급 + 시그널 */}
+                <div className="flex items-center gap-1.5">
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+                    <GradeBadge grade={stock.grade} />
 
-                    {/* 거래량 폭발 */}
-                    {volumeExplosion && (
-                        <span className="text-[11px] font-bold flex-shrink-0" title={`거래량 ${stock.volumeSurgeRate}배`}>
-                            🔥
-                        </span>
+                    {/* 모바일: 최우선 시그널 1개만 */}
+                    <span className="sm:hidden flex-shrink-0">
+                        {primarySignal === 'limitUp' && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] rounded-md">상한가</span>
+                        )}
+                        {primarySignal === 'volume' && (
+                            <span className="text-[11px]" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
+                        )}
+                        {primarySignal === 'score' && (
+                            <span className="px-1 py-0.5 text-[10px] font-bold rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
+                        )}
+                        {primarySignal === 'streak' && (
+                            <span className={`px-1 py-0.5 text-[10px] font-bold rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일</span>
+                        )}
+                    </span>
+
+                    {/* 데스크탑: 시그널 전부 */}
+                    <span className="hidden sm:contents">
+                        {volumeExplosion && (
+                            <span className="text-[11px] font-bold flex-shrink-0" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
+                        )}
+                        {scoreJump && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
+                        )}
+                        {streakDays >= 3 && (
+                            <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일 연속</span>
+                        )}
+                        {isLimitUp && (
+                            <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">상한가</span>
+                        )}
+                    </span>
+                </div>
+
+                {/* 2행: 테마 (데스크탑만) + 이유 */}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                    {stock.themes.length > 0 && (
+                        <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+                            {stock.themes.slice(0, 2).map((theme) => (
+                                <span
+                                    key={theme}
+                                    role="button"
+                                    onClick={(e) => { e.stopPropagation(); onThemeClick(theme); }}
+                                    className="text-sm text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
+                                >
+                                    {theme}
+                                </span>
+                            ))}
+                            {stock.themes.length > 2 && (
+                                <span className="text-sm text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                            )}
+                        </div>
                     )}
-
-                    {/* 점수 급상승 */}
-                    {scoreJump && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">
-                            +{scoreChange.delta}점
-                        </span>
-                    )}
-
-                    {/* 연속 주도 (3일+, 발광은 5일+만) */}
-                    {streakDays >= 3 && (
-                        <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${
-                            streakDays >= 5
-                                ? 'text-red-500 bg-red-500/15'
-                                : 'text-amber-600 bg-amber-500/15'
-                        }`}>
-                            {streakDays}일 연속
-                        </span>
-                    )}
-
-                    {isLimitUp && (
-                        <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
-                            상한가
-                        </span>
+                    {stock.reason && (
+                        <p className="text-[12px] text-[var(--text-secondary)] truncate font-medium min-w-0">
+                            💡 {stock.reason}
+                        </p>
                     )}
                 </div>
-                {stock.themes.length > 0 && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                        {stock.themes.slice(0, 2).map((theme) => (
-                            <span
-                                key={theme}
-                                role="button"
-                                onClick={(e) => { e.stopPropagation(); onThemeClick(theme); }}
-                                className="text-sm text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
-                            >
-                                {theme}
-                            </span>
-                        ))}
-                        {stock.themes.length > 2 && (
-                            <span className="text-sm text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
-                        )}
-                    </div>
-                )}
-                {stock.reason && (
-                    <p className="text-[12px] text-[var(--text-secondary)] truncate mt-0.5 font-medium">
-                        💡 {stock.reason}
-                    </p>
-                )}
+
+                {/* 3행: 최신 뉴스 (데스크탑만) */}
                 {stock.latestNews && (
-                    <p className="text-sm text-[var(--text-tertiary)] truncate mt-0.5">
+                    <p className="hidden sm:block text-sm text-[var(--text-tertiary)] truncate mt-0.5">
                         {stock.latestNews}
                     </p>
                 )}
             </div>
 
+            {/* 가격 */}
             <div className="text-right flex-shrink-0">
                 <div className={`text-base transition-colors duration-700 ${
                     priceFlash === 'rise' ? 'text-[var(--rise-color)] font-semibold'
@@ -167,13 +187,14 @@ function StockRow({
                 )}
             </div>
 
+            {/* 거래대금 (데스크탑) */}
             <div className="hidden sm:block w-12 text-right flex-shrink-0">
                 <div className="text-sm text-[var(--text-tertiary)]">{formatTradingValue(stock.tradingValue)}</div>
             </div>
 
-            <div className="hidden sm:flex w-16 items-center gap-1.5 flex-shrink-0 justify-end">
+            {/* 점수 (데스크탑) — 등급배지는 종목명 옆으로 이동했으므로 점수만 */}
+            <div className="hidden sm:block w-10 text-right flex-shrink-0">
                 <span className="text-base font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
-                <GradeBadge grade={stock.grade} />
             </div>
         </motion.button>
     );
