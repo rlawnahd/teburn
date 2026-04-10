@@ -333,6 +333,56 @@ function useCountUp(target: number, duration: number = 1200): number {
     return value;
 }
 
+// ---- 실데이터 미니 스트립 ----
+type GlanceStock = { grade: string; changeRate: number; themes: string[]; totalScore: number };
+
+function MarketGlance({ stocks }: { stocks: GlanceStock[] }) {
+    if (stocks.length === 0) return null;
+
+    const sCount = stocks.filter(s => s.grade === 'S').length;
+    const marketTemp = Math.round(stocks.reduce((sum, s) => sum + s.totalScore, 0) / stocks.length);
+    const tempColor = marketTemp >= 60 ? '#ef4444' : marketTemp >= 40 ? '#e0e0e0' : '#2962ff';
+
+    // Top theme among S-grade
+    const sStocks = stocks.filter(s => s.grade === 'S');
+    const themeMap = new Map<string, { count: number; totalChange: number }>();
+    sStocks.forEach((s) => {
+        s.themes.forEach((theme) => {
+            const entry = themeMap.get(theme) ?? { count: 0, totalChange: 0 };
+            themeMap.set(theme, { count: entry.count + 1, totalChange: entry.totalChange + s.changeRate });
+        });
+    });
+    let topTheme: string | null = null;
+    let topThemeAvg = 0;
+    themeMap.forEach((val, key) => {
+        if (!topTheme || val.count > (themeMap.get(topTheme)?.count ?? 0)) {
+            topTheme = key;
+            topThemeAvg = val.totalChange / val.count;
+        }
+    });
+
+    return (
+        <div className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap mt-5 text-xs" style={{ animation: 'heroFadeIn 0.8s ease-out 0.28s both' }}>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                <span style={{ color: '#ef4444', fontWeight: 700 }}>S등급 {sCount}개</span>
+            </span>
+            {topTheme && (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                    <span className="text-white/60">탑테마</span>
+                    <span className="font-semibold text-white/90">{topTheme}</span>
+                    <span style={{ color: topThemeAvg >= 0 ? '#ef4444' : '#2962ff', fontWeight: 600 }}>
+                        {topThemeAvg >= 0 ? '+' : ''}{topThemeAvg.toFixed(1)}%
+                    </span>
+                </span>
+            )}
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                <span className="text-white/60">시장온도</span>
+                <span style={{ color: tempColor, fontWeight: 700 }}>{marketTemp}</span>
+            </span>
+        </div>
+    );
+}
+
 // ---- TOP 5 라이브 테이블 (S등급 글로우 + 4~5위 블러) ----
 function LiveStockTable() {
     const { data } = useQuery({
@@ -345,8 +395,9 @@ function LiveStockTable() {
     if (stocks.length === 0) return null;
 
     return (
-        <div className="mt-10 w-full max-w-lg mx-auto" style={{ animation: 'heroFadeIn 0.8s ease-out 0.3s both' }}>
-            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]/80 backdrop-blur-xl overflow-hidden shadow-lg">
+        <div className="mt-6 w-full max-w-lg mx-auto" style={{ animation: 'heroFadeIn 0.8s ease-out 0.3s both' }}>
+            <MarketGlance stocks={stocks} />
+            <div className="mt-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]/80 backdrop-blur-xl overflow-hidden shadow-lg">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/50">
                     <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -427,19 +478,39 @@ function StatsBar() {
     );
 }
 
+// ---- 실시간 상태 배지 ----
+function MarketStatusBadge() {
+    const { data } = useQuery({
+        queryKey: ['hotStocks-landing'],
+        queryFn: () => fetchHotStocks(5),
+        staleTime: 60 * 1000,
+    });
+    const ms = data?.marketStatus;
+    if (!ms) return (
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)]/70 backdrop-blur-sm text-xs text-[var(--text-secondary)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-500 animate-pulse" />
+            데이터 로딩 중
+        </span>
+    );
+    const isLive = ms.isOpen;
+    return (
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)]/70 backdrop-blur-sm text-xs text-[var(--text-secondary)]">
+            <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+            {ms.statusText} {isLive ? '· 실시간 업데이트' : ''}
+        </span>
+    );
+}
+
 // ---- 메인 ----
 export default function HeroSection() {
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20" style={{ background: '#0a0e1a' }}>
+        <section className="relative flex items-center justify-center overflow-hidden py-16 sm:py-20" style={{ background: '#0a0e1a', minHeight: '85vh' }}>
             <GalaxyBackground />
             <ChartLineBackground />
 
             <div className="relative z-10 w-full max-w-2xl mx-auto px-6 text-white" style={{ ['--text-primary' as any]: '#f0f0f0', ['--text-secondary' as any]: '#9ca3af', ['--text-tertiary' as any]: '#6b7280', ['--border-color' as any]: '#1e293b', ['--bg-primary' as any]: '#0f1629', ['--bg-secondary' as any]: '#131b30' }}>
                 <div className="text-center" style={{ animation: 'heroFadeIn 0.6s ease-out both' }}>
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)]/70 backdrop-blur-sm text-xs text-[var(--text-secondary)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        장 중 실시간 업데이트
-                    </span>
+                    <MarketStatusBadge />
                 </div>
 
                 <h1 className="text-center mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] leading-[1.1] tracking-tight"
