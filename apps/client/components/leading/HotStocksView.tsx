@@ -479,7 +479,7 @@ export default function HotStocksView() {
 
             <HeroCard />
 
-            {stocks.length > 0 && <MarketKpiStrip stocks={stocks} />}
+            {/* MarketKpiStrip — MarketStatusBar(홈 상단)로 대체됨 */}
 
             <MarketThemeCard />
 
