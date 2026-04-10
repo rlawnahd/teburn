@@ -7,6 +7,7 @@ import LeadingSectorView from '@/components/leading/LeadingSectorView';
 import CalendarView from '@/components/leading/CalendarView';
 import IndexView from '@/components/leading/IndexView';
 import IndexWidget from '@/components/home/IndexWidget';
+import MarketStatusBar from '@/components/home/MarketStatusBar';
 import TickerStrip from '@/components/home/TickerStrip';
 import LandingPage from '@/components/landing/LandingPage';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,6 +51,9 @@ export default function HomeContent() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 티커 스트립 */}
             <TickerStrip />
+
+            {/* 시장 상태 + KPI 한 줄 */}
+            <MarketStatusBar />
 
             {/* 지수 위젯 + 탭 */}
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">

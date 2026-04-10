@@ -43,6 +43,22 @@ export default function RootLayout({
                 />
             </head>
             <body className="antialiased">
+                {/* 카카오톡/네이버/인스타 인앱 브라우저 → 외부 브라우저로 리다이렉트 */}
+                <Script id="inapp-bounce" strategy="beforeInteractive">{`
+(function(){
+  var ua = navigator.userAgent || '';
+  if (/KAKAOTALK|NAVER|Instagram|FB_IAB|FBAN|Line\\//i.test(ua)) {
+    var url = location.href;
+    if (/iPhone|iPad/i.test(ua)) {
+      location.href = 'x-safari-' + url;
+      setTimeout(function(){ location.href = url; }, 300);
+    } else {
+      location.href = 'intent://' + url.replace(/https?:\\/\\//, '') +
+        '#Intent;scheme=https;package=com.android.chrome;end';
+    }
+  }
+})();
+`}</Script>
                 <noscript>
                     <iframe
                         src="https://www.googletagmanager.com/ns.html?id=GTM-WLVG6WBJ"
