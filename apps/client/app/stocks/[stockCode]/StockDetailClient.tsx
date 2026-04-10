@@ -170,98 +170,109 @@ export default function StockDetailPage() {
                 </div>
             </div>
 
-            {/* 컨텐츠 */}
+            {/* 컨텐츠: 데스크탑 2단 (차트 좌 / 판단 우), 모바일 1단 (판단 먼저) */}
             <main className="max-w-[1280px] mx-auto p-3 space-y-3">
-                {/* 요약 정보 — 테이블 스타일 */}
-                <div className="card">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border-color)]">
-                        <div className="bg-[var(--bg-primary)] px-3 py-2">
-                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래대금</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-primary)]">{formatTradingValue(stock.tradingValue)}</div>
+                <div className="flex flex-col lg:flex-row lg:gap-3">
+                    {/* 좌: 차트 (데스크탑 60%) */}
+                    <div className="lg:flex-[6] lg:min-w-0 order-2 lg:order-1 space-y-3">
+                        <StockChart stockCode={stockCode} />
+
+                        {/* 점수 히스토리 (데스크탑에선 차트 아래) */}
+                        {stock.hotness && (
+                            <div className="card hidden lg:block">
+                                <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
+                                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">점수 추이</span>
+                                </div>
+                                <div className="px-3 py-2">
+                                    <HotnessHistoryChart stockCode={stockCode} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 우: 판단 패널 (데스크탑 40%) */}
+                    <div className="lg:flex-[4] lg:min-w-0 order-1 lg:order-2 space-y-3 mb-3 lg:mb-0">
+                        {/* 판단 요약 카드 */}
+                        {stock.hotness && (
+                            <div className="card">
+                                <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-lg font-bold ${getGradeStyle(stock.hotness.grade).color}`}>
+                                            {stock.hotness.totalScore.toFixed(0)}
+                                        </span>
+                                        <GradeBadge grade={stock.hotness.grade} />
+                                    </div>
+                                </div>
+
+                                <div className="px-3 py-2 space-y-1.5">
+                                    {[
+                                        { label: '거래대금', score: stock.hotness.tradingValueScore, maxScore: 35, color: 'bg-amber-500', detail: undefined },
+                                        { label: '등락률', score: stock.hotness.momentumScore, maxScore: 20, color: 'bg-[var(--rise-color)]', detail: `${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%` },
+                                        { label: '거래량', score: stock.hotness.volumeScore, maxScore: 15, color: 'bg-violet-500', detail: stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-' },
+                                        { label: '뉴스', score: stock.hotness.newsScore, maxScore: 15, color: 'bg-emerald-500', detail: `${stock.hotness.newsCount}건` },
+                                        { label: '대장주', score: stock.hotness.themeConcentrationScore, maxScore: 15, color: 'bg-sky-500', detail: `${stock.hotness.themeConcentration}%` },
+                                        { label: '연속성', score: stock.hotness.streakScore ?? 0, maxScore: 30, color: 'bg-orange-500', detail: (stock.hotness.streakDays ?? 0) > 0 ? `🔥${stock.hotness.streakDays}일` : '-' },
+                                    ].map((bar, i) => (
+                                        <div key={bar.label} className="animate-stagger" style={{ animationDelay: `${i * 50}ms` }}>
+                                            <ScoreBar label={bar.label} score={bar.score} maxScore={bar.maxScore} color={bar.color} detail={bar.detail} />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* 모바일에서만 점수 히스토리 */}
+                                <div className="lg:hidden px-3 py-2 border-t border-[var(--border-color)]">
+                                    <HotnessHistoryChart stockCode={stockCode} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* KPI 요약 */}
+                        <div className="card">
+                            <div className="grid grid-cols-2 gap-px bg-[var(--border-color)]">
+                                <div className="bg-[var(--bg-primary)] px-3 py-2">
+                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래대금</div>
+                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{formatTradingValue(stock.tradingValue)}</div>
+                                </div>
+                                <div className="bg-[var(--bg-primary)] px-3 py-2">
+                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래량</div>
+                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{formatVolume(stock.volume)}</div>
+                                </div>
+                                <div className="bg-[var(--bg-primary)] px-3 py-2">
+                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">관련 테마</div>
+                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{stock.themes.length}개</div>
+                                </div>
+                                <div className="bg-[var(--bg-primary)] px-3 py-2">
+                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">관련 뉴스</div>
+                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{stock.news.length}건</div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="bg-[var(--bg-primary)] px-3 py-2">
-                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래량</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-primary)]">{formatVolume(stock.volume)}</div>
-                        </div>
-                        <div className="bg-[var(--bg-primary)] px-3 py-2">
-                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">관련 테마</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-primary)]">{stock.themes.length}개</div>
-                        </div>
-                        <div className="bg-[var(--bg-primary)] px-3 py-2">
-                            <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">관련 뉴스</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-primary)]">{stock.news.length}건</div>
-                        </div>
+
+                        {/* 관련 테마 (판단 패널 안에) */}
+                        {stock.themes.length > 0 && (
+                            <div className="card">
+                                <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)]">
+                                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 테마</span>
+                                    <span className="text-[11px] text-[var(--text-tertiary)]">{stock.themes.length}개</span>
+                                </div>
+                                <div className="px-3 py-2 flex flex-wrap gap-1">
+                                    {stock.themes.map((theme) => (
+                                        <button
+                                            key={theme}
+                                            onClick={() => router.push(`/themes/${encodeURIComponent(theme)}`)}
+                                            className="px-1.5 py-0.5 text-[11px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-colors cursor-pointer rounded-sm"
+                                        >
+                                            {theme}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {/* 차트 */}
-                <StockChart stockCode={stockCode} />
-
-                {/* 주도주 점수 */}
-                {stock.hotness && (() => {
-                    return (
-                    <div className="card">
-                        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
-                                <span className="text-[11px] text-[var(--text-tertiary)]">종목 관심도 분석</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-sm font-bold ${getGradeStyle(stock.hotness.grade).color}`}>
-                                    {stock.hotness.totalScore.toFixed(0)}
-                                </span>
-                                <GradeBadge grade={stock.hotness.grade} />
-                            </div>
-                        </div>
-
-                        <div className="px-3 py-2 border-b border-[var(--border-color)]">
-                            <HotnessHistoryChart stockCode={stockCode} />
-                        </div>
-
-                        <div className="px-3 py-2 space-y-1.5">
-                            {[
-                                { label: '거래대금', score: stock.hotness.tradingValueScore, maxScore: 35, color: 'bg-amber-500', detail: undefined },
-                                { label: '등락률', score: stock.hotness.momentumScore, maxScore: 20, color: 'bg-[var(--rise-color)]', detail: `${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%` },
-                                { label: '거래량', score: stock.hotness.volumeScore, maxScore: 15, color: 'bg-violet-500', detail: stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-' },
-                                { label: '뉴스', score: stock.hotness.newsScore, maxScore: 15, color: 'bg-emerald-500', detail: `${stock.hotness.newsCount}건` },
-                                { label: '대장주', score: stock.hotness.themeConcentrationScore, maxScore: 15, color: 'bg-sky-500', detail: `${stock.hotness.themeConcentration}%` },
-                                { label: '연속성', score: stock.hotness.streakScore ?? 0, maxScore: 30, color: 'bg-orange-500', detail: (stock.hotness.streakDays ?? 0) > 0 ? `🔥${stock.hotness.streakDays}일` : '-' },
-                            ].map((bar, i) => (
-                                <div key={bar.label} className="animate-stagger" style={{ animationDelay: `${i * 50}ms` }}>
-                                    <ScoreBar
-                                        label={bar.label}
-                                        score={bar.score}
-                                        maxScore={bar.maxScore}
-                                        color={bar.color}
-                                        detail={bar.detail}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    );
-                })()}
-
-                {/* 관련 테마 */}
-                {stock.themes.length > 0 && (
-                    <div className="card">
-                        <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)]">
-                            <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 테마</span>
-                            <span className="text-[11px] text-[var(--text-tertiary)]">{stock.themes.length}개</span>
-                        </div>
-                        <div className="px-3 py-2 flex flex-wrap gap-1">
-                            {stock.themes.map((theme) => (
-                                <button
-                                    key={theme}
-                                    onClick={() => router.push(`/themes/${encodeURIComponent(theme)}`)}
-                                    className="px-1.5 py-0.5 text-[11px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-colors cursor-pointer rounded-sm"
-                                >
-                                    {theme}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 {/* 관련 뉴스 */}
                 <div className="card overflow-hidden">
