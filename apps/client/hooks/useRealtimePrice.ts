@@ -31,25 +31,60 @@ type PriceCallback = (update: PriceUpdate) => void;
 type HotnessCallback = (update: HotnessUpdate) => void;
 
 let ws: WebSocket | null = null;
-let wsToken: string | null = null;
+let currentMode: 'authenticated' | 'anonymous' | null = null;
 const priceListeners = new Set<PriceCallback>();
 const hotnessListeners = new Set<HotnessCallback>();
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectDelay = 1000;
 let isConnecting = false;
 
-function connect(token: string): void {
+function connectWithToken(token: string): void {
     if (isConnecting || (ws && ws.readyState === WebSocket.OPEN)) return;
     isConnecting = true;
-    wsToken = token;
+    currentMode = 'authenticated';
 
     ws = new WebSocket(`${WS_URL}/ws`);
-
     ws.onopen = () => {
         isConnecting = false;
         reconnectDelay = 1000;
         ws!.send(JSON.stringify({ type: 'auth', token }));
     };
+    attachHandlers(() => {
+        // Reconnect with token
+        if (currentMode === 'authenticated') {
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                connectWithToken(token);
+            }, reconnectDelay);
+            reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+        }
+    });
+}
+
+function connectAnonymous(): void {
+    if (isConnecting || (ws && ws.readyState === WebSocket.OPEN)) return;
+    isConnecting = true;
+    currentMode = 'anonymous';
+
+    ws = new WebSocket(`${WS_URL}/ws`);
+    ws.onopen = () => {
+        isConnecting = false;
+        reconnectDelay = 1000;
+        ws!.send(JSON.stringify({ type: 'anonymous' }));
+    };
+    attachHandlers(() => {
+        if (currentMode === 'anonymous') {
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                connectAnonymous();
+            }, reconnectDelay);
+            reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+        }
+    });
+}
+
+function attachHandlers(onReconnect: () => void): void {
+    if (!ws) return;
 
     ws.onmessage = (event) => {
         try {
@@ -67,13 +102,7 @@ function connect(token: string): void {
     ws.onclose = () => {
         isConnecting = false;
         ws = null;
-        if (wsToken) {
-            reconnectTimer = setTimeout(() => {
-                reconnectTimer = null;
-                if (wsToken) connect(wsToken);
-            }, reconnectDelay);
-            reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-        }
+        if (currentMode) onReconnect();
     };
 
     ws.onerror = () => {
@@ -82,7 +111,7 @@ function connect(token: string): void {
 }
 
 function disconnect(): void {
-    wsToken = null;
+    currentMode = null;
     if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
@@ -105,24 +134,33 @@ function unsubscribe(stockCode: string): void {
     }
 }
 
+/**
+ * 항상 WebSocket 연결 시도.
+ * 로그인 → JWT 인증 모드 (구독 가능)
+ * 비로그인 → anonymous 모드 (broadcast 수신만)
+ */
 export function useRealtimeConnection(): void {
     const { isLoggedIn } = useAuth();
 
     useEffect(() => {
-        if (!isLoggedIn) {
-            disconnect();
-            return;
-        }
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/auth/ws-token`, {
-            credentials: 'include',
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.token) {
-                    connect(data.token);
-                }
+        disconnect();
+
+        if (isLoggedIn) {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/auth/ws-token`, {
+                credentials: 'include',
             })
-            .catch(() => {});
+                .then(r => r.json())
+                .then(data => {
+                    if (data.token) {
+                        connectWithToken(data.token);
+                    } else {
+                        connectAnonymous();
+                    }
+                })
+                .catch(() => connectAnonymous());
+        } else {
+            connectAnonymous();
+        }
 
         return () => disconnect();
     }, [isLoggedIn]);
@@ -150,12 +188,14 @@ export function useOnHotnessUpdate(callback: HotnessCallback): void {
     }, []);
 }
 
+/**
+ * 종목 개별 구독. 인증 유저만 동작 (서버에서 anonymous 구독 무시).
+ * 비로그인도 globalSubscription에 포함된 종목은 broadcast로 자동 수신.
+ */
 export function useStockSubscription(stockCode: string): void {
-    const { isLoggedIn } = useAuth();
-
     useEffect(() => {
-        if (!isLoggedIn || !stockCode) return;
+        if (!stockCode) return;
         subscribe(stockCode);
         return () => unsubscribe(stockCode);
-    }, [isLoggedIn, stockCode]);
+    }, [stockCode]);
 }
