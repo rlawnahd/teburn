@@ -1,5 +1,4 @@
-// WebSocket 서버 — 인증(선택), 구독 관리, ping/keepalive, 장마감 정리
-// 비인증(anonymous) 클라이언트도 broadcast 수신 가능. 구독은 인증 유저만.
+// WebSocket 서버 — JWT 인증, 구독 관리, ping/keepalive, 장마감 정리
 
 import { Server as HTTPServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -7,15 +6,14 @@ import { IncomingMessage } from 'http';
 import { verifyToken } from '../middleware/auth';
 import { subscribeStocks } from './kisWebSocket';
 
-const AUTH_TIMEOUT_MS = 10000;
+const AUTH_TIMEOUT_MS = 5000;
 const PING_INTERVAL_MS = 30000;
 
 interface ClientInfo {
     ws: WebSocket;
     userId: string;
-    authenticated: boolean;  // true = JWT 인증 완료 (구독 가능)
-    ready: boolean;          // true = broadcast 수신 가능 (인증 or anonymous)
-    subscriptions: Set<string>;
+    authenticated: boolean;
+    subscriptions: Set<string>;  // individual stock subscriptions (stock detail page)
     authTimer?: ReturnType<typeof setTimeout>;
 }
 
@@ -37,14 +35,13 @@ export function initWebSocketServer(server: HTTPServer): void {
             ws,
             userId: '',
             authenticated: false,
-            ready: false,
             subscriptions: new Set(),
         };
 
-        // AUTH_TIMEOUT 후에도 인증 안 됐으면 anonymous로 전환 (연결 유지)
+        // 5초 내 인증 안 되면 close
         client.authTimer = setTimeout(() => {
             if (!client.authenticated) {
-                client.ready = true;  // anonymous: broadcast 수신만 가능
+                ws.close(4001, 'Authentication timeout');
             }
         }, AUTH_TIMEOUT_MS);
 
@@ -76,7 +73,7 @@ export function initWebSocketServer(server: HTTPServer): void {
     // Ping/keepalive
     pingTimer = setInterval(() => {
         for (const [ws, client] of clients) {
-            if (!client.ready) continue;
+            if (!client.authenticated) continue;
             if (ws.readyState === WebSocket.OPEN) {
                 ws.ping();
             }
@@ -90,40 +87,28 @@ export function initWebSocketServer(server: HTTPServer): void {
  * 메시지 핸들러
  */
 function handleMessage(client: ClientInfo, msg: any): void {
-    // 인증 메시지 처리
-    if (msg.type === 'auth' && msg.token) {
-        const payload = verifyToken(msg.token);
-        if (payload) {
-            client.authenticated = true;
-            client.ready = true;
-            client.userId = payload.userId;
-            if (client.authTimer) {
-                clearTimeout(client.authTimer);
-                client.authTimer = undefined;
+    // 첫 메시지: JWT 인증
+    if (!client.authenticated) {
+        if (msg.type === 'auth' && msg.token) {
+            const payload = verifyToken(msg.token);
+            if (payload) {
+                client.authenticated = true;
+                client.userId = payload.userId;
+                if (client.authTimer) {
+                    clearTimeout(client.authTimer);
+                    client.authTimer = undefined;
+                }
+                client.ws.send(JSON.stringify({ type: 'auth', status: 'ok' }));
+            } else {
+                client.ws.close(4001, 'Invalid token');
             }
-            client.ws.send(JSON.stringify({ type: 'auth', status: 'ok' }));
         } else {
-            // 토큰 무효 → anonymous로 전환 (연결 유지)
-            client.ready = true;
-            client.ws.send(JSON.stringify({ type: 'auth', status: 'anonymous' }));
+            client.ws.close(4001, 'First message must be auth');
         }
         return;
     }
 
-    // anonymous 모드 진입 (토큰 없이 연결)
-    if (msg.type === 'anonymous') {
-        client.ready = true;
-        if (client.authTimer) {
-            clearTimeout(client.authTimer);
-            client.authTimer = undefined;
-        }
-        client.ws.send(JSON.stringify({ type: 'auth', status: 'anonymous' }));
-        return;
-    }
-
-    // 구독은 인증 유저만
-    if (!client.authenticated) return;
-
+    // 인증 후 메시지 처리
     switch (msg.type) {
         case 'subscribe':
             if (msg.stockCode && typeof msg.stockCode === 'string') {
@@ -178,7 +163,7 @@ function syncKiwoomSubscriptions(): void {
  */
 export function broadcastToSubscribers(stockCode: string, message: string): void {
     for (const [ws, client] of clients) {
-        if (!client.ready) continue;
+        if (!client.authenticated) continue;
         if (ws.readyState !== WebSocket.OPEN) continue;
 
         // global subscription이거나 개별 구독 중인 경우
@@ -189,11 +174,11 @@ export function broadcastToSubscribers(stockCode: string, message: string): void
 }
 
 /**
- * 모든 ready 클라이언트에게 메시지 전송 (인증 + anonymous 모두)
+ * 모든 인증된 클라이언트에게 메시지 전송
  */
 export function broadcastAll(message: string): void {
     for (const [ws, client] of clients) {
-        if (!client.ready) continue;
+        if (!client.authenticated) continue;
         if (ws.readyState !== WebSocket.OPEN) continue;
         ws.send(message);
     }
@@ -205,7 +190,7 @@ export function broadcastAll(message: string): void {
 export function closeAllConnections(): void {
     const closedMsg = JSON.stringify({ type: 'marketClosed' });
     for (const [ws, client] of clients) {
-        if (client.ready && ws.readyState === WebSocket.OPEN) {
+        if (client.authenticated && ws.readyState === WebSocket.OPEN) {
             ws.send(closedMsg);
         }
         ws.close(1000, 'Market closed');
@@ -230,7 +215,7 @@ export function updateGlobalSubscriptions(stockCodes: string[]): void {
 export function getConnectedClientCount(): number {
     let count = 0;
     for (const [, client] of clients) {
-        if (client.ready) count++;
+        if (client.authenticated) count++;
     }
     return count;
 }
