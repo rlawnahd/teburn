@@ -35,10 +35,6 @@ export default function HomeContent() {
         router.push(`/?tab=${tab}`, { scroll: false });
     };
 
-    // 랜딩 표시 조건: 비로그인 + 탭 파라미터 없음 (첫 방문자)
-    // ?tab=hot 등으로 직접 접근하면 비로그인이어도 대시보드 표시
-    const showLanding = !isLoading && !isLoggedIn && !tabParam;
-
     if (isLoading) {
         return (
             <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
@@ -47,7 +43,7 @@ export default function HomeContent() {
         );
     }
 
-    if (showLanding) {
+    if (!isLoggedIn) {
         return <LandingPage />;
     }
 
