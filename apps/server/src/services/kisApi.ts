@@ -111,8 +111,8 @@ export async function getMultipleStockPrices(stockCodes: string[]): Promise<Map<
         if (price) {
             results.set(code, price);
         }
-        // API rate limit 방지 (여유있게 100ms)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // KIS 실전 초당 5건 제한 → 250ms로 초당 4건 유지
+        await new Promise(resolve => setTimeout(resolve, 250));
     }
 
     return results;
@@ -135,8 +135,8 @@ export async function getStockPricesByNames(stockNames: string[]): Promise<Map<s
             results.set(name, price);
         }
 
-        // API rate limit 방지 (여유있게 100ms)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // KIS 실전 초당 5건 제한 → 250ms로 초당 4건 유지
+        await new Promise(resolve => setTimeout(resolve, 250));
     }
 
     return results;
