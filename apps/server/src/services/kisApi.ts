@@ -1,6 +1,7 @@
 import axios from 'axios';
 import stockCodesData from '../data/stockCodes.json';
 import { getKisToken, invalidateKisToken } from './kisRestApi';
+import { acquireKisToken } from './kisRateLimiter';
 
 // KIS REST API 설정
 const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
@@ -38,7 +39,10 @@ export interface StockPrice {
 }
 
 // 주식현재가 조회 — KIS REST API (FHKST01010100)
-export async function getStockPrice(stockCode: string, retries = 2): Promise<StockPrice | null> {
+// 글로벌 rate limiter를 거쳐 초당 호출 수 제한
+export async function getStockPrice(stockCode: string, retries = 3): Promise<StockPrice | null> {
+    await acquireKisToken();
+
     try {
         const token = await getAccessToken();
 
@@ -56,11 +60,21 @@ export async function getStockPrice(stockCode: string, retries = 2): Promise<Sto
                     FID_COND_MRKT_DIV_CODE: 'J',
                     FID_INPUT_ISCD: stockCode,
                 },
-                timeout: 5000,
+                timeout: 8000,
             }
         );
 
         const data = response.data;
+
+        // Rate limit 응답 body에 EGW00201로 도착하는 경우
+        if (data.rt_cd === '1' && data.msg_cd === 'EGW00201') {
+            if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 600));
+                return getStockPrice(stockCode, retries - 1);
+            }
+            console.error(`주가 조회 rate limit 소진 (${stockCode})`);
+            return null;
+        }
 
         if (data.rt_cd !== '0') {
             console.error(`주가 조회 실패: ${stockCode}`, data.msg1);
@@ -83,17 +97,29 @@ export async function getStockPrice(stockCode: string, retries = 2): Promise<Sto
         };
     } catch (error: any) {
         const errMsg = error.response?.data || error.message;
+        const errStr = String(errMsg);
 
         // 토큰 만료 시 캐시 초기화 후 재시도
-        if (retries > 0 && (String(errMsg).includes('만료된 token') || String(errMsg).includes('EGW00123'))) {
+        if (retries > 0 && (errStr.includes('만료된 token') || errStr.includes('EGW00123'))) {
             invalidateKisToken();
             await new Promise(resolve => setTimeout(resolve, 200));
             return getStockPrice(stockCode, retries - 1);
         }
 
-        // 네트워크 에러 시 재시도
-        if (retries > 0 && (error.code === 'ECONNRESET' || String(errMsg).includes('socket hang up'))) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+        // Rate limit (네트워크 레벨) — 대기 후 재시도
+        if (retries > 0 && errStr.includes('EGW00201')) {
+            await new Promise(resolve => setTimeout(resolve, 600));
+            return getStockPrice(stockCode, retries - 1);
+        }
+
+        // 네트워크 에러 / timeout 재시도
+        if (retries > 0 && (
+            error.code === 'ECONNRESET' ||
+            error.code === 'ECONNABORTED' ||
+            errStr.includes('socket hang up') ||
+            errStr.includes('timeout')
+        )) {
+            await new Promise(resolve => setTimeout(resolve, 400));
             return getStockPrice(stockCode, retries - 1);
         }
 
@@ -111,8 +137,7 @@ export async function getMultipleStockPrices(stockCodes: string[]): Promise<Map<
         if (price) {
             results.set(code, price);
         }
-        // KIS 실전 초당 5건 제한 → 250ms로 초당 4건 유지
-        await new Promise(resolve => setTimeout(resolve, 250));
+        // 개별 딜레이 제거 — 글로벌 kisRateLimiter가 처리
     }
 
     return results;
@@ -135,8 +160,7 @@ export async function getStockPricesByNames(stockNames: string[]): Promise<Map<s
             results.set(name, price);
         }
 
-        // KIS 실전 초당 5건 제한 → 250ms로 초당 4건 유지
-        await new Promise(resolve => setTimeout(resolve, 250));
+        // 개별 딜레이 제거 — 글로벌 kisRateLimiter가 처리
     }
 
     return results;
