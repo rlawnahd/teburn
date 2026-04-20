@@ -65,94 +65,137 @@ function StockRow({
         : streakDays >= 3 ? 'streak'
         : null;
 
-    const [expanded, setExpanded] = useState(false);
-    const hasDetail = stock.reason || stock.themes.length > 0 || stock.latestNews || volumeExplosion || scoreJump || streakDays >= 3;
-
     return (
-        <motion.div
+        <motion.button
             layout
             layoutId={stock.stockCode}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className={`${glowClass}`}
+            onClick={() => onStockClick(stock.stockCode)}
+            className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors text-left ${glowClass}`}
         >
-            {/* 핵심 1행: 순위 + 종목명 + 등급 + 가격 */}
-            <button
-                onClick={() => onStockClick(stock.stockCode)}
-                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-[var(--bg-tertiary)] transition-colors text-left"
-            >
-                <div className="w-7 flex-shrink-0 text-center">
-                    <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
-                        {rank}
+            {/* 순위 */}
+            <div className="w-8 flex-shrink-0 text-center">
+                <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                    {rank}
+                </span>
+                {isNewEntry ? (
+                    <span className="text-[9px] font-bold text-amber-500 ml-0.5">N</span>
+                ) : rankJump ? (
+                    <span className="text-[10px] font-bold ml-0.5 text-[var(--rise-color)]">
+                        ▲▲{Math.abs(rankChange.delta)}
                     </span>
-                    {isNewEntry && <span className="text-[9px] font-bold text-amber-500 ml-0.5">N</span>}
+                ) : rankDrop ? (
+                    <span className="text-[10px] font-bold ml-0.5 text-[var(--fall-color)]">
+                        ▼▼{Math.abs(rankChange.delta)}
+                    </span>
+                ) : rankChange && rankChange.delta !== 0 ? (
+                    <span className={`text-[9px] font-semibold ml-0.5 ${rankChange.delta > 0 ? 'text-[var(--rise-color)]/70' : 'text-[var(--fall-color)]/70'}`}>
+                        {rankChange.delta > 0 ? '▲' : '▼'}{Math.abs(rankChange.delta)}
+                    </span>
+                ) : null}
+            </div>
+
+            {/* 종목 정보 */}
+            <div className="flex-1 min-w-0">
+                {/* 1행: 종목명 + 등급 + 시그널 */}
+                <div className="flex items-center gap-1.5">
+                    <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
+
+                    {/* 모바일: 최우선 시그널 1개만 */}
+                    <span className="sm:hidden flex-shrink-0">
+                        {primarySignal === 'limitUp' && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] rounded-md">상한가</span>
+                        )}
+                        {primarySignal === 'volume' && (
+                            <span className="text-[11px]" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
+                        )}
+                        {primarySignal === 'score' && (
+                            <span className="px-1 py-0.5 text-[10px] font-bold rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
+                        )}
+                        {primarySignal === 'streak' && (
+                            <span className={`px-1 py-0.5 text-[10px] font-bold rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일</span>
+                        )}
+                    </span>
+
+                    {/* 데스크탑: 시그널 전부 */}
+                    <span className="hidden sm:contents">
+                        {volumeExplosion && (
+                            <span className="text-[11px] font-bold flex-shrink-0" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
+                        )}
+                        {scoreJump && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
+                        )}
+                        {streakDays >= 3 && (
+                            <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일 연속</span>
+                        )}
+                        {isLimitUp && (
+                            <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">상한가</span>
+                        )}
+                    </span>
                 </div>
 
-                <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
-                {primarySignal === 'limitUp' && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] rounded-md flex-shrink-0">상한가</span>
-                )}
-                {primarySignal === 'volume' && (
-                    <span className="text-[11px] flex-shrink-0">🔥</span>
-                )}
-
-                <div className="ml-auto text-right flex-shrink-0 flex items-center gap-3">
-                    <span className="hidden sm:inline text-xs font-medium text-[var(--text-secondary)]">{formatTradingValue(stock.tradingValue)}</span>
-                    <div>
-                        <span className={`text-sm transition-colors duration-700 ${
-                            priceFlash === 'rise' ? 'text-[var(--rise-color)] font-semibold'
-                            : priceFlash === 'fall' ? 'text-[var(--fall-color)] font-semibold'
-                            : 'text-[var(--text-primary)]'
-                        }`}>{stock.currentPrice.toLocaleString()}</span>
-                        <span className={`text-xs font-medium ml-1.5 ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                            {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
-                        </span>
-                    </div>
-                    {hasDetail && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-                            className="w-5 h-5 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
-                            aria-label="상세 보기"
-                        >
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${expanded ? 'rotate-180' : ''}`}>
-                                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </button>
-                    )}
-                </div>
-            </button>
-
-            {/* 펼침 상세 */}
-            {expanded && (
-                <div className="px-4 pb-2.5 pt-0 ml-9 space-y-1 animate-contentFadeIn">
-                    {stock.reason && (
-                        <p className="text-[12px] text-[var(--text-secondary)] font-medium">💡 {stock.reason}</p>
-                    )}
+                {/* 2행: 테마 (데스크탑만) + 이유 */}
+                <div className="flex items-center gap-1.5 mt-0.5">
                     {stock.themes.length > 0 && (
-                        <div className="flex items-center gap-1 flex-wrap">
-                            {stock.themes.slice(0, 3).map((theme) => (
+                        <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+                            {stock.themes.slice(0, 2).map((theme) => (
                                 <span
                                     key={theme}
                                     role="button"
-                                    onClick={() => onThemeClick(theme)}
-                                    className="text-[11px] text-[var(--accent-blue)] hover:underline cursor-pointer"
+                                    onClick={(e) => { e.stopPropagation(); onThemeClick(theme); }}
+                                    className="text-sm text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
                                 >
                                     {theme}
                                 </span>
                             ))}
+                            {stock.themes.length > 2 && (
+                                <span className="text-sm text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                            )}
                         </div>
                     )}
-                    <div className="flex items-center gap-3 text-[11px] text-[var(--text-tertiary)]">
-                        <span className="sm:hidden">거래대금 {formatTradingValue(stock.tradingValue)}</span>
-                        <span>점수 {stock.totalScore}</span>
-                        {streakDays >= 3 && <span className="text-amber-600">{streakDays}일 연속</span>}
-                        {scoreJump && <span className="text-[var(--rise-color)]">+{scoreChange!.delta}점 급등</span>}
-                    </div>
-                    {stock.latestNews && (
-                        <p className="text-[11px] text-[var(--text-tertiary)] truncate">{stock.latestNews}</p>
+                    {stock.reason && (
+                        <p className="text-[12px] text-[var(--text-secondary)] truncate font-medium min-w-0">
+                            💡 {stock.reason}
+                        </p>
                     )}
                 </div>
-            )}
-        </motion.div>
+
+                {/* 3행: 최신 뉴스 (데스크탑만) */}
+                {stock.latestNews && (
+                    <p className="hidden sm:block text-sm text-[var(--text-tertiary)] truncate mt-0.5">
+                        {stock.latestNews}
+                    </p>
+                )}
+            </div>
+
+            {/* 가격 */}
+            <div className="text-right flex-shrink-0">
+                <div className={`text-base transition-colors duration-700 ${
+                    priceFlash === 'rise' ? 'text-[var(--rise-color)] font-semibold'
+                    : priceFlash === 'fall' ? 'text-[var(--fall-color)] font-semibold'
+                    : 'text-[var(--text-primary)]'
+                }`}>{stock.currentPrice.toLocaleString()}</div>
+                {isLimitUp ? (
+                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--rise-color)] mt-0.5">
+                        <span className="text-sm font-bold text-white">↑ {stock.changeRate.toFixed(2)}%</span>
+                    </div>
+                ) : (
+                    <div className={`text-sm font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                        {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                    </div>
+                )}
+            </div>
+
+            {/* 거래대금 (데스크탑) */}
+            <div className="hidden sm:block w-12 text-right flex-shrink-0">
+                <div className="text-sm font-medium text-[var(--text-secondary)]">{formatTradingValue(stock.tradingValue)}</div>
+            </div>
+
+            {/* 점수 (데스크탑) — 등급배지는 종목명 옆으로 이동했으므로 점수만 */}
+            <div className="hidden sm:block w-10 text-right flex-shrink-0">
+                <span className="text-base font-bold text-[var(--text-primary)]">{stock.totalScore}</span>
+            </div>
+        </motion.button>
     );
 }
 
