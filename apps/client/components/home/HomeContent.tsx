@@ -68,8 +68,7 @@ export default function HomeContent() {
                 </div>
             )}
 
-            {/* 티커 스트립 */}
-            <TickerStrip />
+            {/* 티커 스트립 제거 — 정보 과부하 */}
 
             {/* 시장 상태 + KPI 한 줄 */}
             <MarketStatusBar />
