@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Flame, LayoutGrid, Calendar, BarChart2 } from 'lucide-react';
+import Link from 'next/link';
 import HotStocksView from '@/components/leading/HotStocksView';
 import LeadingSectorView from '@/components/leading/LeadingSectorView';
 import CalendarView from '@/components/leading/CalendarView';
@@ -35,6 +36,10 @@ export default function HomeContent() {
         router.push(`/?tab=${tab}`, { scroll: false });
     };
 
+    // 비로그인 + 탭 파라미터 없음 → 랜딩 (첫 방문자)
+    // ?tab=hot 등 직접 접근 → 비로그인이어도 대시보드 표시
+    const showLanding = !isLoading && !isLoggedIn && !tabParam;
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
@@ -43,12 +48,26 @@ export default function HomeContent() {
         );
     }
 
-    if (!isLoggedIn) {
+    if (showLanding) {
         return <LandingPage />;
     }
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
+            {/* 비로그인 안내 배너 */}
+            {!isLoggedIn && (
+                <div className="bg-[var(--accent-blue-light)] border-b border-[var(--accent-blue)]/20">
+                    <div className="max-w-[1280px] mx-auto px-4 py-2 flex items-center justify-between text-xs">
+                        <span className="text-[var(--accent-blue-dark)]">
+                            5분 지연 데이터입니다. 실시간 업데이트는 로그인 후 이용 가능합니다.
+                        </span>
+                        <Link href="/login" className="px-3 py-1 rounded-md bg-[var(--accent-blue)] text-white font-medium hover:opacity-90 transition-opacity">
+                            로그인
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* 티커 스트립 */}
             <TickerStrip />
 

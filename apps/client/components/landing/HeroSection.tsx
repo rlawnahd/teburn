@@ -448,7 +448,7 @@ function LiveStockTable() {
                 <div className="relative">
                     <div className="h-12 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Link href="/login" className="text-sm font-medium text-[var(--accent-blue)] hover:underline">
+                        <Link href="/?tab=hot" className="text-sm font-medium text-[var(--accent-blue)] hover:underline">
                             + 나머지 종목 보기 →
                         </Link>
                     </div>
@@ -531,12 +531,12 @@ export default function HeroSection() {
                 <LiveStockTable />
 
                 <div className="text-center mt-8" style={{ animation: 'heroFadeIn 0.8s ease-out 0.5s both' }}>
-                    <Link href="/login"
+                    <Link href="/?tab=hot"
                         className="inline-flex items-center h-12 px-8 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                         style={{ background: '#ef4444', boxShadow: '0 4px 24px rgba(239,68,68,0.4)' }}>
-                        무료로 시작하기
+                        주도주 바로 보기
                     </Link>
-                    <p className="mt-3 text-xs text-[var(--text-tertiary)]">가입 10초 · 완전 무료</p>
+                    <p className="mt-3 text-xs text-[var(--text-tertiary)]">로그인 없이 무료 이용 · 실시간은 로그인 후</p>
                 </div>
             </div>
         </section>
