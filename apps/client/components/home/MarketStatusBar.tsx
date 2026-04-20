@@ -105,39 +105,8 @@ export default function MarketStatusBar() {
                     {/* S등급 */}
                     <span className="flex items-center gap-1 flex-shrink-0">
                         <span className="text-[var(--text-tertiary)]">S등급</span>
-                        <span className="font-semibold" style={{ color: 'var(--grade-s)' }}>{kpis.sCount}</span>
+                        <span className="font-semibold" style={{ color: 'var(--grade-s)' }}>{kpis.sCount}개</span>
                     </span>
-
-                    {/* A등급 */}
-                    <span className="flex items-center gap-1 flex-shrink-0">
-                        <span className="text-[var(--text-tertiary)]">A등급</span>
-                        <span className="font-semibold" style={{ color: 'var(--grade-a)' }}>{kpis.aCount}</span>
-                    </span>
-
-                    {/* 상한가 */}
-                    {kpis.limitUpCount > 0 && (
-                        <>
-                            <span className="h-3 w-px bg-[var(--border-color)] flex-shrink-0" />
-                            <span className="flex items-center gap-1 flex-shrink-0">
-                                <span className="text-[var(--text-tertiary)]">상한가</span>
-                                <span className="font-semibold" style={{ color: 'var(--rise-color)' }}>{kpis.limitUpCount}</span>
-                            </span>
-                        </>
-                    )}
-
-                    {/* 오늘의 테마 */}
-                    {kpis.topTheme && (
-                        <>
-                            <span className="h-3 w-px bg-[var(--border-color)] flex-shrink-0" />
-                            <span className="flex items-center gap-1 flex-shrink-0">
-                                <span className="text-[var(--text-tertiary)]">탑테마</span>
-                                <span className="font-semibold text-[var(--text-primary)]">{kpis.topTheme}</span>
-                                <span style={{ color: kpis.topThemeAvgChange >= 0 ? 'var(--rise-color)' : 'var(--fall-color)' }}>
-                                    {kpis.topThemeAvgChange >= 0 ? '+' : ''}{kpis.topThemeAvgChange.toFixed(1)}%
-                                </span>
-                            </span>
-                        </>
-                    )}
 
                     {/* 갱신 시각 — 우측 밀기 */}
                     <span className="ml-auto flex-shrink-0 text-[var(--text-disabled)]">
