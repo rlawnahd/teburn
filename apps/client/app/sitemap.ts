@@ -44,6 +44,7 @@ async function fetchDynamicUrls(): Promise<MetadataRoute.Sitemap> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const staticUrls: MetadataRoute.Sitemap = [
         { url: 'https://teburn.com', lastModified: new Date(), changeFrequency: 'always', priority: 1 },
+        { url: 'https://teburn.com/today', lastModified: new Date(), changeFrequency: 'always', priority: 0.95 },
         { url: 'https://teburn.com/?tab=hot', lastModified: new Date(), changeFrequency: 'always', priority: 0.9 },
         { url: 'https://teburn.com/?tab=stocks', lastModified: new Date(), changeFrequency: 'always', priority: 0.8 },
         { url: 'https://teburn.com/?tab=sectors', lastModified: new Date(), changeFrequency: 'always', priority: 0.8 },
