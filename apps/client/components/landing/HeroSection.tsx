@@ -515,9 +515,9 @@ export default function HeroSection() {
 
                 <h1 className="text-center mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] leading-[1.1] tracking-tight"
                     style={{ animation: 'heroFadeIn 0.8s ease-out 0.1s both' }}>
-                    돈이 몰리는 종목을
+                    돈이 몰리는 <span style={{ color: '#ef4444' }}>주도주</span>를
                     <br />
-                    <span style={{ color: '#ef4444' }}>실시간</span>으로
+                    실시간으로
                 </h1>
 
                 <p className="text-center mt-4 text-base sm:text-lg text-[var(--text-secondary)] max-w-md mx-auto"

@@ -98,6 +98,12 @@ export default function HomeContent() {
                                     </button>
                                 );
                             })}
+                            <Link
+                                href="/today"
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all rounded-lg whitespace-nowrap text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"
+                            >
+                                오늘의 주도주
+                            </Link>
                         </div>
                     </div>
                 </div>

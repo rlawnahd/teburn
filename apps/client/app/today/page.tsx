@@ -63,10 +63,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const { stocks } = await fetchData();
     const top3 = stocks.slice(0, 3).map(s => s.stockName).join(', ');
     const date = todayStr();
-    const title = `오늘의 주도주 TOP 10 — ${date} | TEBURN`;
+    const title = `오늘의 주도주 TOP 10 순위 — ${date} | TEBURN 주도주 랭킹`;
     const description = top3
-        ? `${date} 주도주 순위: ${top3} 등. 거래대금·등락률·거래량·뉴스·테마 종합 점수 기반 실시간 분석.`
-        : `${date} 주도주 순위 — 실시간 주도주 분석 서비스 TEBURN`;
+        ? `${date} 주도주 순위 1위 ${stocks[0]?.stockName ?? ''}. ${top3} 등 주도주 TOP 10. 거래대금·등락률·거래량·뉴스·테마 종합 점수 기반 주도주 실시간 분석.`
+        : `${date} 오늘의 주도주 순위 — 실시간 주도주 랭킹 서비스 TEBURN`;
 
     return {
         title,

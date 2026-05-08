@@ -10,11 +10,11 @@ import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
 export const metadata: Metadata = {
-    title: 'TEBURN - 오늘의 주도주를 찾아라',
-    description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+    title: 'TEBURN - 오늘의 주도주 실시간 순위',
+    description: '오늘의 주도주 TOP 10을 실시간으로. 거래대금, 등락률, 거래량, 뉴스, 테마 집중도 5가지 지표로 주도주를 분석합니다. 무료 주도주 랭킹 서비스.',
     openGraph: {
-        title: 'TEBURN - 오늘의 주도주를 찾아라',
-        description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+        title: 'TEBURN - 오늘의 주도주 실시간 순위',
+        description: '오늘의 주도주 TOP 10을 실시간으로. 거래대금, 등락률, 거래량, 뉴스, 테마 집중도 5가지 지표로 주도주를 분석합니다.',
         url: 'https://teburn.com',
         siteName: 'TEBURN',
         locale: 'ko_KR',
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary',
-        title: 'TEBURN - 오늘의 주도주를 찾아라',
-        description: '거래대금, 등락률, 거래량, 뉴스, 테마 집중도까지 — 실시간 주도주 분석 서비스',
+        title: 'TEBURN - 오늘의 주도주 실시간 순위',
+        description: '오늘의 주도주 TOP 10을 실시간으로. 거래대금, 등락률, 거래량, 뉴스, 테마 집중도 5가지 지표로 주도주를 분석합니다.',
     },
     alternates: {
         canonical: 'https://teburn.com',
