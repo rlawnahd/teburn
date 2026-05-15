@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Flame, TrendingUp } from 'lucide-react';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-
 interface NavItem {
   href: string;
   label: string;
@@ -81,12 +79,7 @@ export default function Sidebar() {
       </nav>
 
       {/* 하단 영역 */}
-      <div className="p-4 border-t border-[var(--border-color)]">
-        <div className="flex items-center justify-between px-2">
-          <span className="text-sm text-[var(--text-tertiary)]">테마 변경</span>
-          <ThemeToggle size="sm" />
-        </div>
-      </div>
+      <div className="p-4 border-t border-[var(--border-color)]" />
     </aside>
   );
 }

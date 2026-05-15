@@ -5,8 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, X, Menu } from 'lucide-react';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-
 import { useAuth } from '@/hooks/useAuth';
 import { searchStocks, SearchStockResult } from '@/lib/api/stocks';
 
@@ -173,6 +171,7 @@ export default function Header() {
                             width={scrolled ? 75 : 90}
                             height={scrolled ? 20 : 24}
                             priority
+                            className="brightness-0 invert"
                         />
                     </Link>
                     {/* 데스크톱 네비 */}
@@ -256,8 +255,6 @@ export default function Header() {
                             로그인
                         </Link>
                     )}
-
-                    <ThemeToggle />
 
                     {/* 모바일 햄버거 */}
                     <button

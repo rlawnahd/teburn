@@ -504,18 +504,18 @@ function MarketStatusBadge() {
 // ---- 메인 ----
 export default function HeroSection() {
     return (
-        <section className="relative flex items-center justify-center overflow-hidden py-16 sm:py-20" style={{ background: '#0a0e1a', minHeight: '85vh' }}>
+        <section className="relative flex items-center justify-center overflow-hidden py-16 sm:py-20" style={{ background: '#09090b', minHeight: '85vh' }}>
             <GalaxyBackground />
             <ChartLineBackground />
 
-            <div className="relative z-10 w-full max-w-2xl mx-auto px-6 text-white" style={{ ['--text-primary' as any]: '#f0f0f0', ['--text-secondary' as any]: '#9ca3af', ['--text-tertiary' as any]: '#6b7280', ['--border-color' as any]: '#1e293b', ['--bg-primary' as any]: '#0f1629', ['--bg-secondary' as any]: '#131b30' }}>
+            <div className="relative z-10 w-full max-w-2xl mx-auto px-6 text-white" style={{ ['--text-primary' as any]: '#fafafa', ['--text-secondary' as any]: '#a1a1aa', ['--text-tertiary' as any]: '#71717a', ['--border-color' as any]: '#1e1e22', ['--bg-primary' as any]: '#111113', ['--bg-secondary' as any]: '#09090b' }}>
                 <div className="text-center" style={{ animation: 'heroFadeIn 0.6s ease-out both' }}>
                     <MarketStatusBadge />
                 </div>
 
                 <h1 className="text-center mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] leading-[1.1] tracking-tight"
                     style={{ animation: 'heroFadeIn 0.8s ease-out 0.1s both' }}>
-                    돈이 몰리는 <span style={{ color: '#ef4444' }}>주도주</span>를
+                    돈이 몰리는 <span style={{ color: '#f97316' }}>주도주</span>를
                     <br />
                     실시간으로
                 </h1>
@@ -533,7 +533,7 @@ export default function HeroSection() {
                 <div className="text-center mt-8" style={{ animation: 'heroFadeIn 0.8s ease-out 0.5s both' }}>
                     <Link href="/?tab=hot"
                         className="inline-flex items-center h-12 px-8 text-base font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
-                        style={{ background: '#ef4444', boxShadow: '0 4px 24px rgba(239,68,68,0.4)' }}>
+                        style={{ background: '#f97316', boxShadow: '0 4px 24px rgba(249,115,22,0.4)' }}>
                         주도주 바로 보기
                     </Link>
                     <p className="mt-3 text-xs text-[var(--text-tertiary)]">로그인 없이 무료 이용 · 실시간은 로그인 후</p>
