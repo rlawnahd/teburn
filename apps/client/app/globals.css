@@ -162,15 +162,10 @@ h1, h2, h3, h4, h5, h6 {
    유틸리티 클래스
    ============================ */
 
-/* 카드 스타일 — Grok-tic: 보더 최소, 그림자 없음 */
+/* 카드 스타일 — Grok-tic: 보더 없음, 배경 차이만 */
 .card {
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-}
-
-.card:hover {
-  border-color: var(--border-strong);
 }
 
 .card-flat {

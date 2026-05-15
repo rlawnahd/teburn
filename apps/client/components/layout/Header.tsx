@@ -159,17 +159,15 @@ export default function Header() {
     return (
         <>
             <header
-                className={`${scrolled ? 'h-10' : 'h-12'} border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-[var(--bg-primary)] sticky top-0 z-50 transition-all duration-200 ${
-                    scrolled ? 'shadow-[var(--shadow-header)]' : ''
-                }`}
+                className={`h-10 border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-[var(--bg-primary)] sticky top-0 z-50`}
             >
                 <div className="flex items-center gap-4">
                     <Link href="/" className="flex items-center">
                         <Image
                             src="/teburn-text-logo.svg"
                             alt="TEBURN"
-                            width={scrolled ? 75 : 90}
-                            height={scrolled ? 20 : 24}
+                            width={75}
+                            height={20}
                             priority
                             className="brightness-0 invert"
                         />
