@@ -5,77 +5,77 @@
    ============================ */
 
 /* ============================
-   라이트 테마 (기본)
+   Grok-tic 다크 온리 테마
    ============================ */
-:root {
-  /* 배경색 */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f5f5f5;
-  --bg-tertiary: #ebebeb;
-  --bg-elevated: #ffffff;
-  --bg-hover: rgba(0, 0, 0, 0.03);
-  --bg-active: rgba(0, 0, 0, 0.06);
+:root, [data-theme="dark"] {
+  /* 배경색 — 거의 검정 */
+  --bg-primary: #111113;
+  --bg-secondary: #09090b;
+  --bg-tertiary: #1a1a1e;
+  --bg-elevated: #1c1c20;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(255, 255, 255, 0.08);
 
-  /* 텍스트 색상 */
-  --text-primary: #131722;
-  --text-secondary: #4c525e;
-  --text-tertiary: #787b86;
-  --text-disabled: #a3a6af;
+  /* 텍스트 — 고대비 */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-disabled: #52525b;
 
-  /* 테두리 */
-  --border-color: #e0e3eb;
-  --border-strong: #c8ccd5;
+  /* 테두리 — 거의 안 보임 */
+  --border-color: #1e1e22;
+  --border-strong: #27272a;
 
-  /* 브랜드 색상 */
-  --brand-primary: #ef4444;
-  --brand-secondary: #f97316;
-  --brand-gradient: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-  --accent-blue: #2962ff;
-  --accent-blue-light: #e3edff;
-  --accent-blue-dark: #1948cc;
+  /* 브랜드 — 오렌지 액센트 */
+  --brand-primary: #f97316;
+  --brand-secondary: #fb923c;
+  --brand-gradient: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  --accent-blue: #f97316;
+  --accent-blue-light: rgba(249, 115, 22, 0.12);
+  --accent-blue-dark: #ea580c;
 
-  /* 등급 색상 */
+  /* 등급 */
   --grade-s: #ef4444;
   --grade-a: #f97316;
-  --grade-b: #787b86;
-  --grade-c: #2962ff;
-  --grade-d: #a3a6af;
+  --grade-b: #71717a;
+  --grade-c: #3b82f6;
+  --grade-d: #52525b;
 
-  /* 주식 색상 */
-  --rise-color: #f23645;
-  --rise-bg: #fff0f1;
-  --fall-color: #2962ff;
-  --fall-bg: #e3edff;
-  --neutral-color: #787b86;
-  --neutral-bg: #f5f5f5;
+  /* 주식 — 빨강/파랑 유지 */
+  --rise-color: #ef4444;
+  --rise-bg: rgba(239, 68, 68, 0.1);
+  --fall-color: #3b82f6;
+  --fall-bg: rgba(59, 130, 246, 0.1);
+  --neutral-color: #71717a;
+  --neutral-bg: #1a1a1e;
 
-  /* 상태 색상 */
-  --success-color: #089981;
-  --success-bg: #e6f6f2;
-  --warning-color: #ff9800;
-  --warning-bg: #fff8e6;
-  --error-color: #f23645;
-  --error-bg: #fff0f1;
+  /* 상태 */
+  --success-color: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.1);
+  --warning-color: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.1);
+  --error-color: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.1);
 
-  /* 그림자 */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.1);
-  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
+  /* 그림자 — 사실상 없음 */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-header: none;
+  --shadow-card-hover: none;
 
   /* 등급 틴트 */
-  --grade-s-tint: rgba(242, 54, 69, 0.04);
-  --grade-a-tint: rgba(249, 115, 22, 0.03);
-  --grade-new-color: #d97706;
+  --grade-s-tint: rgba(239, 68, 68, 0.06);
+  --grade-a-tint: rgba(249, 115, 22, 0.05);
+  --grade-new-color: #f59e0b;
 
-  /* 반경 */
+  /* 반경 — 약간 줄임 */
   --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
 
   /* 타이포 스케일 */
@@ -91,73 +91,6 @@
   --transition-fast: 100ms ease;
   --transition-normal: 200ms ease;
   --transition-slow: 300ms ease;
-}
-
-/* ============================
-   다크 테마
-   ============================ */
-[data-theme="dark"] {
-  /* 배경색 */
-  --bg-primary: #1e222d;
-  --bg-secondary: #131722;
-  --bg-tertiary: #2a2e39;
-  --bg-elevated: #262b3d;
-  --bg-hover: rgba(255, 255, 255, 0.04);
-  --bg-active: rgba(255, 255, 255, 0.08);
-
-  /* 텍스트 색상 */
-  --text-primary: #d1d4dc;
-  --text-secondary: #9598a1;
-  --text-tertiary: #636770;
-  --text-disabled: #434651;
-
-  /* 테두리 */
-  --border-color: #2a2e39;
-  --border-strong: #363a45;
-
-  /* 브랜드 색상 */
-  --brand-primary: #ef4444;
-  --brand-secondary: #f97316;
-  --brand-gradient: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-  --accent-blue: #2962ff;
-  --accent-blue-light: #1a2744;
-  --accent-blue-dark: #5b8def;
-
-  /* 등급 색상 */
-  --grade-s: #ef4444;
-  --grade-a: #f97316;
-  --grade-b: #636770;
-  --grade-c: #2962ff;
-  --grade-d: #434651;
-
-  /* 주식 색상 */
-  --rise-color: #f23645;
-  --rise-bg: #2d1f22;
-  --fall-color: #2962ff;
-  --fall-bg: #1a2744;
-  --neutral-color: #636770;
-  --neutral-bg: #2a2e39;
-
-  /* 상태 색상 */
-  --success-color: #089981;
-  --success-bg: #1a2d26;
-  --warning-color: #ffb74d;
-  --warning-bg: #2d2a1a;
-  --error-color: #f23645;
-  --error-bg: #2d1f22;
-
-  /* 그림자 */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.3);
-  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.3);
-
-  /* 등급 틴트 */
-  --grade-s-tint: rgba(242, 54, 69, 0.06);
-  --grade-a-tint: rgba(249, 115, 22, 0.04);
-  --grade-new-color: #f59e0b;
 }
 
 /* ============================
@@ -229,23 +162,19 @@ h1, h2, h3, h4, h5, h6 {
    유틸리티 클래스
    ============================ */
 
-/* 카드 스타일 */
+/* 카드 스타일 — Grok-tic: 보더 최소, 그림자 없음 */
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .card:hover {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-card-hover);
 }
 
 .card-flat {
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
 }
 
@@ -277,7 +206,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 버튼 스타일 */
 .btn-primary {
-  background: var(--accent-blue);
+  background: var(--brand-primary);
   color: white;
   padding: 8px 16px;
   font-weight: 500;
@@ -425,27 +354,7 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(239, 68, 68, 0.06);
 }
 
-/* 라이트모드: 불투명 배경 + 더 진한 shadow로 글로우 표현 */
-@keyframes fireGlowLight {
-  0%, 100% { box-shadow: 0 0 6px rgba(245, 158, 11, 0.4), 0 0 16px rgba(245, 158, 11, 0.2), inset 0 0 12px rgba(245, 158, 11, 0.06); }
-  50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.6), 0 0 28px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.1); }
-}
-
-@keyframes fireGlowLightIntense {
-  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), 0 0 20px rgba(239, 68, 68, 0.2), inset 0 0 12px rgba(239, 68, 68, 0.06); }
-  50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.6), 0 0 32px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(239, 68, 68, 0.1); }
-}
-
-:root .streak-glow {
-  animation: fireGlowLight 2s ease-in-out infinite;
-  background: rgba(245, 158, 11, 0.07);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-}
-:root .streak-glow-intense {
-  animation: fireGlowLightIntense 1.5s ease-in-out infinite;
-  background: rgba(239, 68, 68, 0.07);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-}
+/* 라이트모드 글로우 제거 — 다크 온리 */
 
 /* 순위 변동 진입 */
 @keyframes slideInLeft {
@@ -495,7 +404,7 @@ h1, h2, h3, h4, h5, h6 {
    선택 스타일
    ============================ */
 ::selection {
-  background: var(--accent-blue);
+  background: var(--brand-primary);
   color: white;
 }
 
@@ -503,7 +412,7 @@ h1, h2, h3, h4, h5, h6 {
    포커스 스타일
    ============================ */
 :focus-visible {
-  outline: 1px solid var(--accent-blue);
+  outline: 1px solid var(--brand-primary);
   outline-offset: 1px;
 }
 
@@ -554,7 +463,7 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   background: var(--bg-primary);
-  border-color: var(--accent-blue);
+  border-color: var(--brand-primary);
   outline: none;
 }
 
