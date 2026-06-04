@@ -64,6 +64,12 @@ describe('computePerformance', () => {
         expect(r.status).toBe('excluded');
     });
 
+    it('등급일 + 정확히 7일째에 일봉이 없으면 excluded (경계값)', () => {
+        const candles = [candle('2026-06-01', 9000, 9500)];
+        const r = computePerformance('2026-06-01', candles, '2026-06-08');
+        expect(r.status).toBe('excluded');
+    });
+
     it('진입일 시가가 0이면 excluded (데이터 이상)', () => {
         const candles = [candle('2026-06-01', 9000, 9500), candle('2026-06-02', 0, 10500)];
         const r = computePerformance('2026-06-01', candles, '2026-06-10');
@@ -76,9 +82,21 @@ describe('computePerformance', () => {
             candle('2026-06-03', 1, 1),
             candle('2026-06-04', 1, 1),
             candle('2026-06-05', 1, 1),
-            candle('2026-06-08', 1, 1),
+            candle('2026-06-08', 1, 30200), // 30200/30000 - 1 = 0.6667..%
         ];
         const r = computePerformance('2026-06-01', candles, '2026-06-10');
         expect(r.returnD1).toBe(0.33);
+    });
+
+    it('D+5 수익률도 소수 둘째 자리로 반올림한다', () => {
+        const candles = [
+            candle('2026-06-02', 30000, 30100), // 0.3333..%
+            candle('2026-06-03', 1, 1),
+            candle('2026-06-04', 1, 1),
+            candle('2026-06-05', 1, 1),
+            candle('2026-06-08', 1, 30200), // 30200/30000 - 1 = 0.6667..%
+        ];
+        const r = computePerformance('2026-06-01', candles, '2026-06-10');
+        expect(r.returnD5).toBe(0.67);
     });
 });

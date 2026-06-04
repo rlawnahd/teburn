@@ -15,7 +15,7 @@ export interface ComputedPerformance {
     status: 'pending' | 'partial' | 'complete' | 'excluded';
 }
 
-// 등급일 후 이 일수(달력 기준)가 지나도 일봉이 없으면 excluded
+// 등급일로부터 7일(달력) 경과 시 거래정지/상폐로 간주
 const EXCLUDE_AFTER_DAYS = 7;
 // 진입일 포함 5거래일째가 D+5
 const D5_TRADING_DAYS = 5;
@@ -33,6 +33,7 @@ function round2(n: number): number {
 /**
  * 등급일(D)과 일봉 배열(오름차순)로 수익률 계산.
  * 진입일 = D 이후 첫 거래일 시가 매수 기준.
+ * @param candles 날짜 오름차순 정렬, 중복 날짜 없음 (호출자가 보장)
  */
 export function computePerformance(
     gradeDate: string,
@@ -46,9 +47,9 @@ export function computePerformance(
 
     const entryIdx = candles.findIndex(c => c.date > gradeDate);
 
-    // 등급일 이후 일봉 없음 — 7일 경과 시 거래정지/상폐로 간주
+    // 등급일 이후 일봉 없음 — 7일(달력) 경과 시 거래정지/상폐로 간주
     if (entryIdx === -1) {
-        if (asOfDate > addDays(gradeDate, EXCLUDE_AFTER_DAYS)) {
+        if (asOfDate >= addDays(gradeDate, EXCLUDE_AFTER_DAYS)) {
             return { ...empty, status: 'excluded' };
         }
         return empty;
