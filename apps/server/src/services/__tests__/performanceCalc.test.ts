@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computePerformance, addDays, DailyCandle } from '../performanceCalc';
+import { summarizePerformance, PerfRecordLike } from '../performanceCalc';
 
 // 헬퍼: 일봉 생성
 function candle(date: string, open: number, close: number): DailyCandle {
@@ -98,5 +99,53 @@ describe('computePerformance', () => {
         ];
         const r = computePerformance('2026-06-01', candles, '2026-06-10');
         expect(r.returnD5).toBe(0.67);
+    });
+});
+
+describe('summarizePerformance', () => {
+    function rec(over: Partial<PerfRecordLike>): PerfRecordLike {
+        return {
+            stockCode: '005930', stockName: '삼성전자', grade: 'S',
+            date: '2026-06-01', returnD1: 0, returnD5: null, status: 'partial',
+            ...over,
+        };
+    }
+
+    it('등급별 평균 수익률·승률·표본수를 계산한다', () => {
+        const records: PerfRecordLike[] = [
+            rec({ stockCode: 'A1', stockName: '에이', grade: 'S', returnD1: 10, returnD5: 20, status: 'complete' }),
+            rec({ stockCode: 'A2', stockName: '비', grade: 'S', returnD1: -2, status: 'partial' }),
+            rec({ stockCode: 'A3', stockName: '씨', grade: 'A', returnD1: 4, returnD5: 6, status: 'complete' }),
+        ];
+        const s = summarizePerformance(records, 30, '2026-06-10');
+
+        expect(s.S.count).toBe(2);
+        expect(s.S.avgReturnD1).toBe(4);        // (10 + -2) / 2
+        expect(s.S.avgReturnD5).toBe(20);       // complete만
+        expect(s.S.winRateD1).toBe(50);         // 1/2
+        expect(s.S.best?.stockName).toBe('에이');
+        expect(s.S.worst?.stockName).toBe('비');
+        expect(s.A.count).toBe(1);
+        expect(s.A.avgReturnD1).toBe(4);
+    });
+
+    it('윈도우 밖 레코드와 excluded/pending은 제외한다', () => {
+        const records: PerfRecordLike[] = [
+            rec({ stockCode: 'A1', date: '2026-04-01', returnD1: 99, status: 'complete' }), // 윈도우 밖
+            rec({ stockCode: 'A2', returnD1: null, status: 'excluded' }),
+            rec({ stockCode: 'A3', returnD1: null, status: 'pending' }),
+            rec({ stockCode: 'A4', returnD1: 5, status: 'partial' }),
+        ];
+        const s = summarizePerformance(records, 7, '2026-06-05');
+        expect(s.S.count).toBe(1);
+        expect(s.S.avgReturnD1).toBe(5);
+    });
+
+    it('표본이 없으면 null 평균을 반환한다', () => {
+        const s = summarizePerformance([], 7, '2026-06-05');
+        expect(s.S.count).toBe(0);
+        expect(s.S.avgReturnD1).toBeNull();
+        expect(s.S.winRateD1).toBeNull();
+        expect(s.S.best).toBeNull();
     });
 });
