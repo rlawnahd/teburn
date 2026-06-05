@@ -11,14 +11,14 @@ export default function GuidePage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
 
                 <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
                     <h1 className="text-lg font-bold text-[var(--text-primary)]">이용 가이드</h1>
-                    <p className="text-[13px] text-[var(--text-tertiary)]">
+                    <p className="text-[14px] text-[var(--text-tertiary)]">
                         TEBURN의 주요 기능과 사용법을 안내합니다. 회원가입 없이 바로 이용할 수 있습니다.
                     </p>
 
@@ -120,8 +120,8 @@ export default function GuidePage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="space-y-2">
-            <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">{title}</h2>
-            <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h2>
+            <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {children}
             </div>
         </section>

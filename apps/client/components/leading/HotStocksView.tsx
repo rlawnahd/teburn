@@ -79,17 +79,17 @@ function StockRow({
                     {rank}
                 </span>
                 {isNewEntry ? (
-                    <span className="text-[9px] font-bold text-amber-500 ml-0.5">N</span>
+                    <span className="text-[10px] font-bold text-amber-500 ml-0.5">N</span>
                 ) : rankJump ? (
-                    <span className="text-[10px] font-bold ml-0.5 text-[var(--rise-color)]">
+                    <span className="text-[11px] font-bold ml-0.5 text-[var(--rise-color)]">
                         ▲▲{Math.abs(rankChange.delta)}
                     </span>
                 ) : rankDrop ? (
-                    <span className="text-[10px] font-bold ml-0.5 text-[var(--fall-color)]">
+                    <span className="text-[11px] font-bold ml-0.5 text-[var(--fall-color)]">
                         ▼▼{Math.abs(rankChange.delta)}
                     </span>
                 ) : rankChange && rankChange.delta !== 0 ? (
-                    <span className={`text-[9px] font-semibold ml-0.5 ${rankChange.delta > 0 ? 'text-[var(--rise-color)]/70' : 'text-[var(--fall-color)]/70'}`}>
+                    <span className={`text-[10px] font-semibold ml-0.5 ${rankChange.delta > 0 ? 'text-[var(--rise-color)]/70' : 'text-[var(--fall-color)]/70'}`}>
                         {rankChange.delta > 0 ? '▲' : '▼'}{Math.abs(rankChange.delta)}
                     </span>
                 ) : null}
@@ -104,32 +104,32 @@ function StockRow({
                     {/* 모바일: 최우선 시그널 1개만 */}
                     <span className="sm:hidden flex-shrink-0">
                         {primarySignal === 'limitUp' && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] rounded-md">상한가</span>
+                            <span className="px-1.5 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] rounded-md">상한가</span>
                         )}
                         {primarySignal === 'volume' && (
-                            <span className="text-[11px]" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
+                            <span className="text-[12px]" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
                         )}
                         {primarySignal === 'score' && (
-                            <span className="px-1 py-0.5 text-[10px] font-bold rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
+                            <span className="px-1 py-0.5 text-[11px] font-bold rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
                         )}
                         {primarySignal === 'streak' && (
-                            <span className={`px-1 py-0.5 text-[10px] font-bold rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일</span>
+                            <span className={`px-1 py-0.5 text-[11px] font-bold rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일</span>
                         )}
                     </span>
 
                     {/* 데스크탑: 시그널 전부 */}
                     <span className="hidden sm:contents">
                         {volumeExplosion && (
-                            <span className="text-[11px] font-bold flex-shrink-0" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
+                            <span className="text-[12px] font-bold flex-shrink-0" title={`거래량 ${stock.volumeSurgeRate}배`}>🔥</span>
                         )}
                         {scoreJump && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
+                            <span className="px-1.5 py-0.5 text-[11px] font-bold flex-shrink-0 rounded-md text-[var(--rise-color)] bg-[var(--rise-color)]/15">+{scoreChange!.delta}점</span>
                         )}
                         {streakDays >= 3 && (
-                            <span className={`px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0 rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일 연속</span>
+                            <span className={`px-1.5 py-0.5 text-[11px] font-bold flex-shrink-0 rounded-md ${streakDays >= 5 ? 'text-red-500 bg-red-500/15' : 'text-amber-600 bg-amber-500/15'}`}>{streakDays}일 연속</span>
                         )}
                         {isLimitUp && (
-                            <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">상한가</span>
+                            <span className="px-2 py-0.5 text-[12px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">상한가</span>
                         )}
                     </span>
                 </div>
@@ -154,7 +154,7 @@ function StockRow({
                         </div>
                     )}
                     {stock.reason && (
-                        <p className="text-[12px] text-[var(--text-secondary)] truncate font-medium min-w-0">
+                        <p className="text-[13px] text-[var(--text-secondary)] truncate font-medium min-w-0">
                             💡 {stock.reason}
                         </p>
                     )}
@@ -409,7 +409,7 @@ export default function HotStocksView() {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <p className="text-sm text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
-                <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
+                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
     }

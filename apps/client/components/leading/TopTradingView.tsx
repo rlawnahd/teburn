@@ -48,7 +48,7 @@ function StockRow({
                     <div className="flex items-center gap-1.5">
                         <span className="text-base font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                         {isLimitUp && (
-                            <span className="px-1 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
+                            <span className="px-1 py-0.5 text-[11px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-md">
                                 상한가
                             </span>
                         )}
@@ -147,7 +147,7 @@ export default function TopTradingView() {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <p className="text-base text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
-                <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
+                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
     }

@@ -52,10 +52,10 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
                     className="text-[var(--text-tertiary)] transition-colors duration-200 group-hover:text-[var(--brand-primary)]"
                 />
             </div>
-            <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-2">
+            <h3 className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">
                 {feature.title}
             </h3>
-            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {feature.description}
             </p>
         </div>
@@ -66,10 +66,10 @@ export default function FeaturesSection() {
     return (
         <section className="py-16 sm:py-20 bg-[var(--bg-secondary)] border-t border-[var(--border-color)]">
             <div className="max-w-[960px] mx-auto px-4 sm:px-6">
-                <h2 className="text-[20px] sm:text-[24px] font-bold text-[var(--text-primary)] text-center mb-3">
+                <h2 className="text-[21px] sm:text-[25px] font-bold text-[var(--text-primary)] text-center mb-3">
                     당신의 트레이딩에 엣지를 더하세요
                 </h2>
-                <p className="text-[13px] text-[var(--text-tertiary)] text-center mb-10">
+                <p className="text-[14px] text-[var(--text-tertiary)] text-center mb-10">
                     복잡한 데이터, 쉽고 빠르게
                 </p>
 

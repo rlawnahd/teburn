@@ -57,15 +57,15 @@ export default function TickerStrip() {
                             {stock.grade === 'S' && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--rise-color)] flex-shrink-0" />
                             )}
-                            <span className="text-[12px] font-medium text-[var(--text-primary)]">
+                            <span className="text-[13px] font-medium text-[var(--text-primary)]">
                                 {stock.stockName}
                             </span>
                             {isLimitUp && (
-                                <span className="text-[9px] font-bold text-white bg-[var(--rise-color)] px-1 rounded-sm">
+                                <span className="text-[10px] font-bold text-white bg-[var(--rise-color)] px-1 rounded-sm">
                                     상한
                                 </span>
                             )}
-                            <span className={`text-[12px] font-semibold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                            <span className={`text-[13px] font-semibold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                                 {isPositive ? '+' : ''}{stock.changeRate.toFixed(1)}%
                             </span>
                             <span className="text-xs text-[var(--text-tertiary)]">

@@ -403,7 +403,7 @@ function LiveStockTable() {
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                         <span className="text-xs font-semibold text-[var(--text-secondary)]">실시간 주도주 TOP 5</span>
                     </div>
-                    <span className="text-[10px] text-[var(--text-tertiary)]">LIVE</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">LIVE</span>
                 </div>
 
                 {stocks.map((stock, i) => {
@@ -471,7 +471,7 @@ function StatsBar() {
             ].map(item => (
                 <div key={item.label} className="text-center">
                     <div className="text-xl sm:text-2xl font-black text-[var(--text-primary)]">{item.value}</div>
-                    <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">{item.label}</div>
+                    <div className="text-[12px] text-[var(--text-tertiary)] mt-0.5">{item.label}</div>
                 </div>
             ))}
         </div>

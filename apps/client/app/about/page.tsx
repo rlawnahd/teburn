@@ -11,7 +11,7 @@ export default function AboutPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
@@ -68,8 +68,8 @@ export default function AboutPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="space-y-2">
-            <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">{title}</h2>
-            <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h2>
+            <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {children}
             </div>
         </section>

@@ -84,7 +84,7 @@ export default function ThemeTimeline() {
         return (
             <div className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded p-4">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">테마 흐름</h3>
-                <p className="text-[12px] text-[var(--text-tertiary)] text-center py-4">
+                <p className="text-[13px] text-[var(--text-tertiary)] text-center py-4">
                     장 운영 시간에 데이터가 수집됩니다
                 </p>
             </div>
@@ -101,7 +101,7 @@ export default function ThemeTimeline() {
                     <span className="text-sm font-semibold text-[var(--text-primary)]">테마 흐름</span>
                     <span className="text-xs text-[var(--text-tertiary)]">장중 시간대별 등락률</span>
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
+                <div className="flex items-center gap-3 text-[11px] text-[var(--text-tertiary)]">
                     <span className="flex items-center gap-1">
                         <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: 'rgba(242, 54, 69, 0.6)' }} />
                         상승
@@ -121,7 +121,7 @@ export default function ThemeTimeline() {
                         {TIME_SLOTS.map((time, i) => (
                             <div key={time} className="flex-1 text-center">
                                 {i % 2 === 0 && (
-                                    <span className="text-[9px] text-[var(--text-disabled)]">{time.slice(0, 2)}</span>
+                                    <span className="text-[10px] text-[var(--text-disabled)]">{time.slice(0, 2)}</span>
                                 )}
                             </div>
                         ))}

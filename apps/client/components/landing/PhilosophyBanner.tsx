@@ -13,7 +13,7 @@ export default function PhilosophyBanner() {
     return (
         <section className="py-14 sm:py-20 bg-[var(--bg-primary)] border-t border-[var(--border-color)]">
             <div className="max-w-[960px] mx-auto px-4 sm:px-6">
-                <h2 className="text-[20px] sm:text-[24px] font-bold text-[var(--text-primary)] text-center mb-10">
+                <h2 className="text-[21px] sm:text-[25px] font-bold text-[var(--text-primary)] text-center mb-10">
                     매매의 기준
                 </h2>
 

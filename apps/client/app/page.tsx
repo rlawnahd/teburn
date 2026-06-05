@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 function HomeLoading() {
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
-            <div className="text-[13px] text-[var(--text-tertiary)]">로딩 중...</div>
+            <div className="text-[14px] text-[var(--text-tertiary)]">로딩 중...</div>
         </div>
     );
 }
@@ -21,7 +21,7 @@ export default function HomePage() {
             {/* SSR 정적 소개 섹션 — 크롤러가 읽을 수 있는 텍스트 콘텐츠 */}
             <section className="bg-[var(--bg-secondary)] border-t border-[var(--border-color)]">
                 <div className="max-w-[1280px] mx-auto px-4 py-10">
-                    <h2 className="text-[15px] font-bold text-[var(--text-primary)] mb-6 text-center">
+                    <h2 className="text-[16px] font-bold text-[var(--text-primary)] mb-6 text-center">
                         TEBURN — 오늘의 주도주를 한눈에
                     </h2>
 
@@ -52,7 +52,7 @@ export default function HomePage() {
                         />
                     </div>
 
-                    <p className="mt-6 text-[12px] text-[var(--text-tertiary)] text-center leading-relaxed">
+                    <p className="mt-6 text-[13px] text-[var(--text-tertiary)] text-center leading-relaxed">
                         TEBURN에서 제공하는 정보는 투자 참고용이며, 특정 종목의 매수·매도를 추천하지 않습니다.
                         투자에 대한 최종 판단과 책임은 이용자 본인에게 있습니다.
                     </p>
@@ -65,8 +65,8 @@ export default function HomePage() {
 function FeatureCard({ title, description }: { title: string; description: string }) {
     return (
         <div className="card p-4">
-            <h3 className="text-[13px] font-semibold text-[var(--text-primary)] mb-1">{title}</h3>
-            <p className="text-[12px] text-[var(--text-secondary)] leading-relaxed">{description}</p>
+            <h3 className="text-[14px] font-semibold text-[var(--text-primary)] mb-1">{title}</h3>
+            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">{description}</p>
         </div>
     );
 }

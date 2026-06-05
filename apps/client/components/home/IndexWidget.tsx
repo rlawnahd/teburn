@@ -32,7 +32,7 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
                 className="flex items-center justify-between px-3 py-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-left"
             >
                 <div className="min-w-0">
-                    <div className="text-[12px] text-[var(--text-tertiary)] truncate">{label}</div>
+                    <div className="text-[13px] text-[var(--text-tertiary)] truncate">{label}</div>
                     <div className="text-sm font-medium text-[var(--text-secondary)]">--</div>
                 </div>
             </button>
@@ -52,13 +52,13 @@ function IndexCard({ data, label, flash, onClick }: { data: IndexData | null; la
             className={`flex items-center justify-between px-3 py-2 ${bgTint} hover:brightness-95 transition-all cursor-pointer text-left ${flashClass}`}
         >
             <div className="min-w-0 flex-1">
-                <div className="text-[12px] text-[var(--text-tertiary)] truncate">{data.name}</div>
+                <div className="text-[13px] text-[var(--text-tertiary)] truncate">{data.name}</div>
                 <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-[var(--text-primary)]">
                         {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                     </span>
-                    <span className={`text-[12px] font-medium ${changeColor} flex items-center gap-0.5`}>
-                        <span className="text-[10px]">{isPositive ? '▲' : isNegative ? '▼' : ''}</span>
+                    <span className={`text-[13px] font-medium ${changeColor} flex items-center gap-0.5`}>
+                        <span className="text-[11px]">{isPositive ? '▲' : isNegative ? '▼' : ''}</span>
                         {isPositive ? '+' : ''}{data.changePercent.toFixed(2)}%
                     </span>
                 </div>

@@ -12,7 +12,7 @@ export default function EmptyState({ icon: Icon, title, description }: EmptyStat
             <Icon size={28} className="mb-3 opacity-30" />
             <p className="text-sm font-medium">{title}</p>
             {description && (
-                <p className="text-[12px] mt-1 opacity-70">{description}</p>
+                <p className="text-[13px] mt-1 opacity-70">{description}</p>
             )}
         </div>
     );

@@ -46,7 +46,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{sector.themeName}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`px-1 py-0.5 text-[10px] font-bold text-white rounded-md ${grade.bg}`}>
+                    <span className={`px-1 py-0.5 text-[11px] font-bold text-white rounded-md ${grade.bg}`}>
                         {grade.label}
                     </span>
                     <span className={`text-base font-bold ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
@@ -130,7 +130,7 @@ export default function LeadingSectorView() {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <p className="text-base text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
-                <button onClick={() => refetch()} className="text-[12px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
+                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
             </div>
         );
     }

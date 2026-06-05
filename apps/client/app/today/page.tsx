@@ -139,16 +139,16 @@ export default async function TodayPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-sm font-semibold text-[var(--text-primary)]">{stock.stockName}</span>
-                                            {(stock.volumeSurgeRate ?? 0) >= 10 && <span className="text-[11px]">🔥</span>}
+                                            {(stock.volumeSurgeRate ?? 0) >= 10 && <span className="text-[12px]">🔥</span>}
                                             {stock.streakDays >= 3 && (
-                                                <span className="text-[10px] text-amber-600">{stock.streakDays}일</span>
+                                                <span className="text-[11px] text-amber-600">{stock.streakDays}일</span>
                                             )}
                                         </div>
                                         {stock.reason && (
-                                            <p className="text-[12px] text-[var(--text-secondary)] truncate mt-0.5">💡 {stock.reason}</p>
+                                            <p className="text-[13px] text-[var(--text-secondary)] truncate mt-0.5">💡 {stock.reason}</p>
                                         )}
                                         {stock.themes.length > 0 && (
-                                            <p className="text-[11px] text-[var(--text-tertiary)] truncate mt-0.5">
+                                            <p className="text-[12px] text-[var(--text-tertiary)] truncate mt-0.5">
                                                 {stock.themes.slice(0, 3).join(' · ')}
                                             </p>
                                         )}
@@ -161,7 +161,7 @@ export default async function TodayPage() {
                                     </div>
                                     <div className="w-14 text-right flex-shrink-0">
                                         <div className="text-xs font-medium text-[var(--text-secondary)]">{formatValue(stock.tradingValue)}</div>
-                                        <div className="text-[11px] text-[var(--text-tertiary)]">{stock.totalScore}점</div>
+                                        <div className="text-[12px] text-[var(--text-tertiary)]">{stock.totalScore}점</div>
                                     </div>
                                 </Link>
                             );

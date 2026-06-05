@@ -11,14 +11,14 @@ export default function ThemeInvestingBasicsPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/articles" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/articles" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         &larr; 목록으로
                     </Link>
                 </div>
                 <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
                     <div>
                         <h1 className="text-lg font-bold text-[var(--text-primary)]">테마주 투자의 기초</h1>
-                        <p className="text-[13px] text-[var(--text-tertiary)] mt-1">2025년 2월 25일</p>
+                        <p className="text-[14px] text-[var(--text-tertiary)] mt-1">2025년 2월 25일</p>
                     </div>
 
                     <Section title="테마주란?">
@@ -112,7 +112,7 @@ export default function ThemeInvestingBasicsPage() {
                     </Section>
 
                     <div className="border-t border-[var(--border-color)] pt-4">
-                        <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
+                        <p className="text-[13px] text-[var(--text-tertiary)] leading-relaxed">
                             본 콘텐츠는 정보 제공 목적으로 작성되었으며, 특정 종목에 대한 매수 또는 매도 권유가 아닙니다.
                             투자 판단의 책임은 전적으로 투자자 본인에게 있으며, 투자 전 반드시 충분한 조사와 분석을 수행하시기 바랍니다.
                             과거의 수익률이 미래의 수익률을 보장하지 않습니다.
@@ -127,8 +127,8 @@ export default function ThemeInvestingBasicsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="space-y-2">
-            <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">{title}</h2>
-            <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h2>
+            <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {children}
             </div>
         </section>

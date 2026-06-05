@@ -10,14 +10,14 @@ export default function PrivacyPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
 
                 <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
                     <h1 className="text-lg font-bold text-[var(--text-primary)]">개인정보처리방침</h1>
-                    <p className="text-[13px] text-[var(--text-tertiary)]">시행일: 2025년 2월 11일</p>
+                    <p className="text-[14px] text-[var(--text-tertiary)]">시행일: 2025년 2월 11일</p>
 
                     <Section title="1. 개인정보의 처리 목적">
                         <p>TEBURN(이하 &quot;서비스&quot;)은 다음의 목적을 위하여 개인정보를 처리합니다.</p>
@@ -80,8 +80,8 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="space-y-2">
-            <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">{title}</h2>
-            <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h2>
+            <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {children}
             </div>
         </section>

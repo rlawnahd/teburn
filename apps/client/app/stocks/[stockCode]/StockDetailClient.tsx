@@ -53,9 +53,9 @@ function ScoreBar({
                 <div className={`h-full ${color}`} style={{ width: `${percentage}%` }} />
             </div>
             <div className="w-6 text-right text-xs font-medium text-[var(--text-secondary)]">{(score ?? 0).toFixed(0)}</div>
-            <div className="w-4 text-right text-[11px] text-[var(--text-tertiary)]">/{maxScore}</div>
+            <div className="w-4 text-right text-[12px] text-[var(--text-tertiary)]">/{maxScore}</div>
             {detail && (
-                <div className="w-14 text-right text-[11px] text-[var(--text-tertiary)]">{detail}</div>
+                <div className="w-14 text-right text-[12px] text-[var(--text-tertiary)]">{detail}</div>
             )}
         </div>
     );
@@ -106,7 +106,7 @@ export default function StockDetailPage() {
         return (
             <div className="min-h-screen bg-[var(--bg-secondary)]">
                 <main className="flex items-center justify-center h-[calc(100vh-2.5rem)]">
-                    <div className="flex items-center gap-2 text-[13px] text-[var(--text-tertiary)]">
+                    <div className="flex items-center gap-2 text-[14px] text-[var(--text-tertiary)]">
                         <RefreshCw size={14} className="animate-spin" />
                         <span>종목 정보 로딩 중...</span>
                     </div>
@@ -119,8 +119,8 @@ export default function StockDetailPage() {
         return (
             <div className="min-h-screen bg-[var(--bg-secondary)]">
                 <main className="flex flex-col items-center justify-center h-[calc(100vh-2.5rem)]">
-                    <p className="text-[13px] text-[var(--text-tertiary)] mb-3">종목을 찾을 수 없습니다</p>
-                    <Link href="/" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <p className="text-[14px] text-[var(--text-tertiary)] mb-3">종목을 찾을 수 없습니다</p>
+                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         홈으로 돌아가기
                     </Link>
                 </main>
@@ -145,9 +145,9 @@ export default function StockDetailPage() {
                     </button>
                     <div className="flex items-center gap-2 min-w-0">
                         <h1 className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</h1>
-                        <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">{stock.stockCode}</span>
+                        <span className="text-[12px] text-[var(--text-tertiary)] flex-shrink-0">{stock.stockCode}</span>
                         {isLimitUp && (
-                            <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
+                            <span className="px-1 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                                 상한가
                             </span>
                         )}
@@ -156,12 +156,12 @@ export default function StockDetailPage() {
                         <span className="text-sm font-bold text-[var(--text-primary)]">
                             {stock.currentPrice.toLocaleString()}
                         </span>
-                        <span className={`text-[13px] font-bold ${
+                        <span className={`text-[14px] font-bold ${
                             isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
                         }`}>
                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
                         </span>
-                        <span className={`text-[11px] ${
+                        <span className={`text-[12px] ${
                             isPositive ? 'text-[var(--rise-color)]' : isNegative ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]'
                         }`}>
                             ({isPositive ? '+' : ''}{stock.changePrice.toLocaleString()})
@@ -181,7 +181,7 @@ export default function StockDetailPage() {
                         {stock.hotness && (
                             <div className="card hidden lg:block">
                                 <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
-                                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">점수 추이</span>
+                                    <span className="text-[14px] font-semibold text-[var(--text-primary)]">점수 추이</span>
                                 </div>
                                 <div className="px-3 py-2">
                                     <HotnessHistoryChart stockCode={stockCode} />
@@ -197,7 +197,7 @@ export default function StockDetailPage() {
                             <div className="card">
                                 <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
+                                        <span className="text-[14px] font-semibold text-[var(--text-primary)]">주도주 점수</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={`text-lg font-bold ${getGradeStyle(stock.hotness.grade).color}`}>
@@ -233,20 +233,20 @@ export default function StockDetailPage() {
                         <div className="card">
                             <div className="grid grid-cols-2 gap-px bg-[var(--border-color)]">
                                 <div className="bg-[var(--bg-primary)] px-3 py-2">
-                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래대금</div>
-                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{formatTradingValue(stock.tradingValue)}</div>
+                                    <div className="text-[12px] text-[var(--text-tertiary)] mb-0.5">거래대금</div>
+                                    <div className="text-[14px] font-semibold text-[var(--text-primary)]">{formatTradingValue(stock.tradingValue)}</div>
                                 </div>
                                 <div className="bg-[var(--bg-primary)] px-3 py-2">
-                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">거래량</div>
-                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{formatVolume(stock.volume)}</div>
+                                    <div className="text-[12px] text-[var(--text-tertiary)] mb-0.5">거래량</div>
+                                    <div className="text-[14px] font-semibold text-[var(--text-primary)]">{formatVolume(stock.volume)}</div>
                                 </div>
                                 <div className="bg-[var(--bg-primary)] px-3 py-2">
-                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">관련 테마</div>
-                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{stock.themes.length}개</div>
+                                    <div className="text-[12px] text-[var(--text-tertiary)] mb-0.5">관련 테마</div>
+                                    <div className="text-[14px] font-semibold text-[var(--text-primary)]">{stock.themes.length}개</div>
                                 </div>
                                 <div className="bg-[var(--bg-primary)] px-3 py-2">
-                                    <div className="text-[11px] text-[var(--text-tertiary)] mb-0.5">관련 뉴스</div>
-                                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">{stock.news.length}건</div>
+                                    <div className="text-[12px] text-[var(--text-tertiary)] mb-0.5">관련 뉴스</div>
+                                    <div className="text-[14px] font-semibold text-[var(--text-primary)]">{stock.news.length}건</div>
                                 </div>
                             </div>
                         </div>
@@ -255,15 +255,15 @@ export default function StockDetailPage() {
                         {stock.themes.length > 0 && (
                             <div className="card">
                                 <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)]">
-                                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 테마</span>
-                                    <span className="text-[11px] text-[var(--text-tertiary)]">{stock.themes.length}개</span>
+                                    <span className="text-[14px] font-semibold text-[var(--text-primary)]">관련 테마</span>
+                                    <span className="text-[12px] text-[var(--text-tertiary)]">{stock.themes.length}개</span>
                                 </div>
                                 <div className="px-3 py-2 flex flex-wrap gap-1">
                                     {stock.themes.map((theme) => (
                                         <button
                                             key={theme}
                                             onClick={() => router.push(`/themes/${encodeURIComponent(theme)}`)}
-                                            className="px-1.5 py-0.5 text-[11px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-colors cursor-pointer rounded-sm"
+                                            className="px-1.5 py-0.5 text-[12px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-colors cursor-pointer rounded-sm"
                                         >
                                             {theme}
                                         </button>
@@ -278,13 +278,13 @@ export default function StockDetailPage() {
                 <div className="card overflow-hidden">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)]">
                         <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-semibold text-[var(--text-primary)]">관련 뉴스</span>
-                            <span className="text-[11px] text-[var(--text-tertiary)]">{stock.news.length}건</span>
+                            <span className="text-[14px] font-semibold text-[var(--text-primary)]">관련 뉴스</span>
+                            <span className="text-[12px] text-[var(--text-tertiary)]">{stock.news.length}건</span>
                         </div>
                     </div>
 
                     {stock.news.length === 0 ? (
-                        <div className="py-8 text-center text-[13px] text-[var(--text-tertiary)]">
+                        <div className="py-8 text-center text-[14px] text-[var(--text-tertiary)]">
                             관련 뉴스가 없습니다
                         </div>
                     ) : (
@@ -298,13 +298,13 @@ export default function StockDetailPage() {
                                     className="flex items-start gap-3 px-3 py-2 border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors group"
                                 >
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-[13px] text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent-blue)] transition-colors">
+                                        <h3 className="text-[14px] text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent-blue)] transition-colors">
                                             {item.title}
                                         </h3>
                                         <div className="flex items-center gap-1.5 mt-1">
-                                            <span className="text-[11px] text-[var(--text-tertiary)]">{item.press}</span>
-                                            <span className="text-[11px] text-[var(--text-tertiary)]">·</span>
-                                            <span className="text-[11px] text-[var(--text-tertiary)]">
+                                            <span className="text-[12px] text-[var(--text-tertiary)]">{item.press}</span>
+                                            <span className="text-[12px] text-[var(--text-tertiary)]">·</span>
+                                            <span className="text-[12px] text-[var(--text-tertiary)]">
                                                 {formatRelativeTime(item.createdAt)}
                                             </span>
                                         </div>

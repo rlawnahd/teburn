@@ -142,14 +142,14 @@ export default function BotArchitecturePage() {
             <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
                 <div className="max-w-[960px] mx-auto px-3">
                     <div className="flex items-center gap-2 py-2 border-b border-transparent">
-                        <span className="text-[13px] font-semibold text-[var(--text-primary)] pr-3 border-r border-[var(--border-color)]">
+                        <span className="text-[14px] font-semibold text-[var(--text-primary)] pr-3 border-r border-[var(--border-color)]">
                             봇 아키텍처
                         </span>
                         {tabs.map((tab) => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
+                                className={`relative px-3 py-2 text-[14px] font-medium transition-colors ${
                                     activeTab === tab.key
                                         ? 'text-[var(--text-primary)]'
                                         : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
@@ -175,7 +175,7 @@ export default function BotArchitecturePage() {
                                 <div key={step.id} className="flex items-center gap-1.5">
                                     <button
                                         onClick={() => setActiveStep(activeStep === step.id ? null : step.id)}
-                                        className="px-3 py-2 rounded-lg text-[12px] font-semibold whitespace-nowrap transition-all"
+                                        className="px-3 py-2 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-all"
                                         style={{
                                             border: `1.5px solid ${activeStep === step.id ? step.color : 'var(--border-color)'}`,
                                             background: activeStep === step.id ? `${step.color}15` : 'var(--bg-primary)',
@@ -207,10 +207,10 @@ export default function BotArchitecturePage() {
                                 >
                                     <div className="flex justify-between items-center mb-4">
                                         <div>
-                                            <h3 className="text-[17px] font-bold" style={{ color: step.color }}>
+                                            <h3 className="text-[18px] font-bold" style={{ color: step.color }}>
                                                 {step.title}
                                             </h3>
-                                            <p className="text-[13px] text-[var(--text-tertiary)] mt-1">{step.subtitle}</p>
+                                            <p className="text-[14px] text-[var(--text-tertiary)] mt-1">{step.subtitle}</p>
                                         </div>
                                         <div
                                             className="w-2 h-2 rounded-full"
@@ -228,19 +228,19 @@ export default function BotArchitecturePage() {
                                                 }}
                                             >
                                                 <div className="flex justify-between items-center mb-1.5">
-                                                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                                                    <span className="text-[14px] font-semibold text-[var(--text-primary)]">
                                                         {item.label}
                                                     </span>
                                                     {item.time && (
                                                         <span
-                                                            className="text-[10px] font-medium px-2 py-0.5 rounded"
+                                                            className="text-[11px] font-medium px-2 py-0.5 rounded"
                                                             style={{ color: step.color, background: `${step.color}15` }}
                                                         >
                                                             {item.time}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
+                                                <p className="text-[13px] text-[var(--text-tertiary)] leading-relaxed">
                                                     {item.desc}
                                                 </p>
                                             </div>
@@ -260,8 +260,8 @@ export default function BotArchitecturePage() {
                             <div className="flex items-center gap-2.5 mb-5">
                                 <span className="text-xl">🚂</span>
                                 <div>
-                                    <h3 className="text-[17px] font-bold text-[var(--text-primary)]">Railway 프로젝트</h3>
-                                    <p className="text-[12px] text-[var(--text-tertiary)]">같은 프로젝트 안에 서비스 추가</p>
+                                    <h3 className="text-[18px] font-bold text-[var(--text-primary)]">Railway 프로젝트</h3>
+                                    <p className="text-[13px] text-[var(--text-tertiary)]">같은 프로젝트 안에 서비스 추가</p>
                                 </div>
                             </div>
 
@@ -294,17 +294,17 @@ export default function BotArchitecturePage() {
                                         className="rounded-xl p-5"
                                         style={{ background: `${svc.color}10`, border: `1px solid ${svc.color}30` }}
                                     >
-                                        <div className="text-[12px] font-semibold mb-1" style={{ color: svc.color }}>
+                                        <div className="text-[13px] font-semibold mb-1" style={{ color: svc.color }}>
                                             {svc.badge}
                                         </div>
-                                        <div className="text-[16px] font-bold text-[var(--text-primary)] mb-2">{svc.title}</div>
-                                        <div className="text-[12px] text-[var(--text-tertiary)] leading-relaxed space-y-0.5">
+                                        <div className="text-[17px] font-bold text-[var(--text-primary)] mb-2">{svc.title}</div>
+                                        <div className="text-[13px] text-[var(--text-tertiary)] leading-relaxed space-y-0.5">
                                             {svc.lines.map((line, j) => (
                                                 <div key={j}>{line}</div>
                                             ))}
                                         </div>
                                         <div
-                                            className="inline-block mt-3 text-[11px] font-medium px-2.5 py-1 rounded-md"
+                                            className="inline-block mt-3 text-[12px] font-medium px-2.5 py-1 rounded-md"
                                             style={{ color: svc.color, background: `${svc.color}15` }}
                                         >
                                             {svc.tag}
@@ -318,20 +318,20 @@ export default function BotArchitecturePage() {
                                 className="mt-5 p-4 rounded-lg"
                                 style={{ background: `${ACCENT.blue}08`, border: `1px solid ${ACCENT.blue}20` }}
                             >
-                                <div className="text-[12px] font-semibold mb-2" style={{ color: ACCENT.blue }}>
+                                <div className="text-[13px] font-semibold mb-2" style={{ color: ACCENT.blue }}>
                                     🔗 내부 통신
                                 </div>
-                                <div className="text-[12px] text-[var(--text-tertiary)] leading-loose space-y-1">
+                                <div className="text-[13px] text-[var(--text-tertiary)] leading-loose space-y-1">
                                     <div>
-                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[11px]" style={{ color: ACCENT.cyan }}>bot</code>
+                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[12px]" style={{ color: ACCENT.cyan }}>bot</code>
                                         {' → '}
-                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[11px]" style={{ color: ACCENT.cyan }}>server.railway.internal:4000/api/leading/hot</code>
+                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[12px]" style={{ color: ACCENT.cyan }}>server.railway.internal:4000/api/leading/hot</code>
                                         {' — Railway 내부 네트워크로 빠르게 통신'}
                                     </div>
                                     <div>
-                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[11px]" style={{ color: ACCENT.green }}>bot</code>
+                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[12px]" style={{ color: ACCENT.green }}>bot</code>
                                         {' → '}
-                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[11px]" style={{ color: ACCENT.green }}>openapi.koreainvestment.com</code>
+                                        <code className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[12px]" style={{ color: ACCENT.green }}>openapi.koreainvestment.com</code>
                                         {' — KIS API로 실시간 주문'}
                                     </div>
                                 </div>
@@ -343,11 +343,11 @@ export default function BotArchitecturePage() {
                             <div className="flex items-center gap-2.5 mb-3">
                                 <span className="text-lg">▲</span>
                                 <div>
-                                    <h3 className="text-[15px] font-bold text-[var(--text-primary)]">Vercel (기존)</h3>
-                                    <p className="text-[12px] text-[var(--text-tertiary)]">Next.js 프론트엔드 — 봇과 직접 관련 없음</p>
+                                    <h3 className="text-[16px] font-bold text-[var(--text-primary)]">Vercel (기존)</h3>
+                                    <p className="text-[13px] text-[var(--text-tertiary)]">Next.js 프론트엔드 — 봇과 직접 관련 없음</p>
                                 </div>
                             </div>
-                            <p className="text-[13px] text-[var(--text-tertiary)]">
+                            <p className="text-[14px] text-[var(--text-tertiary)]">
                                 teburn.com 웹사이트는 Vercel에서 그대로 운영. 봇은 서버(Railway)와만 통신하므로 프론트엔드 변경 불필요.
                                 나중에 대시보드를 추가하고 싶다면 클라이언트에 봇 상태 조회 페이지를 추가할 수 있음.
                             </p>
@@ -355,12 +355,12 @@ export default function BotArchitecturePage() {
 
                         {/* Why Railway */}
                         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-5">
-                            <h3 className="text-[15px] font-bold text-[var(--text-primary)] mb-3">💡 왜 Railway인가?</h3>
+                            <h3 className="text-[16px] font-bold text-[var(--text-primary)] mb-3">💡 왜 Railway인가?</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {infraReasons.map((item, i) => (
                                     <div key={i} className="p-3.5 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
-                                        <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-1">{item.title}</div>
-                                        <div className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">{item.desc}</div>
+                                        <div className="text-[14px] font-semibold text-[var(--text-primary)] mb-1">{item.title}</div>
+                                        <div className="text-[13px] text-[var(--text-tertiary)] leading-relaxed">{item.desc}</div>
                                     </div>
                                 ))}
                             </div>
@@ -372,8 +372,8 @@ export default function BotArchitecturePage() {
                 {activeTab === 'timeline' && (
                     <div className="space-y-4 pt-3">
                         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6">
-                            <h3 className="text-[17px] font-bold text-[var(--text-primary)] mb-1">봇의 하루</h3>
-                            <p className="text-[13px] text-[var(--text-tertiary)] mb-6">장 운영일(평일) 기준 봇이 하는 일</p>
+                            <h3 className="text-[18px] font-bold text-[var(--text-primary)] mb-1">봇의 하루</h3>
+                            <p className="text-[14px] text-[var(--text-tertiary)] mb-6">장 운영일(평일) 기준 봇이 하는 일</p>
 
                             <div className="relative pl-7">
                                 {/* 세로 라인 */}
@@ -407,7 +407,7 @@ export default function BotArchitecturePage() {
                                     {cycleSteps.map((text, i) => (
                                         <div
                                             key={i}
-                                            className="text-[13px] text-[var(--text-tertiary)] py-1.5"
+                                            className="text-[14px] text-[var(--text-tertiary)] py-1.5"
                                             style={{ borderBottom: i < cycleSteps.length - 1 ? '1px solid var(--border-color)' : 'none' }}
                                         >
                                             {text}

@@ -68,7 +68,7 @@ function SearchModal({ onClose }: { onClose: () => void }) {
                             value={query}
                             onChange={(e) => handleChange(e.target.value)}
                             placeholder="종목명 또는 종목코드 검색..."
-                            className="flex-1 text-[14px] bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none border-none"
+                            className="flex-1 text-[15px] bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none border-none"
                         />
                         {query && (
                             <button
@@ -96,12 +96,12 @@ function SearchModal({ onClose }: { onClose: () => void }) {
                                     className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-[var(--bg-tertiary)] transition-colors text-left border-b border-[var(--border-color)] last:border-b-0"
                                 >
                                     <div className="min-w-0">
-                                        <div className="text-[14px] font-medium text-[var(--text-primary)] truncate">{stock.stockName}</div>
-                                        <div className="text-[12px] text-[var(--text-tertiary)]">{stock.stockCode}</div>
+                                        <div className="text-[15px] font-medium text-[var(--text-primary)] truncate">{stock.stockName}</div>
+                                        <div className="text-[13px] text-[var(--text-tertiary)]">{stock.stockCode}</div>
                                     </div>
                                     <div className="text-right flex-shrink-0 ml-3">
-                                        <div className="text-[14px] text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
-                                        <div className={`text-[12px] font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
+                                        <div className="text-[15px] text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
+                                        <div className={`text-[13px] font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                                             {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
                                         </div>
                                     </div>
@@ -207,7 +207,7 @@ export default function Header() {
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                         </svg>
-                        <span className="text-[12px]">알림봇</span>
+                        <span className="text-[13px]">알림봇</span>
                     </a>
 
                     {/* 검색 버튼 */}
@@ -216,7 +216,7 @@ export default function Header() {
                         className="flex items-center gap-1.5 h-8 px-2.5 border border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-colors rounded-lg"
                     >
                         <Search size={14} />
-                        <span className="text-[12px] hidden sm:inline">검색</span>
+                        <span className="text-[13px] hidden sm:inline">검색</span>
                         <kbd className="text-xs hidden sm:inline opacity-40 ml-1">⌘K</kbd>
                     </button>
 
@@ -226,7 +226,7 @@ export default function Header() {
                             {user?.provider === 'local' && user?.name === 'admin' && (
                                 <Link
                                     href="/admin"
-                                    className="h-8 px-2.5 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded flex items-center"
+                                    className="h-8 px-2.5 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded flex items-center"
                                 >
                                     어드민
                                 </Link>
@@ -240,7 +240,7 @@ export default function Header() {
                             )}
                             <button
                                 onClick={logout}
-                                className="h-8 px-2.5 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded"
+                                className="h-8 px-2.5 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded"
                             >
                                 로그아웃
                             </button>
@@ -248,7 +248,7 @@ export default function Header() {
                     ) : (
                         <Link
                             href="/login"
-                            className="hidden sm:flex items-center h-8 px-3 text-[12px] font-medium bg-[var(--accent-color)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                            className="hidden sm:flex items-center h-8 px-3 text-[13px] font-medium bg-[var(--accent-color)] text-white rounded-lg hover:opacity-90 transition-opacity"
                         >
                             로그인
                         </Link>
@@ -275,7 +275,7 @@ export default function Header() {
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setShowMobileMenu(false)}
-                                className="block px-3 py-2.5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                                className="block px-3 py-2.5 text-[15px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                             >
                                 {link.label}
                             </Link>
@@ -285,7 +285,7 @@ export default function Header() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => setShowMobileMenu(false)}
-                            className="flex items-center gap-2 px-3 py-2.5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                            className="flex items-center gap-2 px-3 py-2.5 text-[15px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
@@ -295,7 +295,7 @@ export default function Header() {
                         {isLoggedIn ? (
                             <button
                                 onClick={() => { logout(); setShowMobileMenu(false); }}
-                                className="w-full text-left px-3 py-2.5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                                className="w-full text-left px-3 py-2.5 text-[15px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                             >
                                 로그아웃
                             </button>
@@ -303,7 +303,7 @@ export default function Header() {
                             <Link
                                 href="/login"
                                 onClick={() => setShowMobileMenu(false)}
-                                className="block px-3 py-2.5 text-[14px] font-medium text-[var(--accent-color)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                                className="block px-3 py-2.5 text-[15px] font-medium text-[var(--accent-color)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                             >
                                 로그인
                             </Link>

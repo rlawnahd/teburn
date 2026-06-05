@@ -59,7 +59,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                 </div>
 
                 {/* 테이블 헤더 */}
-                <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[10px] text-[var(--text-tertiary)]">
+                <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[11px] text-[var(--text-tertiary)]">
                     <span className="w-5 text-center">#</span>
                     <span className="flex-1">종목</span>
                     <span className="w-14 text-right">거래대금</span>
@@ -98,7 +98,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
                                                 {stock.changeRate >= 29.9 && (
-                                                    <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
+                                                    <span className="px-1 py-0.5 text-[10px] font-bold text-white bg-[var(--rise-color)] flex-shrink-0 rounded-sm">
                                                         상한가
                                                     </span>
                                                 )}
@@ -109,13 +109,13 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                                         <button
                                                             key={theme}
                                                             onClick={(e) => handleThemeClick(theme, e)}
-                                                            className="text-[10px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
+                                                            className="text-[11px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
                                                         >
                                                             {theme}
                                                         </button>
                                                     ))}
                                                     {stock.themes.length > 2 && (
-                                                        <span className="text-[10px] text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
+                                                        <span className="text-[11px] text-[var(--text-tertiary)]">+{stock.themes.length - 2}</span>
                                                     )}
                                                 </div>
                                             )}

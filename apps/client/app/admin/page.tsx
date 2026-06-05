@@ -229,7 +229,7 @@ function UsersTab() {
                                 const height = `${Math.max((item.count / maxTrendCount) * 100, item.count > 0 ? 12 : 4)}%`;
                                 return (
                                     <div key={item.date} className="flex-1 min-w-0 flex flex-col items-center gap-2">
-                                        <div className="text-[11px] font-medium text-[var(--text-secondary)] h-4">
+                                        <div className="text-[12px] font-medium text-[var(--text-secondary)] h-4">
                                             {item.count > 0 ? item.count : ''}
                                         </div>
                                         <div className="w-full flex-1 flex items-end">
@@ -239,7 +239,7 @@ function UsersTab() {
                                                 title={`${item.date}: ${item.count}명`}
                                             />
                                         </div>
-                                        <div className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
+                                        <div className="text-[11px] text-[var(--text-tertiary)] whitespace-nowrap">
                                             {formatShortDate(item.date)}
                                         </div>
                                     </div>
@@ -290,7 +290,7 @@ function UsersTab() {
                                         {u.name.charAt(0).toUpperCase()}
                                     </div>
                                     <span className="text-sm font-medium text-[var(--text-primary)]">{u.name}</span>
-                                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                                    <span className={`text-[12px] px-2 py-0.5 rounded-full font-medium ${
                                         u.provider === 'kakao' ? 'bg-yellow-500/10 text-yellow-600' :
                                         'bg-emerald-500/10 text-emerald-500'
                                     }`}>
@@ -299,7 +299,7 @@ function UsersTab() {
                                 </div>
                                 <div className="text-right">
                                     <div className="text-sm text-[var(--text-tertiary)]">{formatDate(u.createdAt)}</div>
-                                    <div className="text-[11px] text-[var(--text-tertiary)]">마지막 활동 {formatTime(u.lastSeenAt)}</div>
+                                    <div className="text-[12px] text-[var(--text-tertiary)]">마지막 활동 {formatTime(u.lastSeenAt)}</div>
                                 </div>
                             </div>
                         ))}
@@ -380,7 +380,7 @@ function DataTab() {
                         공휴일
                     </span>
                 )}
-                <span className="ml-auto text-[13px] text-[var(--text-tertiary)]">
+                <span className="ml-auto text-[14px] text-[var(--text-tertiary)]">
                     5초 자동 갱신
                 </span>
             </div>
@@ -398,7 +398,7 @@ function DataTab() {
                     <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {status.realtime.wsClients}
                     </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
+                    <div className="text-[14px] text-[var(--text-tertiary)] mt-1">
                         구독 {status.realtime.wsGlobalSubs}종목
                     </div>
                 </div>
@@ -422,7 +422,7 @@ function DataTab() {
                             {status.realtime.kisConnected ? '연결됨' : '끊김'}
                         </span>
                     </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-2">
+                    <div className="text-[14px] text-[var(--text-tertiary)] mt-2">
                         {status.realtime.kisSubs} / {status.realtime.kisMaxSubs} 종목
                     </div>
                 </div>
@@ -441,7 +441,7 @@ function DataTab() {
                     <div className="flex gap-1.5 mt-2 flex-wrap">
                         {Object.entries(status.hotStocks.grades).map(([grade, count]) => (
                             count > 0 && (
-                                <span key={grade} className={`text-[12px] font-semibold px-2 py-0.5 rounded-full ${
+                                <span key={grade} className={`text-[13px] font-semibold px-2 py-0.5 rounded-full ${
                                     grade === 'S' ? 'bg-rose-500/10 text-rose-500' :
                                     grade === 'A' ? 'bg-amber-500/10 text-amber-600' :
                                     grade === 'B' ? 'bg-sky-500/10 text-sky-600' :
@@ -465,7 +465,7 @@ function DataTab() {
                     <div className="text-3xl font-bold text-[var(--text-primary)]">
                         {status.priceCache.stocks}
                     </div>
-                    <div className="text-[13px] text-[var(--text-tertiary)] mt-1">
+                    <div className="text-[14px] text-[var(--text-tertiary)] mt-1">
                         {status.priceCache.themes}개 테마
                     </div>
                 </div>
@@ -730,7 +730,7 @@ function ThemeEditModal({
                                             <div>
                                                 <span className="text-sm text-[var(--text-primary)]">{stock.name}</span>
                                                 {stock.code && (
-                                                    <span className="text-[13px] text-[var(--text-tertiary)] ml-2">
+                                                    <span className="text-[14px] text-[var(--text-tertiary)] ml-2">
                                                         ({stock.code})
                                                     </span>
                                                 )}
@@ -868,11 +868,11 @@ function ThemesTab() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">
-                                <th className="text-left px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">테마명</th>
-                                <th className="text-center px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">종목 수</th>
-                                <th className="text-center px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">유형</th>
-                                <th className="text-center px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">상태</th>
-                                <th className="text-right px-4 py-3 text-[13px] font-medium text-[var(--text-tertiary)]">작업</th>
+                                <th className="text-left px-4 py-3 text-[14px] font-medium text-[var(--text-tertiary)]">테마명</th>
+                                <th className="text-center px-4 py-3 text-[14px] font-medium text-[var(--text-tertiary)]">종목 수</th>
+                                <th className="text-center px-4 py-3 text-[14px] font-medium text-[var(--text-tertiary)]">유형</th>
+                                <th className="text-center px-4 py-3 text-[14px] font-medium text-[var(--text-tertiary)]">상태</th>
+                                <th className="text-right px-4 py-3 text-[14px] font-medium text-[var(--text-tertiary)]">작업</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-color)]">
@@ -887,7 +887,7 @@ function ThemesTab() {
                                         {theme.stockCount}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`text-[13px] px-2 py-1 rounded-full ${
+                                        <span className={`text-[14px] px-2 py-1 rounded-full ${
                                             theme.isCustom
                                                 ? 'bg-violet-500/10 text-violet-500'
                                                 : 'bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]'

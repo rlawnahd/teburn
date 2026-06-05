@@ -46,7 +46,7 @@ function TradeStreak({ trades }: { trades: { pnl: number | null }[] }) {
                 {completedTrades.map((t, i) => {
                     const isWin = (t.pnl || 0) >= 0;
                     return (
-                        <div key={i} className={`w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-bold text-white ${
+                        <div key={i} className={`w-5 h-5 rounded-sm flex items-center justify-center text-[11px] font-bold text-white ${
                             isWin ? 'bg-[var(--rise-color)]/60' : 'bg-[var(--fall-color)]/60'
                         }`}>
                             {isWin ? 'W' : 'L'}

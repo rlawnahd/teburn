@@ -11,14 +11,14 @@ export default function HowHotnessScoreWorksPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/articles" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/articles" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         &larr; 목록으로
                     </Link>
                 </div>
                 <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
                     <div>
                         <h1 className="text-lg font-bold text-[var(--text-primary)]">TEBURN 주도주 점수 산출 원리</h1>
-                        <p className="text-[13px] text-[var(--text-tertiary)] mt-1">2025년 2월 25일</p>
+                        <p className="text-[14px] text-[var(--text-tertiary)] mt-1">2025년 2월 25일</p>
                     </div>
 
                     <Section title="1. 주도주 점수란?">
@@ -171,8 +171,8 @@ export default function HowHotnessScoreWorksPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="space-y-2">
-            <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">{title}</h2>
-            <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h2>
+            <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {children}
             </div>
         </section>

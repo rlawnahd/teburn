@@ -10,14 +10,14 @@ function ConfidenceGauge({ value }: { value: number }) {
     const color = value >= 85 ? 'var(--rise-color)' : value >= 70 ? '#f59e0b' : 'var(--text-tertiary)';
     return (
         <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-[var(--text-tertiary)]">신뢰도</span>
+            <span className="text-[12px] text-[var(--text-tertiary)]">신뢰도</span>
             <div className="w-16 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
                 <div
                     className="h-full rounded-full transition-all"
                     style={{ width: `${value}%`, backgroundColor: color }}
                 />
             </div>
-            <span className="text-[11px] font-semibold" style={{ color }}>{value}%</span>
+            <span className="text-[12px] font-semibold" style={{ color }}>{value}%</span>
         </div>
     );
 }
@@ -33,7 +33,7 @@ function StockHero({ stock }: { stock: HotStock }) {
         >
             <div className="flex items-center gap-1.5 mb-2">
                 <Crown size={14} className="text-amber-500" />
-                <span className="text-[11px] font-bold text-amber-600 tracking-wide">오늘의 주도주</span>
+                <span className="text-[12px] font-bold text-amber-600 tracking-wide">오늘의 주도주</span>
             </div>
 
             <div className="flex items-baseline gap-2 mb-2">
@@ -76,7 +76,7 @@ function ThemeHero({ theme }: { theme: HeroTheme }) {
         >
             <div className="flex items-center gap-1.5 mb-2">
                 <Flame size={14} className="text-[var(--rise-color)]" />
-                <span className="text-[11px] font-bold text-[var(--rise-color)] tracking-wide">오늘의 주도 테마</span>
+                <span className="text-[12px] font-bold text-[var(--rise-color)] tracking-wide">오늘의 주도 테마</span>
             </div>
 
             <div className="flex items-baseline gap-2 mb-2">

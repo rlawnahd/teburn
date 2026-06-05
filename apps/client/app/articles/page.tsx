@@ -44,13 +44,13 @@ export default function ArticlesPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[13px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
 
                 <h1 className="text-lg font-bold text-[var(--text-primary)] mb-4">투자 가이드</h1>
-                <p className="text-[13px] text-[var(--text-tertiary)] mb-6">
+                <p className="text-[14px] text-[var(--text-tertiary)] mb-6">
                     주도주, 테마주, 거래량 분석 등 주식 투자에 도움이 되는 가이드를 제공합니다.
                 </p>
 
@@ -61,13 +61,13 @@ export default function ArticlesPage() {
                             href={`/articles/${article.slug}`}
                             className="block bg-[var(--bg-primary)] border border-[var(--border-color)] p-4 hover:border-[var(--accent-blue)] transition-colors"
                         >
-                            <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">
+                            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">
                                 {article.title}
                             </h2>
-                            <p className="text-[13px] text-[var(--text-secondary)] mt-1 leading-relaxed">
+                            <p className="text-[14px] text-[var(--text-secondary)] mt-1 leading-relaxed">
                                 {article.summary}
                             </p>
-                            <p className="text-[12px] text-[var(--text-tertiary)] mt-2">
+                            <p className="text-[13px] text-[var(--text-tertiary)] mt-2">
                                 {article.date}
                             </p>
                         </Link>

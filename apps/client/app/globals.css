@@ -79,13 +79,13 @@
   --radius-full: 9999px;
 
   /* 타이포 스케일 */
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-base: 13px;
-  --text-md: 14px;
-  --text-lg: 15px;
-  --text-xl: 18px;
-  --text-2xl: 22px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 19px;
+  --text-2xl: 23px;
 
   /* 트랜지션 */
   --transition-fast: 100ms ease;
@@ -120,7 +120,7 @@ body {
   background: var(--bg-secondary);
   color: var(--text-primary);
   font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
@@ -205,7 +205,7 @@ h1, h2, h3, h4, h5, h6 {
   color: white;
   padding: 8px 16px;
   font-weight: 500;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--radius-md);
   transition: all var(--transition-normal);
 }
@@ -219,7 +219,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   padding: 8px 16px;
   font-weight: 500;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--radius-md);
   transition: all var(--transition-normal);
 }
