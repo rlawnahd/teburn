@@ -2,9 +2,9 @@
 import axios from 'axios';
 import GradePerformance from '../models/GradePerformance';
 import HotnessHistory from '../models/HotnessHistory';
-import { getKisToken } from './kisRestApi';
+import { getKisToken, invalidateKisToken } from './kisRestApi';
 import { acquireKisToken } from './kisRateLimiter';
-import { computePerformance, DailyCandle } from './performanceCalc';
+import { computePerformance, DailyCandle, addDays } from './performanceCalc';
 
 const KIS_APP_KEY = process.env.KIS_APP_KEY || '';
 const KIS_APP_SECRET = process.env.KIS_APP_SECRET || '';
@@ -24,6 +24,7 @@ export async function fetchDailyCandles(
     stockCode: string,
     startDate: string, // YYYY-MM-DD
     endDate: string,
+    retries = 2,
 ): Promise<DailyCandle[]> {
     await acquireKisToken();
 
@@ -51,6 +52,12 @@ export async function fetchDailyCandles(
             },
         );
 
+        // Rate limit 응답 body에 EGW00201로 도착하는 경우 — 대기 후 재시도
+        if (response.data.rt_cd === '1' && response.data.msg_cd === 'EGW00201' && retries > 0) {
+            await new Promise(r => setTimeout(r, 600));
+            return fetchDailyCandles(stockCode, startDate, endDate, retries - 1);
+        }
+
         if (response.data.rt_cd !== '0') {
             console.error(`일봉 조회 실패 (${stockCode}):`, response.data.msg1);
             return [];
@@ -66,6 +73,19 @@ export async function fetchDailyCandles(
             }))
             .sort((a, b) => a.date.localeCompare(b.date));
     } catch (error: any) {
+        const errStr = String(error.response?.data ? JSON.stringify(error.response.data) : error.message);
+
+        // 토큰 만료 — 캐시 무효화 후 재시도
+        if (retries > 0 && (errStr.includes('만료된 token') || errStr.includes('EGW00123'))) {
+            invalidateKisToken();
+            return fetchDailyCandles(stockCode, startDate, endDate, retries - 1);
+        }
+        // Rate limit body 응답 — 대기 후 재시도
+        if (retries > 0 && errStr.includes('EGW00201')) {
+            await new Promise(r => setTimeout(r, 600));
+            return fetchDailyCandles(stockCode, startDate, endDate, retries - 1);
+        }
+
         console.error(`일봉 조회 에러 (${stockCode}):`, error.response?.data || error.message);
         return [];
     }
@@ -102,8 +122,9 @@ export async function upsertGradeRecords(records: GradeRecordInput[]): Promise<n
                 { upsert: true, new: false },
             );
             if (!result) created++; // null이면 신규 생성
-        } catch {
-            // unique index 충돌 무시
+        } catch (err: any) {
+            // unique index 충돌(11000)만 무시, 그 외는 로깅
+            if (err?.code !== 11000) console.error('성적표 레코드 upsert 에러:', err.message);
         }
     }
     return created;
@@ -145,15 +166,24 @@ export async function fillPerformanceRecords(): Promise<void> {
     console.log(`📈 성적표 채움 완료: ${updated}개 레코드 (${byCode.size}개 종목 조회)`);
 }
 
+let backfillStarted = false; // 모듈 레벨 — 동시/중복 실행 가드
+
 /**
  * 컬렉션이 비어 있으면 HotnessHistory 90일치 S/A를 소급 백필 (배포 후 1회)
  */
 export async function backfillPerformanceIfEmpty(): Promise<void> {
+    if (backfillStarted) return;
+    backfillStarted = true;
+
     const count = await GradePerformance.estimatedDocumentCount();
     if (count > 0) return;
 
     console.log('📈 성적표 백필 시작 (HotnessHistory 90일치 S/A)...');
-    const hist = await HotnessHistory.find({ grade: { $in: ['S', 'A'] } }).lean();
+    const since = addDays(kstTodayStr(), -90);
+    const hist = await HotnessHistory.find({
+        grade: { $in: ['S', 'A'] },
+        date: { $gte: since },
+    }).lean();
     if (hist.length === 0) {
         console.log('📈 백필할 히스토리 없음');
         return;
