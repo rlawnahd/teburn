@@ -23,6 +23,8 @@ import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
+import performanceRoutes from './routes/performance';
+import { upsertGradeRecords, fillPerformanceRecords, backfillPerformanceIfEmpty } from './services/performanceService';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
@@ -119,6 +121,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/indices', indicesRoutes);
 app.use('/api/trading', tradingRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/performance', performanceRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
@@ -192,6 +195,12 @@ connectDB().then(async () => {
                 startThemeAnalysisScheduler();
                 return startTelegramBot();
             })
+            .then(() => {
+                // 성적표 백필 (컬렉션 비어 있을 때 1회, 백그라운드)
+                backfillPerformanceIfEmpty().catch(err => {
+                    console.error('❌ 성적표 백필 실패:', err);
+                });
+            })
             .catch(err => {
                 console.error('❌ 주가 캐시/주도주 웜업 실패:', err);
             });
@@ -261,6 +270,26 @@ connectDB().then(async () => {
                         console.log('주도주 히스토리 저장 완료');
                     } catch (error) {
                         console.error('주도주 히스토리 저장 실패:', error);
+                    }
+
+                    // 등급 성적표: 오늘 S/A 레코드 생성 + 미완성 레코드 채움
+                    try {
+                        const saStocks = getHotStocksCache().filter(
+                            (s) => s.grade === 'S' || s.grade === 'A'
+                        );
+                        await upsertGradeRecords(
+                            saStocks.map((s) => ({
+                                stockCode: s.stockCode,
+                                stockName: s.stockName,
+                                grade: s.grade,
+                                totalScore: s.totalScore,
+                                date: today,
+                            }))
+                        );
+                        await fillPerformanceRecords();
+                        console.log('등급 성적표 갱신 완료');
+                    } catch (error) {
+                        console.error('등급 성적표 갱신 실패:', error);
                     }
 
                     // WebSocket 클라이언트 연결 종료
