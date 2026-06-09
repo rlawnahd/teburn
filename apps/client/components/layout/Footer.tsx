@@ -29,6 +29,7 @@ export default function Footer() {
                             <span className="text-[13px] font-semibold text-[var(--text-secondary)]">서비스</span>
                             <div>
                                 <Link href="/about" className={FOOTER_LINK}>서비스 소개</Link>
+                                <Link href="/performance" className={FOOTER_LINK}>주도주 성적표</Link>
                                 <Link href="/guide" className={FOOTER_LINK}>이용 가이드</Link>
                                 <Link href="/faq" className={FOOTER_LINK}>FAQ</Link>
                             </div>
