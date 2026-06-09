@@ -124,6 +124,7 @@ function SearchModal({ onClose }: { onClose: () => void }) {
 const NAV_LINKS = [
     { href: '/', label: '홈', authRequired: false },
     { href: '/performance', label: '성적표', authRequired: false },
+    { href: '/report', label: '리포트', authRequired: false },
     { href: '/guide', label: '가이드', authRequired: false },
 ];
 
