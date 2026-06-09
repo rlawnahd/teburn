@@ -174,14 +174,14 @@ function GradeCard({
                 <div>
                     <div className="text-[11px] text-[var(--text-secondary)]">당일 단타</div>
                     <div className="text-[10px] text-[var(--text-disabled)] mb-1 leading-tight">
-                        다음날 시가<br />→그날 종가
+                        시가 매수<br />당일 종가 매도
                     </div>
                     <div className={`text-sm font-semibold ${d1.cls}`}>{d1.text}</div>
                 </div>
                 <div>
                     <div className="text-[11px] text-[var(--text-secondary)]">일주일 보유</div>
                     <div className="text-[10px] text-[var(--text-disabled)] mb-1 leading-tight">
-                        5거래일<br />후 종가
+                        시가 매수<br />5일째 종가 매도
                     </div>
                     <div className={`text-sm font-semibold ${d5.cls}`}>{d5.text}</div>
                 </div>
