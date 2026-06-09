@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import DailyReport from '../models/DailyReport';
 import DailyLeadingTheme from '../models/DailyLeadingTheme';
 import { getHotStocksCache } from './hotnessService';
-import { toReportStocks, toReportThemes, buildReportPrompt, DailyThemeLike } from './dailyReportBuilder';
+import { toReportStocks, toReportThemes, buildReportPrompt, DailyThemeLike, HotStockLike } from './dailyReportBuilder';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -17,7 +17,7 @@ function kstDayRange(date: string): { start: Date; end: Date } {
     return { start, end };
 }
 
-async function generateSummary(date: string, themes: DailyThemeLike[], stocks: any[]): Promise<string> {
+async function generateSummary(date: string, themes: DailyThemeLike[], stocks: HotStockLike[]): Promise<string> {
     const prompt = buildReportPrompt(date, themes, stocks);
     const response = await openai.chat.completions.create({
         model: 'gpt-5.4-nano',
