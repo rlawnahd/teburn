@@ -48,7 +48,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: 'https://teburn.com/performance', lastModified: new Date(), changeFrequency: 'daily', priority: 0.85 },
         { url: 'https://teburn.com/?tab=hot', lastModified: new Date(), changeFrequency: 'always', priority: 0.9 },
         { url: 'https://teburn.com/?tab=stocks', lastModified: new Date(), changeFrequency: 'always', priority: 0.8 },
-        { url: 'https://teburn.com/?tab=sectors', lastModified: new Date(), changeFrequency: 'always', priority: 0.8 },
         { url: 'https://teburn.com/terms', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
         { url: 'https://teburn.com/about', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
         { url: 'https://teburn.com/guide', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
