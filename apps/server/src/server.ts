@@ -23,7 +23,7 @@ import { saveTodayVolumeHistory } from './services/volumeSurgeService';
 import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
-import performanceRoutes from './routes/performance';
+import performanceRoutes, { invalidateSummaryCache } from './routes/performance';
 import { upsertGradeRecords, fillPerformanceRecords, backfillPerformanceIfEmpty } from './services/performanceService';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
@@ -274,6 +274,8 @@ connectDB().then(async () => {
 
                     // 등급 성적표: 오늘 S/A 레코드 생성 + 미완성 레코드 채움
                     try {
+                        const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
+                            .toISOString().split('T')[0];
                         const saStocks = getHotStocksCache().filter(
                             (s) => s.grade === 'S' || s.grade === 'A'
                         );
@@ -283,10 +285,11 @@ connectDB().then(async () => {
                                 stockName: s.stockName,
                                 grade: s.grade,
                                 totalScore: s.totalScore,
-                                date: today,
+                                date: kstToday,
                             }))
                         );
                         await fillPerformanceRecords();
+                        invalidateSummaryCache();
                         console.log('등급 성적표 갱신 완료');
                     } catch (error) {
                         console.error('등급 성적표 갱신 실패:', error);

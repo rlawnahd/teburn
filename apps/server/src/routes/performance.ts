@@ -12,6 +12,10 @@ function kstTodayStr(): string {
 let summaryCache: { data: any; ts: number } | null = null;
 const SUMMARY_TTL = 60 * 60 * 1000; // 1시간
 
+export function invalidateSummaryCache(): void {
+    summaryCache = null;
+}
+
 // 윈도우별(7/30/90일) 등급 성적 요약
 router.get('/summary', async (req: Request, res: Response) => {
     try {
