@@ -162,6 +162,15 @@ function GradeCard({
     const d1 = formatReturn(summary.avgReturnD1);
     const d5 = formatReturn(summary.avgReturnD5);
 
+    // 단타(D+1) 기준 최고/최악 종목 (표본 2건 이상일 때만 최저 표시)
+    const best = summary.best;
+    const worst =
+        summary.worst && best && summary.worst.stockCode !== best.stockCode
+            ? summary.worst
+            : null;
+    const bestR = best ? formatReturn(best.returnD1) : null;
+    const worstR = worst ? formatReturn(worst.returnD1) : null;
+
     return (
         <div className="card p-4">
             <div className="flex items-center justify-between mb-3">
@@ -195,6 +204,32 @@ function GradeCard({
                     </div>
                 </div>
             </div>
+            {best && bestR && (
+                <div className="mt-3 pt-3 border-t border-[var(--border-color)] flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--text-tertiary)]">
+                    <span>
+                        단타 최고{' '}
+                        <Link
+                            href={`/stocks/${best.stockCode}`}
+                            className="text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:underline"
+                        >
+                            {best.stockName}
+                        </Link>{' '}
+                        <span className={`font-semibold ${bestR.cls}`}>{bestR.text}</span>
+                    </span>
+                    {worst && worstR && (
+                        <span>
+                            최저{' '}
+                            <Link
+                                href={`/stocks/${worst.stockCode}`}
+                                className="text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:underline"
+                            >
+                                {worst.stockName}
+                            </Link>{' '}
+                            <span className={`font-semibold ${worstR.cls}`}>{worstR.text}</span>
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
