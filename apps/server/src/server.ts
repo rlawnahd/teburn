@@ -24,7 +24,9 @@ import { startTelegramBot } from './services/telegramBot';
 import { warmupChartHistory } from './services/indexService';
 import tradingRoutes from './routes/trading';
 import performanceRoutes, { invalidateSummaryCache } from './routes/performance';
+import reportRoutes from './routes/report';
 import { upsertGradeRecords, fillPerformanceRecords, backfillPerformanceIfEmpty } from './services/performanceService';
+import { generateDailyReport } from './services/dailyReportService';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
@@ -123,6 +125,7 @@ app.use('/api/indices', indicesRoutes);
 app.use('/api/trading', tradingRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/performance', performanceRoutes);
+app.use('/api/report', reportRoutes);
 
 app.get('/', (req, res) => {
     res.send('NewsPick Backend API is Running!');
@@ -299,6 +302,15 @@ connectDB().then(async () => {
                         console.log('등급 성적표 갱신 완료');
                     } catch (error) {
                         console.error('등급 성적표 갱신 실패:', error);
+                    }
+
+                    // 일별 마감 리포트 생성 (그날 1회, 멱등)
+                    try {
+                        const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
+                            .toISOString().split('T')[0];
+                        await generateDailyReport(kstToday);
+                    } catch (error) {
+                        console.error('일별 리포트 생성 실패:', error);
                     }
 
                     // WebSocket 클라이언트 연결 종료
