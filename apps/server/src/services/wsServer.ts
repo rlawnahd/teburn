@@ -226,3 +226,28 @@ export function getConnectedClientCount(): number {
 export function getGlobalSubscriptionCount(): number {
     return globalSubscriptions.size;
 }
+
+/**
+ * 메모리 진단용 — WS 상태 스냅샷 (read-only)
+ */
+export function getWsDiagnostics(): {
+    totalClients: number;
+    authenticated: number;
+    bufferedBytes: number;
+    globalSubs: number;
+    refCounts: number;
+} {
+    let authenticated = 0;
+    let bufferedBytes = 0;
+    for (const [ws, client] of clients) {
+        if (client.authenticated) authenticated++;
+        bufferedBytes += ws.bufferedAmount || 0;
+    }
+    return {
+        totalClients: clients.size,
+        authenticated,
+        bufferedBytes,
+        globalSubs: globalSubscriptions.size,
+        refCounts: stockRefCounts.size,
+    };
+}

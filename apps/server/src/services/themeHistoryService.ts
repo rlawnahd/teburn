@@ -207,3 +207,10 @@ export function stopHistoryCollection(): void {
         dbInterval = null;
     }
 }
+
+/** 메모리 진단용 — 실시간 히스토리 캐시 크기 */
+export function getRealtimeHistoryStats(): { themes: number; totalItems: number } {
+    let totalItems = 0;
+    for (const items of realtimeHistoryCache.values()) totalItems += items.length;
+    return { themes: realtimeHistoryCache.size, totalItems };
+}
