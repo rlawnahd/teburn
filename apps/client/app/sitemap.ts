@@ -38,6 +38,23 @@ async function fetchDynamicUrls(): Promise<MetadataRoute.Sitemap> {
         }
     } catch { /* API down → 정적 URL만 */ }
 
+    try {
+        // 일별 리포트
+        const reportRes = await fetch(`${API_URL}/report?limit=90`, { next: { revalidate: 3600 } });
+        if (reportRes.ok) {
+            const reportJson = await reportRes.json();
+            const reports: { date: string }[] = reportJson.data?.reports ?? [];
+            for (const r of reports) {
+                urls.push({
+                    url: `https://teburn.com/report/${r.date}`,
+                    lastModified: new Date(),
+                    changeFrequency: 'monthly',
+                    priority: 0.6,
+                });
+            }
+        }
+    } catch { /* API down → 정적 URL만 */ }
+
     return urls;
 }
 
@@ -46,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: 'https://teburn.com', lastModified: new Date(), changeFrequency: 'always', priority: 1 },
         { url: 'https://teburn.com/today', lastModified: new Date(), changeFrequency: 'always', priority: 0.95 },
         { url: 'https://teburn.com/performance', lastModified: new Date(), changeFrequency: 'daily', priority: 0.85 },
+        { url: 'https://teburn.com/report', lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
         { url: 'https://teburn.com/?tab=hot', lastModified: new Date(), changeFrequency: 'always', priority: 0.9 },
         { url: 'https://teburn.com/?tab=stocks', lastModified: new Date(), changeFrequency: 'always', priority: 0.8 },
         { url: 'https://teburn.com/terms', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },

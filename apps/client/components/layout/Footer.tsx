@@ -30,6 +30,7 @@ export default function Footer() {
                             <div>
                                 <Link href="/about" className={FOOTER_LINK}>서비스 소개</Link>
                                 <Link href="/performance" className={FOOTER_LINK}>주도주 성적표</Link>
+                                <Link href="/report" className={FOOTER_LINK}>일별 리포트</Link>
                                 <Link href="/guide" className={FOOTER_LINK}>이용 가이드</Link>
                                 <Link href="/faq" className={FOOTER_LINK}>FAQ</Link>
                             </div>

@@ -50,12 +50,20 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                         <span className="text-xs text-[var(--text-tertiary)]">{dayName}요일</span>
                         <span className="text-xs text-[var(--text-tertiary)]">주도주</span>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
-                    >
-                        <X size={14} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => { router.push(`/report/${date}`); onClose(); }}
+                            className="text-xs text-[var(--accent-blue)] hover:underline"
+                        >
+                            📄 리포트
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* 테이블 헤더 */}
