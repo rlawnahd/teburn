@@ -346,3 +346,10 @@ export async function getAllIndexData(): Promise<{
 }
 
 export { getNasdaqIndexData, getKospiFuturesPrice, getKospiIndexData, getKosdaqIndexData };
+
+/** 메모리 진단용 — 차트 히스토리/지수 캐시 크기 */
+export function getChartHistoryStats(): { keys: number; totalPoints: number; indexCacheSize: number } {
+    let totalPoints = 0;
+    for (const points of chartHistory.values()) totalPoints += points.length;
+    return { keys: chartHistory.size, totalPoints, indexCacheSize: indexCache.size };
+}

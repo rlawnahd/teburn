@@ -155,3 +155,8 @@ export const getBatchStockNewsCountFromApi = async (
 
     return result;
 };
+
+/** 메모리 진단용 — 종목 뉴스 카운트 캐시 크기 */
+export function getNaverNewsCacheSize(): number {
+    return stockNewsCountCache.size;
+}

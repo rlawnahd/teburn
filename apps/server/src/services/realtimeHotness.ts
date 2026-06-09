@@ -125,3 +125,8 @@ export function getRealtimeScores(): RealtimeScore[] {
     return Array.from(realtimeScores.values())
         .sort((a, b) => b.totalScore - a.totalScore);
 }
+
+/** 메모리 진단용 — 실시간 점수 캐시 크기 */
+export function getRealtimeScoreCount(): number {
+    return realtimeScores.size;
+}

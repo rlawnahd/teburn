@@ -30,6 +30,7 @@ import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
 import { startHistoryCollection } from './services/themeHistoryService';
 import { startThemeAnalysisScheduler } from './services/marketThemeService';
+import { getMemoryDiagnostics } from './services/memoryDiagnostics';
 import News from './models/News';
 
 // 1. 환경 변수 로드
@@ -147,6 +148,11 @@ app.get('/health', async (req, res) => {
 
     const httpStatus = mongoose.connection.readyState === 1 ? 200 : 503;
     res.status(httpStatus).json(healthCheck);
+});
+
+// 메모리 진단 — 의심 자료구조 크기 스냅샷
+app.get('/health/memory', (req, res) => {
+    res.json(getMemoryDiagnostics());
 });
 
 // 6. 서버 실행

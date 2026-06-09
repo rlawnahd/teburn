@@ -286,6 +286,11 @@ export function getKisSubscriptionCount(): number {
     return subscribedStocks.size;
 }
 
+/** 메모리 진단용 — 등록된 가격 콜백 수 (중복 등록 누수 감지) */
+export function getPriceCallbackCount(): number {
+    return priceCallbacks.length;
+}
+
 /**
  * WebSocket 중지
  */

@@ -151,3 +151,8 @@ export async function getBatchStockAiReasons(
 
     return result;
 }
+
+/** 메모리 진단용 — AI 요약 캐시 크기 */
+export function getStockReasonCacheSize(): number {
+    return memoryCache.size;
+}
