@@ -33,10 +33,20 @@ import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHo
 import { startHistoryCollection } from './services/themeHistoryService';
 import { startThemeAnalysisScheduler } from './services/marketThemeService';
 import { getMemoryDiagnostics } from './services/memoryDiagnostics';
+import { assertRequiredEnv } from './config';
+import { getKSTParts } from './utils/marketStatus';
 import News from './models/News';
 
 // 1. 환경 변수 로드
 dotenv.config();
+
+// 필수 환경변수 검증 (JWT_SECRET 미설정 시 즉시 종료 — 하드코딩 폴백 제거 후 fail-fast)
+try {
+    assertRequiredEnv();
+} catch (err: any) {
+    console.error(`❌ 환경변수 설정 오류: ${err.message}`);
+    process.exit(1);
+}
 
 const app = express();
 
@@ -256,11 +266,8 @@ connectDB().then(async () => {
         let lastVolumeCollectDate = '';
 
         const checkMarketCloseSchedule = async () => {
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-            const dayOfWeek = now.getDay(); // 0=일, 6=토
+            // KST 기준 시각 — 서버 TZ(UTC 등)와 무관하게 동작 (이전: getHours() 로컬시간 버그)
+            const { hour, minute, dayOfWeek, dateString: today } = getKSTParts();
 
             // 평일 15:35~15:40 사이에 실행 (장 마감 직후)
             if (dayOfWeek >= 1 && dayOfWeek <= 5 && hour === 15 && minute >= 35 && minute <= 40) {
@@ -287,8 +294,6 @@ connectDB().then(async () => {
 
                     // 등급 성적표: 오늘 S/A 레코드 생성 + 미완성 레코드 채움
                     try {
-                        const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
-                            .toISOString().split('T')[0];
                         const saStocks = getHotStocksCache().filter(
                             (s) => s.grade === 'S' || s.grade === 'A'
                         );
@@ -298,7 +303,7 @@ connectDB().then(async () => {
                                 stockName: s.stockName,
                                 grade: s.grade,
                                 totalScore: s.totalScore,
-                                date: kstToday,
+                                date: today,
                             }))
                         );
                         await fillPerformanceRecords();
@@ -310,9 +315,7 @@ connectDB().then(async () => {
 
                     // 일별 마감 리포트 생성 (그날 1회, 멱등)
                     try {
-                        const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
-                            .toISOString().split('T')[0];
-                        await generateDailyReport(kstToday);
+                        await generateDailyReport(today);
                     } catch (error) {
                         console.error('일별 리포트 생성 실패:', error);
                     }
@@ -328,9 +331,8 @@ connectDB().then(async () => {
         console.log('⏰ 장 마감 거래량 수집: 평일 15:35에 자동 실행');
 
         // 서버 시작 시 오늘 데이터가 없으면 즉시 수집 시도 (장 마감 후인 경우)
-        const now = new Date();
-        const hour = now.getHours();
-        const dayOfWeek = now.getDay();
+        // KST 기준 — 서버 TZ와 무관하게 동작
+        const { hour, dayOfWeek } = getKSTParts();
         if (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 16) {
             console.log('🔄 서버 시작: 오늘 거래량 데이터 수집 시도...');
             setTimeout(async () => {
