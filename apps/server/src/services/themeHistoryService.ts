@@ -99,7 +99,7 @@ export async function getThemeHistory(
     themeName: string,
     period: 'today' | '1d' | '7d' | '30d' = 'today'
 ): Promise<{ timestamp: Date; avgChangeRate: number; topStock: string; topStockRate: number }[]> {
-    // 오늘 데이터는 메모리 캐시에서 (1분 간격 실시간)
+    // 오늘 데이터는 메모리 캐시에서 (실시간 수집 비활성화 상태에서는 빈 배열 반환)
     if (period === 'today') {
         const realtimeData = getRealtimeHistory(themeName);
         return realtimeData.map(h => ({
@@ -170,7 +170,7 @@ export async function getAllThemesTodayHistory(): Promise<Map<string, { timestam
 }
 
 // 히스토리 수집 시작
-let realtimeInterval: NodeJS.Timeout | null = null;  // 1분 간격 (메모리)
+let realtimeInterval: NodeJS.Timeout | null = null;  // 실시간 인메모리 수집 비활성화 (미사용)
 let dbInterval: NodeJS.Timeout | null = null;        // 5분 간격 (DB)
 
 export function startHistoryCollection(): void {
