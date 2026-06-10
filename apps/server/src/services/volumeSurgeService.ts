@@ -14,6 +14,42 @@ interface VolumeSurgeInfo {
 const surgeRateCache = new Map<string, { data: number; timestamp: number }>();
 const CACHE_TTL = 60 * 60 * 1000;
 
+const SURGE_SAMPLE_DAYS = 20;
+
+/**
+ * 거래량 급증률 계산 (순수 함수).
+ * 오늘(todayMidnight 이후) 레코드를 평균 분모에서 제외하고, 가장 최근 maxSamples개만 사용한다.
+ * @returns 급증 배수(소수 2자리) / 과거 데이터 없으면 null
+ */
+export function computeSurgeRate(
+    history: { date: Date; volume: number }[],
+    todayMidnight: Date,
+    todayVolume: number,
+    maxSamples: number = SURGE_SAMPLE_DAYS,
+): number | null {
+    const past = history
+        .filter((h) => h.date.getTime() < todayMidnight.getTime()) // 당일 제외 (자기오염 차단)
+        .sort((a, b) => b.date.getTime() - a.date.getTime())       // 최신순
+        .slice(0, maxSamples)
+        .map((h) => h.volume);
+
+    if (past.length === 0) return null;
+
+    const avgVolume = past.reduce((sum, v) => sum + v, 0) / past.length;
+    if (avgVolume === 0) {
+        return todayVolume > 0 ? 10 : 0;
+    }
+
+    return Math.round((todayVolume / avgVolume) * 100) / 100;
+}
+
+/** KST 자정(서버 로컬 자정과 동일 구성) — 저장 경로(saveTodayVolumeHistory)의 date 경계와 일치 */
+function getTodayMidnight(): Date {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
 /**
  * 오늘의 거래량 히스토리 저장 (장 마감 후 실행)
  */
@@ -78,34 +114,34 @@ export async function getVolumeSurgeRate(stockCode: string): Promise<number | nu
 
     const todayVolume = currentPrice.volume;
 
-    // 과거 20일 평균 거래량 조회
-    const twentyDaysAgo = new Date();
-    twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
+    // 과거 20일 평균 거래량 조회 (오늘 제외)
+    const todayMidnight = getTodayMidnight();
+    const twentyDaysAgo = new Date(todayMidnight);
+    twentyDaysAgo.setDate(twentyDaysAgo.getDate() - SURGE_SAMPLE_DAYS);
 
     const history = await StockVolumeHistory.find({
         stockCode,
-        date: { $gte: twentyDaysAgo },
+        date: { $gte: twentyDaysAgo, $lt: todayMidnight },
     })
+        .select('date volume')
         .sort({ date: -1 })
-        .limit(20)
+        .limit(SURGE_SAMPLE_DAYS)
         .lean();
 
-    if (history.length === 0) {
+    const surgeRate = computeSurgeRate(
+        history.map((h) => ({ date: h.date as Date, volume: h.volume as number })),
+        todayMidnight,
+        todayVolume,
+    );
+
+    if (surgeRate === null) {
         return null;
     }
-
-    const avgVolume = history.reduce((sum, h) => sum + h.volume, 0) / history.length;
-
-    if (avgVolume === 0) {
-        return todayVolume > 0 ? 10 : 0; // 10배로 처리
-    }
-
-    const surgeRate = todayVolume / avgVolume;
 
     // 캐시 저장
     surgeRateCache.set(stockCode, { data: surgeRate, timestamp: Date.now() });
 
-    return Math.round(surgeRate * 100) / 100;
+    return surgeRate;
 }
 
 /**
@@ -116,41 +152,39 @@ export async function getBatchVolumeSurgeRates(
 ): Promise<Map<string, number>> {
     const result = new Map<string, number>();
 
-    // 과거 20일 데이터 일괄 조회
-    const twentyDaysAgo = new Date();
-    twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
+    // 과거 20일 데이터 일괄 조회 (오늘 제외)
+    const todayMidnight = getTodayMidnight();
+    const twentyDaysAgo = new Date(todayMidnight);
+    twentyDaysAgo.setDate(twentyDaysAgo.getDate() - SURGE_SAMPLE_DAYS);
 
     const history = await StockVolumeHistory.find({
         stockCode: { $in: stockCodes },
-        date: { $gte: twentyDaysAgo },
-    }).lean();
+        date: { $gte: twentyDaysAgo, $lt: todayMidnight },
+    })
+        .select('stockCode date volume')
+        .sort({ date: -1 })
+        .lean();
 
-    // 종목별 평균 계산
-    const avgVolumeMap = new Map<string, number>();
-    const volumeCountMap = new Map<string, number>();
-
+    // 종목별 히스토리 그룹화 (최신순 정렬은 위 쿼리에서 보장)
+    const historyByStock = new Map<string, { date: Date; volume: number }[]>();
     for (const h of history) {
-        const current = avgVolumeMap.get(h.stockCode) || 0;
-        const count = volumeCountMap.get(h.stockCode) || 0;
-        avgVolumeMap.set(h.stockCode, current + h.volume);
-        volumeCountMap.set(h.stockCode, count + 1);
+        const arr = historyByStock.get(h.stockCode) || [];
+        arr.push({ date: h.date as Date, volume: h.volume as number });
+        historyByStock.set(h.stockCode, arr);
     }
 
     for (const stockCode of stockCodes) {
-        const totalVolume = avgVolumeMap.get(stockCode) || 0;
-        const count = volumeCountMap.get(stockCode) || 0;
-        const avgVolume = count > 0 ? totalVolume / count : 0;
-
         const currentPrice = themePriceCache.getStockPrice(stockCode);
         if (!currentPrice) continue;
 
-        const todayVolume = currentPrice.volume;
-
-        if (avgVolume === 0) {
-            result.set(stockCode, todayVolume > 0 ? 10 : 0);
-        } else {
-            const surgeRate = todayVolume / avgVolume;
-            result.set(stockCode, Math.round(surgeRate * 100) / 100);
+        const surgeRate = computeSurgeRate(
+            historyByStock.get(stockCode) || [],
+            todayMidnight,
+            currentPrice.volume,
+        );
+        // null(과거 데이터 없음)이면 맵에 넣지 않음 → 소비처에서 0점 처리 (단일 버전과 일치)
+        if (surgeRate !== null) {
+            result.set(stockCode, surgeRate);
         }
     }
 

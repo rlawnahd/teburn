@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import { jwtSecret } from '../config';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'teburn-jwt-secret-change-in-prod';
 const LAST_SEEN_UPDATE_INTERVAL = 15 * 60 * 1000;
 const lastSeenUpdateCache = new Map<string, number>();
 
@@ -11,12 +11,17 @@ export interface AuthRequest extends Request {
 }
 
 export function generateToken(userId: string, provider: string): string {
-    return jwt.sign({ userId, provider }, JWT_SECRET, { expiresIn: '7d' });
+    return jwt.sign({ userId, provider }, jwtSecret(), { expiresIn: '7d' });
+}
+
+/** WebSocket 인증용 단기 토큰 (60초). JWT_SECRET 단일 출처 재사용 — 하드코딩 폴백 제거. */
+export function generateWsToken(userId: string, provider: string): string {
+    return jwt.sign({ userId, provider }, jwtSecret(), { expiresIn: '60s' });
 }
 
 export function verifyToken(token: string): { userId: string; provider: string } | null {
     try {
-        return jwt.verify(token, JWT_SECRET) as { userId: string; provider: string };
+        return jwt.verify(token, jwtSecret()) as { userId: string; provider: string };
     } catch {
         return null;
     }

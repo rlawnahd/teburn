@@ -28,6 +28,18 @@ export interface IndexData {
 const indexCache = new Map<string, { data: IndexData; timestamp: number }>();
 const CACHE_TTL = 60 * 1000;
 
+// 지수 조회 실패 로그 스팸 방지 — cacheKey별 30분에 1회만 출력 (Map은 지수 수만큼 bounded)
+const lastErrorLogAt = new Map<string, number>();
+const ERROR_LOG_INTERVAL = 30 * 60 * 1000;
+
+function logIndexErrorThrottled(cacheKey: string, message: string): void {
+    const now = Date.now();
+    if (now - (lastErrorLogAt.get(cacheKey) || 0) >= ERROR_LOG_INTERVAL) {
+        console.error(message);
+        lastErrorLogAt.set(cacheKey, now);
+    }
+}
+
 // 차트 데이터 수집기 (매 조회마다 가격 기록, 당일분만 유지)
 const chartHistory = new Map<string, IndexChartPoint[]>();
 let chartDate = ''; // 현재 저장 중인 날짜 (YYYY-MM-DD)
@@ -207,7 +219,7 @@ async function getYahooFinanceData(
 
         const result = response.data.chart?.result?.[0];
         if (!result) {
-            console.error(`${name} 데이터 없음`);
+            logIndexErrorThrottled(cacheKey, `${name} 데이터 없음`);
             return null;
         }
 
@@ -253,7 +265,7 @@ async function getYahooFinanceData(
         indexCache.set(cacheKey, { data, timestamp: Date.now() });
         return data;
     } catch (error: any) {
-        console.error(`${name} 조회 에러:`, error.message);
+        logIndexErrorThrottled(cacheKey, `${name} 조회 에러: ${error.message}`);
         const stale = indexCache.get(cacheKey);
         return stale ? stale.data : null;
     }

@@ -250,7 +250,7 @@ export default function Header() {
                     ) : (
                         <Link
                             href="/login"
-                            className="hidden sm:flex items-center h-8 px-3 text-[13px] font-medium bg-[var(--accent-color)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                            className="hidden sm:flex items-center h-8 px-3 text-[13px] font-medium bg-[var(--brand-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
                         >
                             로그인
                         </Link>
@@ -305,7 +305,7 @@ export default function Header() {
                             <Link
                                 href="/login"
                                 onClick={() => setShowMobileMenu(false)}
-                                className="block px-3 py-2.5 text-[15px] font-medium text-[var(--accent-color)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
+                                className="block px-3 py-2.5 text-[15px] font-medium text-[var(--brand-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                             >
                                 로그인
                             </Link>

@@ -209,10 +209,10 @@ export default function StockDetailPage() {
 
                                 <div className="px-3 py-2 space-y-1.5">
                                     {[
-                                        { label: '거래대금', score: stock.hotness.tradingValueScore, maxScore: 35, color: 'bg-amber-500', detail: undefined },
-                                        { label: '등락률', score: stock.hotness.momentumScore, maxScore: 20, color: 'bg-[var(--rise-color)]', detail: `${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%` },
+                                        { label: '거래대금', score: stock.hotness.tradingValueScore, maxScore: 25, color: 'bg-amber-500', detail: undefined },
+                                        { label: '등락률', score: stock.hotness.momentumScore, maxScore: 10, color: 'bg-[var(--rise-color)]', detail: `${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(1)}%` },
                                         { label: '거래량', score: stock.hotness.volumeScore, maxScore: 15, color: 'bg-violet-500', detail: stock.hotness.volumeSurgeRate ? `${stock.hotness.volumeSurgeRate.toFixed(0)}%` : '-' },
-                                        { label: '뉴스', score: stock.hotness.newsScore, maxScore: 15, color: 'bg-emerald-500', detail: `${stock.hotness.newsCount}건` },
+                                        { label: '뉴스', score: stock.hotness.newsScore, maxScore: 5, color: 'bg-emerald-500', detail: `${stock.hotness.newsCount}건` },
                                         { label: '대장주', score: stock.hotness.themeConcentrationScore, maxScore: 15, color: 'bg-sky-500', detail: `${stock.hotness.themeConcentration}%` },
                                         { label: '연속성', score: stock.hotness.streakScore ?? 0, maxScore: 30, color: 'bg-orange-500', detail: (stock.hotness.streakDays ?? 0) > 0 ? `🔥${stock.hotness.streakDays}일` : '-' },
                                     ].map((bar, i) => (

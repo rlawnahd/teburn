@@ -1,16 +1,17 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { getDashboardData, getTodayAccount, syncWithKiwoomBalance } from '../services/tradingService';
 import { getMarketStatus } from '../utils/marketStatus';
+import { isTradingAuthorized } from '../utils/auth';
+import { tradingPassword } from '../config';
 import Trade from '../models/Trade';
 
 const router = Router();
 
-const TRADING_PASSWORD = process.env.TRADING_PASSWORD || '';
-
-// 비밀번호 인증 미들웨어 (상세 매매일지용)
+// 비밀번호 인증 미들웨어 (상세 매매일지용).
+// 비밀번호는 헤더로만 받는다 (쿼리스트링은 로그/Referer 유출 위험으로 제거).
 function requirePassword(req: Request, res: Response, next: NextFunction) {
-    const password = req.headers['x-trading-password'] as string || req.query.password as string;
-    if (!TRADING_PASSWORD || password === TRADING_PASSWORD) {
+    const password = req.headers['x-trading-password'] as string | undefined;
+    if (isTradingAuthorized(password, tradingPassword())) {
         next();
     } else {
         res.status(401).json({ success: false, message: '비밀번호가 필요합니다.' });
@@ -45,7 +46,7 @@ router.get('/dashboard', async (req: Request, res: Response) => {
 // 비밀번호 검증
 router.post('/auth', (req: Request, res: Response) => {
     const { password } = req.body;
-    if (!TRADING_PASSWORD || password === TRADING_PASSWORD) {
+    if (isTradingAuthorized(password, tradingPassword())) {
         res.json({ success: true });
     } else {
         res.status(401).json({ success: false, message: '비밀번호가 틀렸습니다.' });

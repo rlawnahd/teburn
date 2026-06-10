@@ -1,9 +1,8 @@
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
 import { Strategy as KakaoStrategy } from 'passport-kakao';
-import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import { generateToken, AuthRequest, authMiddleware, requireAuth } from '../middleware/auth';
+import { generateToken, generateWsToken, AuthRequest, authMiddleware, requireAuth } from '../middleware/auth';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 
@@ -131,11 +130,7 @@ router.get('/me', authMiddleware, (req: AuthRequest, res: Response) => {
 });
 
 router.get('/ws-token', requireAuth, (req: AuthRequest, res: Response) => {
-    const wsToken = jwt.sign(
-        { userId: req.user._id.toString(), provider: req.user.provider },
-        process.env.JWT_SECRET || 'teburn-jwt-secret-change-in-prod',
-        { expiresIn: '60s' }
-    );
+    const wsToken = generateWsToken(req.user._id.toString(), req.user.provider);
     res.json({ success: true, token: wsToken });
 });
 

@@ -28,30 +28,18 @@ export default function GuidePage() {
                         </p>
                         <p className="mt-2 font-medium text-[var(--text-primary)]">등급 의미</p>
                         <ul className="list-disc pl-5 space-y-1 mt-1">
-                            <li><span className="font-medium">S등급</span> (90점 이상) — 시장을 강하게 주도하는 종목. 거래량, 가격 상승, 뉴스 노출 모두 최상위</li>
-                            <li><span className="font-medium">A등급</span> (75~89점) — 높은 관심을 받는 종목. 주도주 후보군</li>
-                            <li><span className="font-medium">B등급</span> (60~74점) — 보통 수준의 관심. 상승 여력 관찰 필요</li>
-                            <li><span className="font-medium">C등급</span> (45~59점) — 낮은 관심. 시장 주도력이 약한 상태</li>
-                            <li><span className="font-medium">D등급</span> (44점 이하) — 최소 관심. 현재 시장에서 주목받지 못하는 종목</li>
+                            <li><span className="font-medium">S등급</span> (70점 이상) — 시장을 강하게 주도하는 종목. 거래량, 가격 상승, 뉴스 노출 모두 최상위</li>
+                            <li><span className="font-medium">A등급</span> (50~69점) — 높은 관심을 받는 종목. 주도주 후보군</li>
+                            <li><span className="font-medium">B등급</span> (35~49점) — 보통 수준의 관심. 상승 여력 관찰 필요</li>
+                            <li><span className="font-medium">C등급</span> (20~34점) — 낮은 관심. 시장 주도력이 약한 상태</li>
+                            <li><span className="font-medium">D등급</span> (20점 미만) — 최소 관심. 현재 시장에서 주목받지 못하는 종목</li>
                         </ul>
                         <p className="mt-2">
                             점수는 장중 5분 간격으로 업데이트되며, 등급 옆의 점수 변화 표시를 통해 추세를 확인할 수 있습니다.
                         </p>
-                    </Section>
-
-                    <Section title="거래대금 탭">
-                        <p>
-                            당일 거래대금 기준으로 상위 종목들을 보여줍니다.
-                            거래대금은 거래량에 가격을 곱한 값으로, 실제로 얼마나 많은 자금이 해당 종목에 유입되고 있는지를 나타냅니다.
-                            거래대금이 높은 종목일수록 시장의 관심이 집중되고 있다는 의미입니다.
-                        </p>
-                    </Section>
-
-                    <Section title="섹터 탭">
-                        <p>
-                            업종(섹터)별로 시장 동향을 한눈에 파악할 수 있습니다.
-                            각 섹터의 등락률과 주요 종목들의 현황을 확인하여, 어떤 업종이 강세인지 또는 약세인지 빠르게 판단할 수 있습니다.
-                            특정 섹터를 클릭하면 해당 업종에 속한 종목들의 상세 정보를 볼 수 있습니다.
+                        <p className="mt-2">
+                            목록에는 각 종목의 <span className="font-medium">거래대금</span>도 함께 표시됩니다.
+                            거래대금은 거래량에 가격을 곱한 값으로, 해당 종목에 자금이 얼마나 유입되고 있는지를 나타냅니다.
                         </p>
                     </Section>
 

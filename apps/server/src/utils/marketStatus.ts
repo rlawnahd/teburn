@@ -18,6 +18,45 @@ function getKSTDate(): Date {
     return new Date(now.getTime() + (now.getTimezoneOffset() * 60 * 1000) + KST_OFFSET);
 }
 
+export interface KSTParts {
+    year: number;
+    month: number;
+    day: number;
+    hour: number;       // 0~23
+    minute: number;     // 0~59
+    dayOfWeek: number;  // 0=일 ~ 6=토
+    dateString: string; // 'YYYY-MM-DD' (KST 기준)
+}
+
+// 서버 TZ(UTC/KST 등)와 무관하게 KST(Asia/Seoul) 벽시계 기준 시각 구성요소를 반환.
+// Date.getHours()류의 로컬 TZ 의존을 제거하기 위해 Intl(Asia/Seoul)을 사용한다.
+const KST_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+});
+
+export function getKSTParts(date: Date = new Date()): KSTParts {
+    const parts = KST_FORMATTER.formatToParts(date);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value || '';
+
+    const year = Number(get('year'));
+    const month = Number(get('month'));
+    const day = Number(get('day'));
+    let hour = Number(get('hour'));
+    if (hour === 24) hour = 0; // en-CA가 자정을 '24'로 줄 수 있어 보정
+    const minute = Number(get('minute'));
+    const dateString = `${get('year')}-${get('month')}-${get('day')}`;
+    // KST 달력 날짜의 요일 (UTC 기준으로 구성해 로컬 TZ 영향 제거)
+    const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+
+    return { year, month, day, hour, minute, dayOfWeek, dateString };
+}
+
 function getTimeInMinutes(date: Date): number {
     return date.getHours() * 60 + date.getMinutes();
 }
