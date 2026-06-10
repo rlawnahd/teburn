@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import DailyReport from '../models/DailyReport';
 import DailyLeadingTheme from '../models/DailyLeadingTheme';
 import { getHotStocksCache } from './hotnessService';
-import { toReportStocks, toReportThemes, buildReportPrompt, DailyThemeLike, HotStockLike } from './dailyReportBuilder';
+import { toReportStocks, toReportThemes, buildReportPrompt, legacyStocksToReport, DailyThemeLike, HotStockLike, LegacyStockLike } from './dailyReportBuilder';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -70,6 +70,48 @@ export async function generateDailyReport(date: string): Promise<void> {
         { upsert: true },
     );
     console.log(`📄 일별 리포트 생성 완료: ${date} (테마 ${topThemes.length}, 종목 ${topStocks.length}, 요약 ${aiSummary ? 'O' : 'X'})`);
+}
+
+// KST 기준 Date → 'YYYY-MM-DD' 문자열
+function kstDateString(d: Date): string {
+    return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+}
+
+let backfillStarted = false;
+
+/**
+ * 과거 DailyLeadingTheme(최대 90일) 데이터로 리포트 소급 생성 (data-only, AI 요약 없음).
+ * 이미 리포트가 있는 날(오늘 등 AI 요약 포함분)은 건드리지 않음 — 멱등.
+ */
+export async function backfillDailyReports(): Promise<void> {
+    if (backfillStarted) return;
+    backfillStarted = true;
+
+    const days = await DailyLeadingTheme.find({}).sort({ date: -1 }).lean();
+    if (days.length === 0) {
+        console.log('📄 리포트 백필: DailyLeadingTheme 데이터 없음 — skip');
+        return;
+    }
+
+    let created = 0;
+    for (const day of days) {
+        const dateStr = kstDateString(new Date(day.date));
+
+        const existing = await DailyReport.findOne({ date: dateStr }).lean();
+        if (existing) continue; // 오늘(AI 요약 포함) 등 기존 리포트 보존
+
+        const topThemes = toReportThemes((day.topThemes as DailyThemeLike[]) ?? [], TOP_THEMES);
+        const topStocks = legacyStocksToReport((day.topStocks as LegacyStockLike[]) ?? [], TOP_STOCKS);
+        if (topThemes.length === 0 && topStocks.length === 0) continue;
+
+        await DailyReport.findOneAndUpdate(
+            { date: dateStr },
+            { $setOnInsert: { date: dateStr, aiSummary: '', topThemes, topStocks, generatedAt: new Date() } },
+            { upsert: true },
+        );
+        created++;
+    }
+    console.log(`📄 리포트 백필 완료: ${created}일 생성 (DailyLeadingTheme ${days.length}일 검토)`);
 }
 
 /** 단일 리포트 조회 */
