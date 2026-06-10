@@ -174,27 +174,19 @@ let realtimeInterval: NodeJS.Timeout | null = null;  // 1분 간격 (메모리)
 let dbInterval: NodeJS.Timeout | null = null;        // 5분 간격 (DB)
 
 export function startHistoryCollection(): void {
-    if (realtimeInterval) {
+    if (dbInterval) {
         return;
     }
 
-    // 날짜 체크 및 캐시 초기화
-    clearCacheIfNewDay();
-
-    // 즉시 한 번 실행
-    saveRealtimeHistory();
-    saveThemeSnapshot();
-
-    // 1분마다 메모리에 저장 (실시간 차트용)
-    realtimeInterval = setInterval(() => {
-        clearCacheIfNewDay();
-        saveRealtimeHistory();
-    }, 60 * 1000);
-    console.log('⏰ 실시간 히스토리 수집 시작: 1분 간격 (메모리)');
+    // 실시간 인메모리 수집(saveRealtimeHistory, 분당)은 유일한 소비처였던
+    // 섹터 탭 타임라인(ThemeTimeline)이 제거되어 비활성화함.
+    // 메모리 최대 구조였던 realtimeHistoryCache를 더 이상 채우지 않는다.
+    // (재활성화하려면 아래 realtimeInterval 블록을 복원)
 
     // 5분마다 DB에 저장 (과거 조회용)
+    saveThemeSnapshot();
     dbInterval = setInterval(saveThemeSnapshot, 5 * 60 * 1000);
-    console.log('⏰ DB 히스토리 수집 시작: 5분 간격');
+    console.log('⏰ DB 히스토리 수집 시작: 5분 간격 (실시간 인메모리 수집 비활성화)');
 }
 
 export function stopHistoryCollection(): void {
