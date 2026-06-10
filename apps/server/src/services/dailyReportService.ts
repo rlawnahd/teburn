@@ -93,12 +93,16 @@ export async function backfillDailyReports(): Promise<void> {
         return;
     }
 
+    // 기존 리포트 날짜를 1회 조회해 Set으로 (N+1 회피)
+    const existingDates = new Set(
+        (await DailyReport.find({}, { date: 1 }).lean()).map((r: any) => r.date),
+    );
+
     let created = 0;
     for (const day of days) {
         const dateStr = kstDateString(new Date(day.date));
 
-        const existing = await DailyReport.findOne({ date: dateStr }).lean();
-        if (existing) continue; // 오늘(AI 요약 포함) 등 기존 리포트 보존
+        if (existingDates.has(dateStr)) continue; // 오늘(AI 요약 포함) 등 기존 리포트 보존
 
         const topThemes = toReportThemes((day.topThemes as DailyThemeLike[]) ?? [], TOP_THEMES);
         const topStocks = legacyStocksToReport((day.topStocks as LegacyStockLike[]) ?? [], TOP_STOCKS);
