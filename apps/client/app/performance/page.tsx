@@ -114,6 +114,36 @@ function interpretPattern(s: GradeSummary): string | null {
     return `당일 단타는 ${f(d1)}로 약했지만 일주일 보유 시 ${f(d5)} — 뒤늦게 살아나는 패턴입니다.`;
 }
 
+// 대표 윈도우(30→90→7일 순, 표본 있는 것)의 S등급으로 상단 한 줄 결론 생성
+function headlineConclusion(windows: WindowSummary[]): { text: string; days: number } | null {
+    for (const d of [30, 90, 7]) {
+        const s = windows.find((w) => w.days === d)?.S;
+        if (!s || s.count === 0 || s.avgReturnD1 === null) continue;
+
+        const f = (v: number) => (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+        const d1 = s.avgReturnD1;
+
+        if (s.avgReturnD5 === null) {
+            return { text: `TEBURN S등급 주도주, 신호 다음날 단타는 평균 ${f(d1)}.`, days: d };
+        }
+        const d5 = s.avgReturnD5;
+        let text: string;
+        if (d1 > 0 && d5 < 0) {
+            text = `TEBURN S등급 주도주는 다음날 단타엔 강하지만(평균 ${f(d1)}), 일주일 들고 가면 평균 ${f(d5)} — 짧게 끊는 게 유리했습니다.`;
+        } else if (d1 > 0 && d5 >= d1) {
+            text = `TEBURN S등급 주도주는 들고 갈수록 강했습니다 — 단타 ${f(d1)}, 일주일 보유 ${f(d5)}.`;
+        } else if (d1 > 0) {
+            text = `TEBURN S등급 주도주, 단타 평균 ${f(d1)} · 일주일 보유 ${f(d5)} — 길게 갈수록 탄력이 줄었습니다.`;
+        } else if (d5 < 0) {
+            text = `TEBURN S등급 주도주, 단타 ${f(d1)} · 일주일 보유 ${f(d5)} — 신호 다음날 진입이 불리했던 구간입니다.`;
+        } else {
+            text = `TEBURN S등급 주도주, 단타 ${f(d1)} · 일주일 보유 ${f(d5)}.`;
+        }
+        return { text, days: d };
+    }
+    return null;
+}
+
 function formatDate(dateStr: string): string {
     // dateStr: "2026-06-04" 형식
     const [y, m, d] = dateStr.split('-');
@@ -244,6 +274,8 @@ export default async function PerformancePage() {
         fetchDaily(),
     ]);
 
+    const headline = headlineConclusion(windows);
+
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <div className="max-w-[800px] mx-auto px-4 py-8">
@@ -258,10 +290,26 @@ export default async function PerformancePage() {
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">
                         주도주 성적표
                     </h1>
-                    <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed">
-                        S/A등급 종목의 <strong className="text-[var(--text-primary)]">익일 시가 매수 기준</strong> 실제 수익률을
-                        매일 자동 검증합니다. 좋은 성적도 나쁜 성적도 그대로 공개합니다.
-                    </p>
+
+                    {/* 데이터 기반 한 줄 결론 */}
+                    {headline && (
+                        <p className="mt-3 text-lg font-bold text-[var(--text-primary)] leading-snug">
+                            {headline.text}
+                            <span className="block mt-1 text-xs font-normal text-[var(--text-tertiary)]">
+                                최근 {headline.days}일 기준
+                            </span>
+                        </p>
+                    )}
+
+                    {/* 이게 뭐예요? */}
+                    <div className="card p-4 mt-4">
+                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                            <strong className="text-[var(--text-primary)]">이게 뭐예요?</strong> TEBURN은 매일 거래대금·등락률·뉴스·테마를
+                            종합해 그날의 주도주를 <strong className="text-[var(--text-primary)]">S·A등급</strong>으로 뽑습니다. 이 페이지는
+                            그렇게 뽑은 종목을 <strong className="text-[var(--text-primary)]">신호 다음 거래일 시가에 샀다면</strong> 실제로
+                            수익이 났는지를 매일 자동으로 검증한 성적표입니다. 좋은 성적도 나쁜 성적도 그대로 공개합니다.
+                        </p>
+                    </div>
                 </div>
 
                 {/* 윈도우별 요약 */}
