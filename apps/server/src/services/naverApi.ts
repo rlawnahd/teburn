@@ -72,6 +72,14 @@ export const fetchNaverNewsApi = async (query: string = '주식'): Promise<NewsI
 const stockNewsCountCache = new Map<string, { count: number; latestNewsTitle: string | null; timestamp: number }>();
 const STOCK_NEWS_CACHE_TTL = 10 * 60 * 1000; // 10분
 
+// 만료 항목 주기적 스윕 — TTL만으로는 조회 안 되는 종목 키가 계속 쌓이므로 누수 방지
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of stockNewsCountCache) {
+        if (now - val.timestamp > STOCK_NEWS_CACHE_TTL) stockNewsCountCache.delete(key);
+    }
+}, STOCK_NEWS_CACHE_TTL);
+
 export const getStockNewsCountFromApi = async (stockName: string): Promise<{ count: number; latestNewsTitle: string | null }> => {
     // 캐시 확인
     const cached = stockNewsCountCache.get(stockName);
