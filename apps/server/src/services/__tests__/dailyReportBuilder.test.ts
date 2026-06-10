@@ -3,8 +3,10 @@ import {
     toReportStocks,
     toReportThemes,
     buildReportPrompt,
+    legacyStocksToReport,
     HotStockLike,
     DailyThemeLike,
+    LegacyStockLike,
 } from '../dailyReportBuilder';
 
 function hot(over: Partial<HotStockLike>): HotStockLike {
@@ -71,5 +73,24 @@ describe('buildReportPrompt', () => {
         const p = buildReportPrompt('2026-06-09', [], []);
         expect(typeof p).toBe('string');
         expect(p).toContain('2026-06-09');
+    });
+});
+
+describe('legacyStocksToReport', () => {
+    it("레거시 topStock을 grade=''/score=0으로 변환하고 limit으로 자른다 (입력 rank 유지)", () => {
+        const input: LegacyStockLike[] = [
+            { rank: 1, stockCode: 'A1', stockName: '에이', changeRate: 5.0, tradingValue: 100, themes: ['반도체'] },
+            { rank: 2, stockCode: 'A2', stockName: '비', changeRate: 2.0, tradingValue: 50, themes: [] },
+        ];
+        const out = legacyStocksToReport(input, 1);
+        expect(out.length).toBe(1);
+        expect(out[0]).toEqual({
+            rank: 1, stockCode: 'A1', stockName: '에이', changeRate: 5.0,
+            tradingValue: 100, grade: '', score: 0, themes: ['반도체'],
+        });
+    });
+
+    it('빈 배열이면 빈 배열을 반환한다', () => {
+        expect(legacyStocksToReport([], 10)).toEqual([]);
     });
 });

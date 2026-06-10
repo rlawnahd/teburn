@@ -76,3 +76,30 @@ export function buildReportPrompt(
         stockLines,
     ].join('\n');
 }
+
+// DailyLeadingTheme.topStocks(ITopStock) 형태 — 과거 백필용 (등급/점수 없음)
+export interface LegacyStockLike {
+    rank: number;
+    stockCode: string;
+    stockName: string;
+    changeRate: number;
+    tradingValue: number;
+    themes: string[];
+}
+
+/**
+ * 과거 DailyLeadingTheme의 topStocks를 ReportStock으로 변환.
+ * 등급/점수 정보가 없으므로 grade='', score=0으로 채움 (입력 rank 유지).
+ */
+export function legacyStocksToReport(stocks: LegacyStockLike[], limit: number): ReportStock[] {
+    return stocks.slice(0, limit).map((s) => ({
+        rank: s.rank,
+        stockCode: s.stockCode,
+        stockName: s.stockName,
+        changeRate: s.changeRate,
+        tradingValue: s.tradingValue,
+        grade: '',
+        score: 0,
+        themes: s.themes,
+    }));
+}

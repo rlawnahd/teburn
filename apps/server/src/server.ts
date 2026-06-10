@@ -26,7 +26,7 @@ import tradingRoutes from './routes/trading';
 import performanceRoutes, { invalidateSummaryCache } from './routes/performance';
 import reportRoutes from './routes/report';
 import { upsertGradeRecords, fillPerformanceRecords, backfillPerformanceIfEmpty } from './services/performanceService';
-import { generateDailyReport } from './services/dailyReportService';
+import { generateDailyReport, backfillDailyReports } from './services/dailyReportService';
 import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
@@ -208,6 +208,10 @@ connectDB().then(async () => {
                 // 성적표 백필 (컬렉션 비어 있을 때 1회, 백그라운드)
                 backfillPerformanceIfEmpty().catch(err => {
                     console.error('❌ 성적표 백필 실패:', err);
+                });
+                // 일별 리포트 백필 (과거 DailyLeadingTheme → data-only 리포트, 1회, 백그라운드)
+                backfillDailyReports().catch(err => {
+                    console.error('❌ 리포트 백필 실패:', err);
                 });
             })
             .catch(err => {
