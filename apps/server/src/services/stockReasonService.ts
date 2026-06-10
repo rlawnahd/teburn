@@ -12,6 +12,14 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const memoryCache = new Map<string, { reason: string; timestamp: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
 
+// 만료 키 주기적 스윕 — 키가 '날짜:종목코드'라 날짜가 바뀌면 옛 키가 영원히 남는 누수 방지
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of memoryCache) {
+        if (now - val.timestamp > CACHE_TTL) memoryCache.delete(key);
+    }
+}, CACHE_TTL);
+
 function todayKST(): string {
     const kstOffset = 9 * 60 * 60 * 1000;
     return new Date(Date.now() + kstOffset).toISOString().split('T')[0];
