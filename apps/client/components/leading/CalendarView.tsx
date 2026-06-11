@@ -33,10 +33,23 @@ function DateCell({
     return (
         <div
             onClick={hasData ? onClick : undefined}
+            onKeyDown={
+                hasData
+                    ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onClick();
+                          }
+                      }
+                    : undefined
+            }
+            role={hasData ? 'button' : undefined}
+            tabIndex={hasData ? 0 : undefined}
+            aria-label={hasData ? `${day}일 주도주 상세 보기` : undefined}
             className={`relative min-h-[90px] md:min-h-[110px] p-2 md:p-2.5 rounded-lg transition-colors ${
                 isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]/60'
             } ${isToday ? 'bg-[var(--accent)]/5 ring-1 ring-inset ring-[var(--accent)]/40' : ''} ${
-                hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''
+                hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]' : ''
             }`}
         >
             {/* Data indicator dot */}

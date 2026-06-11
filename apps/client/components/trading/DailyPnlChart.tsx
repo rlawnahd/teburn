@@ -10,7 +10,7 @@ interface Props {
 export default function DailyPnlChart({ dailyHistory, initialCapital }: Props) {
     if (dailyHistory.length === 0) {
         return (
-            <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+            <div className="card p-4">
                 <h3 className="text-[var(--text-primary)] text-base font-medium mb-2">일별 수익률</h3>
                 <p className="text-[var(--text-tertiary)] text-base">아직 매매 기록이 없습니다.</p>
             </div>
@@ -22,7 +22,7 @@ export default function DailyPnlChart({ dailyHistory, initialCapital }: Props) {
     const range = maxValue - minValue || 1;
 
     return (
-        <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+        <div className="card p-4">
             <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">일별 자산 추이</h3>
 
             <div className="flex items-end gap-[2px] h-[120px]">

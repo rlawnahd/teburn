@@ -8,7 +8,6 @@ import CalendarView from '@/components/leading/CalendarView';
 import IndexView from '@/components/leading/IndexView';
 import IndexWidget from '@/components/home/IndexWidget';
 import MarketStatusBar from '@/components/home/MarketStatusBar';
-import TickerStrip from '@/components/home/TickerStrip';
 import LandingPage from '@/components/landing/LandingPage';
 import { useAuth } from '@/hooks/useAuth';
 

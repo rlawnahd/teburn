@@ -73,7 +73,7 @@ export default function TradingView() {
         return (
             <div className="space-y-3">
                 {[1, 2].map((i) => (
-                    <div key={i} className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-4 animate-pulse">
+                    <div key={i} className="card p-4 animate-pulse">
                         <div className="h-4 bg-[var(--bg-tertiary)] rounded w-1/3 mb-3" />
                         <div className="h-8 bg-[var(--bg-tertiary)] rounded w-1/2 mb-2" />
                     </div>
@@ -84,7 +84,7 @@ export default function TradingView() {
 
     if (!data?.account) {
         return (
-            <div className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-6 text-center">
+            <div className="card p-6 text-center">
                 <p className="text-[var(--text-tertiary)] text-base">아직 매매 기록이 없습니다.</p>
             </div>
         );
@@ -98,7 +98,7 @@ export default function TradingView() {
     return (
         <div className="space-y-3">
             {/* 운용 현황 요약 */}
-            <div className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-4">
+            <div className="card p-4">
                 <p className="text-[var(--text-tertiary)] text-sm mb-1">실계좌 운용 수익률</p>
                 <p className={`text-3xl font-bold ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
                     {isProfit ? '+' : ''}{account.totalPnlRate.toFixed(2)}%
@@ -130,11 +130,11 @@ export default function TradingView() {
             {/* 승률 게이지 + 최근 매매 결과 */}
             {stats.totalTrades > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="card rounded p-4">
+                    <div className="card p-4">
                         <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">승률</h3>
                         <WinRateGauge winRate={winRate} winCount={account.winCount} loseCount={account.loseCount} />
                     </div>
-                    <div className="card rounded p-4">
+                    <div className="card p-4">
                         <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">최근 매매 결과</h3>
                         <TradeStreak trades={data.recentTrades} />
                     </div>
@@ -149,7 +149,7 @@ export default function TradingView() {
 
             {/* 매매 통계 */}
             {stats.totalTrades > 0 && (
-                <div className="bg-[var(--bg-primary)] rounded border border-[var(--border-color)] p-4">
+                <div className="card p-4">
                     <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">매매 통계</h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div>

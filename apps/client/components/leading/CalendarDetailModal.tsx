@@ -53,13 +53,14 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => { router.push(`/report/${date}`); onClose(); }}
-                            className="text-xs text-[var(--accent)] hover:underline"
+                            className="px-2 py-1 text-xs text-[var(--accent)] hover:underline"
                         >
                             📄 리포트
                         </button>
                         <button
                             onClick={onClose}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                            aria-label="닫기"
+                            className="w-8 h-8 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
                         >
                             <X size={14} />
                         </button>

@@ -17,7 +17,7 @@ const SELL_REASON_LABELS: Record<string, string> = {
 
 export default function TradeHistory({ trades }: Props) {
     return (
-        <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+        <div className="card p-4">
             <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">매매 이력</h3>
 
             {trades.length === 0 ? (
