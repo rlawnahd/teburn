@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { fetchIndexData, IndexData } from '@/lib/api/indices';
 import {
-    LineChart,
-    Line,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     Tooltip,
@@ -14,7 +14,19 @@ import {
     ReferenceLine,
 } from 'recharts';
 
-function IndexChart({ data, color }: { data: IndexData; color: string }) {
+// 방향색: 상승=빨강, 하락=파랑 (한국 시장 관습)
+function dirColor(change: number): string {
+    return change >= 0 ? 'var(--rise-color)' : 'var(--fall-color)';
+}
+
+function gradId(data: IndexData): string {
+    return 'idxgrad-' + data.symbol.replace(/[^a-zA-Z0-9]/g, '');
+}
+
+function IndexChart({ data }: { data: IndexData }) {
+    const color = dirColor(data.change);
+    const id = gradId(data);
+
     const chartData = data.chartData.map((p) => {
         const d = new Date(p.time);
         return {
@@ -25,29 +37,35 @@ function IndexChart({ data, color }: { data: IndexData; color: string }) {
 
     if (chartData.length === 0) {
         return (
-            <div className="h-[140px] sm:h-[180px] flex items-center justify-center text-base text-[var(--text-tertiary)]">
+            <div className="h-[140px] sm:h-[170px] flex items-center justify-center text-sm text-[var(--text-tertiary)]">
                 차트 데이터 없음
             </div>
         );
     }
 
     const prices = chartData.map((d) => d.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    const minPrice = Math.min(...prices, data.previousClose);
+    const maxPrice = Math.max(...prices, data.previousClose);
     const padding = (maxPrice - minPrice) * 0.1 || 1;
 
     return (
-        <div className="h-[140px] sm:h-[180px]">
+        <div className="h-[140px] sm:h-[170px]">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.4} />
+                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <defs>
+                        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+                            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} vertical={false} />
                     <XAxis
                         dataKey="time"
                         tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
                         tickLine={false}
-                        axisLine={{ stroke: 'var(--border-color)' }}
+                        axisLine={false}
                         interval="preserveStartEnd"
-                        minTickGap={40}
+                        minTickGap={48}
                     />
                     <YAxis
                         domain={[minPrice - padding, maxPrice + padding]}
@@ -55,15 +73,16 @@ function IndexChart({ data, color }: { data: IndexData; color: string }) {
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(v) => v.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                        width={55}
+                        width={48}
+                        orientation="right"
                     />
                     <Tooltip
                         contentStyle={{
                             backgroundColor: 'var(--bg-primary)',
                             border: '1px solid var(--border-color)',
-                            borderRadius: '0',
-                            fontSize: '11px',
-                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            padding: '6px 10px',
                             color: 'var(--text-primary)',
                         }}
                         formatter={(value: number | undefined) => [
@@ -72,92 +91,62 @@ function IndexChart({ data, color }: { data: IndexData; color: string }) {
                         ]}
                         labelFormatter={(label) => label}
                     />
-                    <ReferenceLine
-                        y={data.previousClose}
-                        stroke="var(--text-tertiary)"
-                        strokeDasharray="4 4"
-                        opacity={0.4}
-                    />
-                    <Line
+                    <ReferenceLine y={data.previousClose} stroke="var(--text-tertiary)" strokeDasharray="4 4" opacity={0.35} />
+                    <Area
                         type="monotone"
                         dataKey="price"
                         stroke={color}
-                        strokeWidth={1.5}
+                        strokeWidth={2}
+                        fill={`url(#${id})`}
                         dot={false}
                         isAnimationActive={false}
                     />
-                </LineChart>
+                </AreaChart>
             </ResponsiveContainer>
         </div>
     );
 }
 
-function IndexDetailCard({ data, color }: { data: IndexData | null; color: string }) {
-    if (!data) {
-        return (
-            <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-3">
-                <div className="text-base text-[var(--text-tertiary)]">데이터를 불러올 수 없습니다</div>
-            </div>
-        );
-    }
-
+function IndexDetailCard({ data }: { data: IndexData }) {
     const isPositive = data.change >= 0;
-    const changeColor = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
+    const dirClass = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
+    const arrow = isPositive ? '▲' : '▼';
 
     return (
-        <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] overflow-hidden">
-            {/* 헤더 */}
-            <div className="px-3 py-2 border-b border-[var(--border-color)]">
+        <div className="card overflow-hidden">
+            {/* 헤더 — 종목명 + 큰 가격(방향색) */}
+            <div className="px-4 pt-3 pb-2">
                 <div className="flex items-center justify-between">
-                    <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                            <span className="text-base font-semibold text-[var(--text-primary)] truncate">{data.name}</span>
-                        </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                        <span className="text-base font-semibold text-[var(--text-primary)]">
-                            {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </span>
-                        <span className={`text-base font-medium ${changeColor} ml-2`}>
-                            {isPositive ? '+' : ''}{data.change.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            {' '}({isPositive ? '+' : ''}{data.changePercent.toFixed(2)}%)
-                        </span>
-                    </div>
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">{data.name}</span>
+                    <span className="text-xs text-[var(--text-tertiary)]">{data.tradingHours}</span>
                 </div>
-                <div className="mt-1">
-                    <span className="text-sm text-[var(--text-tertiary)]">
-                        {data.tradingHours}
+                <div className="mt-1 flex items-baseline gap-2 flex-wrap">
+                    <span className={`text-2xl font-bold tabular-nums ${dirClass}`}>
+                        {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </span>
+                    <span className={`text-sm font-medium tabular-nums ${dirClass}`}>
+                        {arrow} {Math.abs(data.change).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        {' '}({isPositive ? '+' : '-'}{Math.abs(data.changePercent).toFixed(2)}%)
                     </span>
                 </div>
             </div>
 
-            {/* 차트 */}
-            <div className="p-2">
-                <IndexChart data={data} color={color} />
+            {/* 영역 차트 */}
+            <div className="px-2">
+                <IndexChart data={data} />
             </div>
 
-            {/* 상세 정보 */}
-            <div className="px-3 pb-2">
-                <div className="grid grid-cols-3 border-t border-[var(--border-color)]">
-                    <div className="py-1.5 pr-2 border-r border-[var(--border-color)]">
-                        <div className="text-sm text-[var(--text-tertiary)]">전일종가</div>
-                        <div className="text-sm font-medium text-[var(--text-primary)]">
-                            {data.previousClose.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </div>
-                    </div>
-                    <div className="py-1.5 px-2 border-r border-[var(--border-color)]">
-                        <div className="text-sm text-[var(--text-tertiary)]">고가</div>
-                        <div className="text-sm font-medium text-[var(--rise-color)]">
-                            {data.high > 0 ? data.high.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}
-                        </div>
-                    </div>
-                    <div className="py-1.5 pl-2">
-                        <div className="text-sm text-[var(--text-tertiary)]">저가</div>
-                        <div className="text-sm font-medium text-[var(--fall-color)]">
-                            {data.low > 0 ? data.low.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}
-                        </div>
-                    </div>
-                </div>
+            {/* 상세 — 보더리스, 가벼운 인라인 */}
+            <div className="px-4 py-2.5 flex items-center justify-between text-xs">
+                <span className="text-[var(--text-tertiary)]">
+                    전일 <span className="text-[var(--text-secondary)] tabular-nums">{data.previousClose.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                </span>
+                <span className="text-[var(--text-tertiary)]">
+                    고 <span className="text-[var(--rise-color)] tabular-nums">{data.high > 0 ? data.high.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}</span>
+                </span>
+                <span className="text-[var(--text-tertiary)]">
+                    저 <span className="text-[var(--fall-color)] tabular-nums">{data.low > 0 ? data.low.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}</span>
+                </span>
             </div>
         </div>
     );
@@ -177,6 +166,10 @@ export default function IndexView() {
         ? new Date(dataUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' })
         : null;
 
+    // null(미제공/오류) 카드는 숨김 — 깨진 카드 대신 비표시
+    const domestic = [data?.kospiIndex, data?.kosdaqIndex].filter(Boolean) as IndexData[];
+    const futures = [data?.kospi, data?.nasdaq].filter(Boolean) as IndexData[];
+
     return (
         <div>
             {/* 헤더 */}
@@ -184,14 +177,12 @@ export default function IndexView() {
                 <div className="flex items-center gap-2">
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">지수 현황</h2>
                     {updatedTime && (
-                        <span className="text-sm text-[var(--text-tertiary)]">
-                            {updatedTime}
-                        </span>
+                        <span className="text-sm text-[var(--text-tertiary)]">{updatedTime}</span>
                     )}
                 </div>
                 <button
                     onClick={() => refetch()}
-                    className="p-1 hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors"
+                    className="p-1 hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors rounded"
                     title="새로고침"
                     aria-label="새로고침"
                 >
@@ -202,32 +193,40 @@ export default function IndexView() {
             {isLoading ? (
                 <div className="space-y-4">
                     {[0, 1].map((section) => (
-                        <div key={section}>
-                            <div className="h-3 w-16 bg-[var(--bg-tertiary)] animate-pulse mb-2" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {[0, 1].map((i) => (
-                                    <div key={i} className="h-[300px] bg-[var(--bg-primary)] border border-[var(--border-color)] animate-pulse" />
-                                ))}
-                            </div>
+                        <div key={section} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {[0, 1].map((i) => (
+                                <div key={i} className="h-[260px] bg-[var(--bg-primary)] rounded-lg animate-pulse" />
+                            ))}
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="space-y-4">
-                    <div>
-                        <h3 className="text-sm font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">국내 지수</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <IndexDetailCard data={data?.kospiIndex ?? null} color="var(--rise-color)" />
-                            <IndexDetailCard data={data?.kosdaqIndex ?? null} color="var(--accent-blue)" />
+                <div className="space-y-5">
+                    {domestic.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">국내 지수</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {domestic.map((d) => (
+                                    <IndexDetailCard key={d.symbol} data={d} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">선물 지수</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <IndexDetailCard data={data?.kospi ?? null} color="var(--rise-color)" />
-                            <IndexDetailCard data={data?.nasdaq ?? null} color="var(--success-color)" />
+                    )}
+                    {futures.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">선물 지수</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {futures.map((d) => (
+                                    <IndexDetailCard key={d.symbol} data={d} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
+                    {domestic.length === 0 && futures.length === 0 && (
+                        <div className="card p-8 text-center text-sm text-[var(--text-tertiary)]">
+                            지수 데이터를 불러올 수 없습니다
+                        </div>
+                    )}
                 </div>
             )}
         </div>
