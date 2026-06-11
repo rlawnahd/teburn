@@ -59,8 +59,9 @@ export default function LoginPage() {
                 <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl p-7">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium mb-1">아이디</label>
+                            <label htmlFor="username" className="block text-sm font-medium mb-1">아이디</label>
                             <input
+                                id="username"
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -72,9 +73,10 @@ export default function LoginPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">비밀번호</label>
+                            <label htmlFor="password" className="block text-sm font-medium mb-1">비밀번호</label>
                             <div className="relative">
                                 <input
+                                    id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -92,7 +94,7 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {error && <p className="text-sm text-red-500">{error}</p>}
+                        {error && <p className="text-sm text-[var(--error-color)]">{error}</p>}
 
                         <button
                             type="submit"

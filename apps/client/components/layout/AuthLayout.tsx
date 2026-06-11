@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <>
             <Header />
             {children}
-            <aside className="hidden xl:block fixed right-4 top-16 z-10">
+            <aside className="hidden xl:block fixed right-4 top-10 z-10">
                 <KakaoAdFit adUnit="DAN-wGcNGCgZbNV7h6Oa" width={160} height={600} />
             </aside>
             <div className="xl:hidden flex justify-center py-4">

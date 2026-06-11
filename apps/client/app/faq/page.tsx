@@ -47,11 +47,11 @@ export default function FaqPage() {
                     <QnA question="등급(S/A/B/C/D) 기준은 어떻게 되나요?">
                         <p>주도주 점수에 따라 다음과 같이 등급이 부여됩니다.</p>
                         <ul className="list-disc pl-5 space-y-1 mt-2">
-                            <li><span className="font-medium">S등급</span> — 90점 이상. 시장을 강하게 주도하는 최상위 종목</li>
-                            <li><span className="font-medium">A등급</span> — 75~89점. 높은 시장 관심을 받는 종목</li>
-                            <li><span className="font-medium">B등급</span> — 60~74점. 보통 수준의 관심을 받는 종목</li>
-                            <li><span className="font-medium">C등급</span> — 45~59점. 시장 주도력이 약한 종목</li>
-                            <li><span className="font-medium">D등급</span> — 44점 이하. 현재 시장에서 주목받지 못하는 종목</li>
+                            <li><span className="font-medium">S등급</span> — 70점 이상. 시장을 강하게 주도하는 최상위 종목</li>
+                            <li><span className="font-medium">A등급</span> — 50~69점. 높은 시장 관심을 받는 종목</li>
+                            <li><span className="font-medium">B등급</span> — 35~49점. 보통 수준의 관심을 받는 종목</li>
+                            <li><span className="font-medium">C등급</span> — 20~34점. 시장 주도력이 약한 종목</li>
+                            <li><span className="font-medium">D등급</span> — 19점 이하. 현재 시장에서 주목받지 못하는 종목</li>
                         </ul>
                     </QnA>
 

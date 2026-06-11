@@ -109,7 +109,7 @@ export default async function TodayPage() {
                     <div className="flex items-center gap-3 mt-2 text-xs">
                         {marketStatus && (
                             <span className="flex items-center gap-1">
-                                <span className={`w-1.5 h-1.5 rounded-full ${marketStatus.isOpen ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${marketStatus.isOpen ? 'bg-[var(--success-color)]' : 'bg-[var(--text-tertiary)]'}`} />
                                 <span className="text-[var(--text-tertiary)]">{marketStatus.statusText}</span>
                             </span>
                         )}
@@ -126,7 +126,13 @@ export default async function TodayPage() {
                 ) : (
                     <div className="card overflow-hidden">
                         {stocks.map((stock, i) => {
-                            const isPositive = stock.changeRate > 0;
+                            const changeRate = stock.changeRate;
+                            const rateColorClass = changeRate > 0
+                                ? 'text-[var(--rise-color)]'
+                                : changeRate < 0
+                                    ? 'text-[var(--fall-color)]'
+                                    : 'text-[var(--text-tertiary)]';
+                            const rateSign = changeRate > 0 ? '+' : changeRate < 0 ? '' : '';
                             return (
                                 <Link
                                     key={stock.stockCode}
@@ -155,8 +161,8 @@ export default async function TodayPage() {
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <div className="text-sm text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
-                                        <div className={`text-xs font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                                            {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                                        <div className={`text-xs font-medium ${rateColorClass}`}>
+                                            {rateSign}{changeRate.toFixed(2)}%
                                         </div>
                                     </div>
                                     <div className="w-14 text-right flex-shrink-0">
