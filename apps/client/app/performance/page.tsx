@@ -43,9 +43,7 @@ interface DailyEntry {
 
 async function fetchSummary(): Promise<WindowSummary[]> {
     try {
-        const res = await fetch(`${API_URL}/performance/summary`, {
-            next: { revalidate: 3600 },
-        });
+        const res = await fetch(`${API_URL}/performance/summary`, { next: { revalidate: 3600 } });
         if (!res.ok) throw new Error('fetch failed');
         const json = await res.json();
         return json.data?.windows ?? [];
@@ -56,9 +54,7 @@ async function fetchSummary(): Promise<WindowSummary[]> {
 
 async function fetchDaily(): Promise<DailyEntry[]> {
     try {
-        const res = await fetch(`${API_URL}/performance/daily?days=30`, {
-            next: { revalidate: 3600 },
-        });
+        const res = await fetch(`${API_URL}/performance/daily?days=30`, { next: { revalidate: 3600 } });
         if (!res.ok) throw new Error('fetch failed');
         const json = await res.json();
         return json.data?.days ?? [];
@@ -71,374 +67,206 @@ async function fetchDaily(): Promise<DailyEntry[]> {
 // 포맷 헬퍼
 // ============================
 
-function formatReturn(v: number | null): { text: string; cls: string } {
+function fmtPct(v: number | null): { text: string; cls: string } {
     if (v === null) return { text: '—', cls: 'text-[var(--text-tertiary)]' };
     const text = (v > 0 ? '+' : '') + v.toFixed(2) + '%';
-    const cls =
-        v > 0
-            ? 'text-[var(--rise-color)]'
-            : v < 0
-              ? 'text-[var(--fall-color)]'
-              : 'text-[var(--text-tertiary)]';
+    const cls = v > 0 ? 'text-[var(--rise-color)]' : v < 0 ? 'text-[var(--fall-color)]' : 'text-[var(--text-tertiary)]';
     return { text, cls };
 }
 
-function formatWinRate(v: number | null): string {
-    if (v === null) return '—';
-    return v.toFixed(0) + '%';
-}
-
-// 당일 단타(D+1) vs 일주일 보유(D+5) 패턴을 한 줄로 해석
-function interpretPattern(s: GradeSummary): string | null {
-    if (s.count === 0 || s.avgReturnD1 === null) return null;
-    const f = (v: number) => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
-    const d1 = s.avgReturnD1;
-
-    if (s.avgReturnD5 === null) {
-        return `당일 단타 평균 ${f(d1)} · 일주일 성적은 아직 집계 중입니다.`;
-    }
-    const d5 = s.avgReturnD5;
-
-    if (d1 > 0 && d5 < 0) {
-        return `당일 단타는 평균 ${f(d1)}로 플러스지만 일주일 들고 가면 ${f(d5)} — 신호 다음날 반짝하고 식는 패턴입니다.`;
-    }
-    if (d1 > 0 && d5 >= d1) {
-        return `당일 단타 ${f(d1)}, 일주일 보유 ${f(d5)} — 들고 갈수록 강해지는 패턴입니다.`;
-    }
-    if (d1 > 0) {
-        return `당일 단타 ${f(d1)}, 일주일 보유 ${f(d5)} — 시간이 갈수록 탄력이 줄어드는 패턴입니다.`;
-    }
-    if (d5 < 0) {
-        return `당일 단타 ${f(d1)}, 일주일 보유 ${f(d5)} — 신호 다음날 진입이 불리했던 구간입니다.`;
-    }
-    return `당일 단타는 ${f(d1)}로 약했지만 일주일 보유 시 ${f(d5)} — 뒤늦게 살아나는 패턴입니다.`;
-}
-
-// 대표 윈도우(30→90→7일 순, 표본 있는 것)의 S등급으로 상단 한 줄 결론 생성
-function headlineConclusion(windows: WindowSummary[]): { text: string; days: number } | null {
-    for (const d of [30, 90, 7]) {
-        const s = windows.find((w) => w.days === d)?.S;
-        if (!s || s.count === 0 || s.avgReturnD1 === null) continue;
-
-        const f = (v: number) => (v > 0 ? '+' : '') + v.toFixed(1) + '%';
-        const d1 = s.avgReturnD1;
-
-        if (s.avgReturnD5 === null) {
-            return { text: `TEBURN S등급 주도주, 신호 다음날 단타는 평균 ${f(d1)}.`, days: d };
-        }
-        const d5 = s.avgReturnD5;
-        let text: string;
-        if (d1 > 0 && d5 < 0) {
-            text = `TEBURN S등급 주도주는 다음날 단타엔 강하지만(평균 ${f(d1)}), 일주일 들고 가면 평균 ${f(d5)} — 짧게 끊는 게 유리했습니다.`;
-        } else if (d1 > 0 && d5 >= d1) {
-            text = `TEBURN S등급 주도주는 들고 갈수록 강했습니다 — 단타 ${f(d1)}, 일주일 보유 ${f(d5)}.`;
-        } else if (d1 > 0) {
-            text = `TEBURN S등급 주도주, 단타 평균 ${f(d1)} · 일주일 보유 ${f(d5)} — 길게 갈수록 탄력이 줄었습니다.`;
-        } else if (d5 < 0) {
-            text = `TEBURN S등급 주도주, 단타 ${f(d1)} · 일주일 보유 ${f(d5)} — 신호 다음날 진입이 불리했던 구간입니다.`;
-        } else {
-            text = `TEBURN S등급 주도주, 단타 ${f(d1)} · 일주일 보유 ${f(d5)}.`;
-        }
-        return { text, days: d };
-    }
-    return null;
+function fmtWin(v: number | null): string {
+    return v === null ? '—' : v.toFixed(0) + '%';
 }
 
 function formatDate(dateStr: string): string {
-    // dateStr: "2026-06-04" 형식
     const [y, m, d] = dateStr.split('-');
-    return `${y}년 ${m}월 ${d}일`;
+    return `${y}년 ${Number(m)}월 ${Number(d)}일`;
+}
+
+// 대표 윈도우: 30 → 90 → 7일 순, S등급 표본 있는 것
+function pickWindow(windows: WindowSummary[]): WindowSummary | null {
+    for (const d of [30, 90, 7]) {
+        const w = windows.find((x) => x.days === d);
+        if (w && w.S.count > 0 && w.S.winRateD1 !== null) return w;
+    }
+    return windows.find((w) => w.S.count > 0) ?? null;
+}
+
+// 신뢰도 평결 한 줄 (다음날 성적 기준)
+function verdictLine(s: GradeSummary): string {
+    const wr = s.winRateD1 ?? 0;
+    const d1 = s.avgReturnD1 ?? 0;
+    if (wr >= 60 && d1 > 0) return '신호 다음날 사면 대체로 수익이 났습니다 — 따라 살 만했던 구간.';
+    if (wr >= 50 && d1 > 0) return '절반 이상 적중하고 평균도 플러스였습니다.';
+    if (d1 > 0) return '적중률은 절반 아래지만 평균은 플러스 — 수익 종목이 손실을 메운 구간.';
+    return '신호 다음날 진입은 평균적으로 손실이었습니다 — 이 구간은 신중히 봐야 합니다.';
 }
 
 // ============================
 // 메타데이터
 // ============================
 
+const META_DESC =
+    'TEBURN 알고리즘이 매일 뽑는 주도주(S·A등급)를 신호 다음날 샀다면 실제로 수익이 났는지 — 적중률과 평균 수익률로 검증한 신뢰도 성적표입니다.';
+
 export const metadata: Metadata = {
-    title: '주도주 성적표 — S/A등급 실제 수익률 검증 | TEBURN',
-    description:
-        'TEBURN 주도주 점수의 실제 성적을 공개합니다. S/A등급 종목의 익일 시가 매수 기준 당일 단타·일주일 보유 수익률과 승률을 매일 자동 검증합니다.',
+    title: '주도주 성적표 — 알고리즘 신뢰도 검증 | TEBURN',
+    description: META_DESC,
     openGraph: {
-        title: '주도주 성적표 — S/A등급 실제 수익률 검증 | TEBURN',
-        description:
-            'TEBURN 주도주 점수의 실제 성적을 공개합니다. S/A등급 종목의 익일 시가 매수 기준 당일 단타·일주일 보유 수익률과 승률을 매일 자동 검증합니다.',
+        title: '주도주 성적표 — 알고리즘 신뢰도 검증 | TEBURN',
+        description: META_DESC,
         url: 'https://teburn.com/performance',
         siteName: 'TEBURN',
         locale: 'ko_KR',
         type: 'article',
     },
-    twitter: {
-        card: 'summary',
-        title: '주도주 성적표 — S/A등급 실제 수익률 검증 | TEBURN',
-        description:
-            'TEBURN 주도주 점수의 실제 성적을 공개합니다. S/A등급 종목의 익일 시가 매수 기준 당일 단타·일주일 보유 수익률과 승률을 매일 자동 검증합니다.',
-    },
+    twitter: { card: 'summary', title: '주도주 성적표 — 알고리즘 신뢰도 검증 | TEBURN', description: META_DESC },
     alternates: { canonical: 'https://teburn.com/performance' },
 };
-
-// ============================
-// 서브 컴포넌트
-// ============================
-
-function GradeCard({
-    grade,
-    summary,
-}: {
-    grade: 'S' | 'A';
-    summary: GradeSummary;
-}) {
-    const gradeColor =
-        grade === 'S' ? 'text-[var(--grade-s)]' : 'text-[var(--grade-a)]';
-    const d1 = formatReturn(summary.avgReturnD1);
-    const d5 = formatReturn(summary.avgReturnD5);
-
-    // 단타(D+1) 기준 최고/최악 종목 (표본 2건 이상일 때만 최저 표시)
-    const best = summary.best;
-    const worst =
-        summary.worst && best && summary.worst.stockCode !== best.stockCode
-            ? summary.worst
-            : null;
-    const bestR = best ? formatReturn(best.returnD1) : null;
-    const worstR = worst ? formatReturn(worst.returnD1) : null;
-
-    return (
-        <div className="card p-4">
-            <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm font-bold ${gradeColor}`}>{grade}등급</span>
-                <span className="text-xs text-[var(--text-tertiary)]">
-                    표본 {summary.count}건
-                </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                    <div className="text-[11px] text-[var(--text-secondary)]">당일 단타</div>
-                    <div className="text-[10px] text-[var(--text-disabled)] mb-1 leading-tight">
-                        시가 매수<br />당일 종가 매도
-                    </div>
-                    <div className={`text-sm font-semibold ${d1.cls}`}>{d1.text}</div>
-                </div>
-                <div>
-                    <div className="text-[11px] text-[var(--text-secondary)]">일주일 보유</div>
-                    <div className="text-[10px] text-[var(--text-disabled)] mb-1 leading-tight">
-                        시가 매수<br />5일째 종가 매도
-                    </div>
-                    <div className={`text-sm font-semibold ${d5.cls}`}>{d5.text}</div>
-                </div>
-                <div>
-                    <div className="text-[11px] text-[var(--text-secondary)]">단타 승률</div>
-                    <div className="text-[10px] text-[var(--text-disabled)] mb-1 leading-tight">
-                        플러스<br />비율
-                    </div>
-                    <div className="text-sm font-semibold text-[var(--text-primary)]">
-                        {formatWinRate(summary.winRateD1)}
-                    </div>
-                </div>
-            </div>
-            {best && bestR && (
-                <div className="mt-3 pt-3 border-t border-[var(--border-color)] flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--text-tertiary)]">
-                    <span>
-                        단타 최고{' '}
-                        <Link
-                            href={`/stocks/${best.stockCode}`}
-                            className="text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:underline"
-                        >
-                            {best.stockName}
-                        </Link>{' '}
-                        <span className={`font-semibold ${bestR.cls}`}>{bestR.text}</span>
-                    </span>
-                    {worst && worstR && (
-                        <span>
-                            최저{' '}
-                            <Link
-                                href={`/stocks/${worst.stockCode}`}
-                                className="text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:underline"
-                            >
-                                {worst.stockName}
-                            </Link>{' '}
-                            <span className={`font-semibold ${worstR.cls}`}>{worstR.text}</span>
-                        </span>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
 
 // ============================
 // 페이지
 // ============================
 
 export default async function PerformancePage() {
-    const [windows, dailyEntries] = await Promise.all([
-        fetchSummary(),
-        fetchDaily(),
-    ]);
-
-    const headline = headlineConclusion(windows);
+    const [windows, dailyEntries] = await Promise.all([fetchSummary(), fetchDaily()]);
+    const hero = pickWindow(windows);
 
     return (
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <div className="max-w-[800px] mx-auto px-4 py-8">
                 {/* 헤더 */}
-                <div className="mb-8">
-                    <Link
-                        href="/"
-                        className="text-xs text-[var(--accent-blue)] hover:underline"
-                    >
-                        ← 홈으로
-                    </Link>
-                    <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">
-                        주도주 성적표
-                    </h1>
-
-                    {/* 데이터 기반 한 줄 결론 */}
-                    {headline && (
-                        <p className="mt-3 text-lg font-bold text-[var(--text-primary)] leading-snug">
-                            {headline.text}
-                            <span className="block mt-1 text-xs font-normal text-[var(--text-tertiary)]">
-                                최근 {headline.days}일 기준
-                            </span>
-                        </p>
-                    )}
-
-                    {/* 이게 뭐예요? */}
-                    <div className="card p-4 mt-4">
-                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                            <strong className="text-[var(--text-primary)]">이게 뭐예요?</strong> TEBURN은 매일 거래대금·등락률·뉴스·테마를
-                            종합해 그날의 주도주를 <strong className="text-[var(--text-primary)]">S·A등급</strong>으로 뽑습니다. 이 페이지는
-                            그렇게 뽑은 종목을 <strong className="text-[var(--text-primary)]">신호 다음 거래일 시가에 샀다면</strong> 실제로
-                            수익이 났는지를 매일 자동으로 검증한 성적표입니다. 좋은 성적도 나쁜 성적도 그대로 공개합니다.
-                        </p>
-                    </div>
+                <div className="mb-5">
+                    <Link href="/" className="text-xs text-[var(--accent-blue)] hover:underline">← 홈으로</Link>
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">주도주 성적표</h1>
+                    <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed">
+                        <strong className="text-[var(--text-primary)]">TEBURN이 뽑은 주도주, 믿고 사도 될까?</strong>{' '}
+                        알고리즘이 매일 선정한 S·A등급 종목을 <strong className="text-[var(--text-primary)]">신호 다음날 샀다면</strong> 실제로 수익이 났는지를
+                        적중률과 평균 수익률로 검증합니다. 좋은 성적도 나쁜 성적도 그대로 공개합니다.
+                    </p>
                 </div>
 
-                {/* 윈도우별 요약 */}
-                {windows.length === 0 ? (
-                    <div className="card p-8 text-center text-sm text-[var(--text-tertiary)] mb-6">
-                        아직 데이터가 없습니다.
-                    </div>
+                {!hero ? (
+                    <div className="card p-8 text-center text-sm text-[var(--text-tertiary)]">아직 데이터가 없습니다.</div>
                 ) : (
-                    <div className="space-y-8 mb-8">
-                        {windows.map((w) => {
-                            const insight = interpretPattern(w.S);
+                    <>
+                        {/* 히어로 평결 — S등급, 다음날 성적 */}
+                        {(() => {
+                            const s = hero.S;
+                            const wr = s.winRateD1 ?? 0;
+                            const hit = Math.round((wr / 100) * s.count);
+                            const avg = fmtPct(s.avgReturnD1);
+                            const d5 = fmtPct(s.avgReturnD5);
                             return (
-                                <section key={w.days}>
-                                    <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
-                                        최근 {w.days}일
-                                    </h2>
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <GradeCard grade="S" summary={w.S} />
-                                        <GradeCard grade="A" summary={w.A} />
+                                <section className="card p-5 mb-4">
+                                    <p className="text-sm text-[var(--text-secondary)]">
+                                        최근 {hero.days}일 · <span className="font-semibold text-[var(--grade-s)]">S등급</span> 주도주를 신호 다음날 샀다면
+                                    </p>
+                                    <div className="mt-4 flex items-end gap-8 flex-wrap">
+                                        <div>
+                                            <div className="text-xs text-[var(--text-tertiary)] mb-0.5">적중률</div>
+                                            <div className="text-4xl font-bold text-[var(--text-primary)] tabular-nums leading-none">{fmtWin(s.winRateD1)}</div>
+                                            <div className="text-xs text-[var(--text-tertiary)] mt-1">{s.count}개 중 {hit}개 수익</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-[var(--text-tertiary)] mb-0.5">평균 수익률</div>
+                                            <div className={`text-4xl font-bold tabular-nums leading-none ${avg.cls}`}>{avg.text}</div>
+                                            <div className="text-xs text-[var(--text-tertiary)] mt-1">다음날 종가 기준</div>
+                                        </div>
                                     </div>
-                                    {insight && (
-                                        <p className="mt-2.5 text-xs text-[var(--text-secondary)] leading-relaxed">
-                                            <span className="font-semibold text-[var(--grade-s)]">S등급</span> {insight}
-                                        </p>
-                                    )}
+                                    <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">{verdictLine(s)}</p>
+                                    <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">
+                                        1주일 더 들고 갔다면(5거래일): 평균 <span className={d5.cls}>{d5.text}</span>
+                                    </p>
                                 </section>
                             );
-                        })}
-                    </div>
-                )}
+                        })()}
 
-                {/* 일자별 상세 */}
-                {dailyEntries.length > 0 && (
-                    <section className="mb-8">
-                        <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
-                            일자별 상세
-                        </h2>
-                        <div className="space-y-2">
-                            {dailyEntries.map((entry) => (
-                                <details
-                                    key={entry.date}
-                                    className="bg-[var(--bg-primary)] rounded-lg overflow-hidden"
-                                >
-                                    <summary className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-[var(--bg-tertiary)] transition-colors">
-                                        <span className="text-sm font-medium text-[var(--text-primary)]">
-                                            {formatDate(entry.date)}
-                                        </span>
-                                        <span className="text-xs text-[var(--text-tertiary)]">
-                                            {entry.stocks.length}종목
-                                        </span>
-                                    </summary>
-                                    <div className="border-t border-[var(--border-color)]">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-[var(--border-color)]">
-                                                    <th className="px-4 py-2 text-left text-xs text-[var(--text-tertiary)] font-normal">
-                                                        종목명
-                                                    </th>
-                                                    <th className="px-3 py-2 text-center text-xs text-[var(--text-tertiary)] font-normal w-12">
-                                                        등급
-                                                    </th>
-                                                    <th className="px-3 py-2 text-right text-xs text-[var(--text-tertiary)] font-normal w-20">
-                                                        당일단타
-                                                    </th>
-                                                    <th className="px-4 py-2 text-right text-xs text-[var(--text-tertiary)] font-normal w-20">
-                                                        일주일
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {entry.stocks.map((stock) => {
-                                                    const isExcluded = stock.status === 'excluded';
-                                                    const d1 = isExcluded
-                                                        ? { text: '제외', cls: 'text-[var(--text-tertiary)]' }
-                                                        : formatReturn(stock.returnD1);
-                                                    const d5 = isExcluded
-                                                        ? { text: '—', cls: 'text-[var(--text-tertiary)]' }
-                                                        : formatReturn(stock.returnD5);
-                                                    const gradeColor =
-                                                        stock.grade === 'S'
-                                                            ? 'text-[var(--grade-s)]'
-                                                            : 'text-[var(--grade-a)]';
-
-                                                    return (
-                                                        <tr
-                                                            key={stock.stockCode}
-                                                            className="border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors"
-                                                        >
-                                                            <td className="px-4 py-2.5">
-                                                                <Link
-                                                                    href={`/stocks/${stock.stockCode}`}
-                                                                    className="text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline transition-colors"
-                                                                >
-                                                                    {stock.stockName}
-                                                                </Link>
-                                                            </td>
-                                                            <td className={`px-3 py-2.5 text-center text-xs font-semibold ${gradeColor}`}>
-                                                                {stock.grade}
-                                                            </td>
-                                                            <td className={`px-3 py-2.5 text-right text-xs font-medium ${d1.cls}`}>
-                                                                {d1.text}
-                                                            </td>
-                                                            <td className={`px-4 py-2.5 text-right text-xs font-medium ${d5.cls}`}>
-                                                                {d5.text}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </details>
-                            ))}
+                        {/* 보조 — A등급 + 기간별 적중률 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                            <div className="card p-4">
+                                <div className="text-xs text-[var(--text-tertiary)] mb-1.5">A등급 (최근 {hero.days}일)</div>
+                                <div className="flex items-baseline gap-3 flex-wrap">
+                                    <span className="text-base font-semibold text-[var(--text-primary)]">적중률 {fmtWin(hero.A.winRateD1)}</span>
+                                    <span className={`text-sm font-medium ${fmtPct(hero.A.avgReturnD1).cls}`}>평균 {fmtPct(hero.A.avgReturnD1).text}</span>
+                                    <span className="text-xs text-[var(--text-tertiary)]">표본 {hero.A.count}</span>
+                                </div>
+                            </div>
+                            <div className="card p-4">
+                                <div className="text-xs text-[var(--text-tertiary)] mb-1.5">기간별 S등급 적중률</div>
+                                <div className="flex gap-4 text-sm">
+                                    {[7, 30, 90].map((d) => {
+                                        const w = windows.find((x) => x.days === d);
+                                        return (
+                                            <span key={d} className="text-[var(--text-tertiary)]">
+                                                {d}일 <span className="font-semibold text-[var(--text-primary)]">{fmtWin(w?.S.winRateD1 ?? null)}</span>
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
-                    </section>
+
+                        {/* 일자별 상세 — 기본 접힘 */}
+                        {dailyEntries.length > 0 && (
+                            <details className="mb-8 card overflow-hidden">
+                                <summary className="px-4 py-3 cursor-pointer select-none text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
+                                    전체 일자별 기록 보기 ({dailyEntries.length}일)
+                                </summary>
+                                <div className="border-t border-[var(--border-color)] divide-y divide-[var(--border-color)]">
+                                    {dailyEntries.map((entry) => (
+                                        <details key={entry.date} className="bg-[var(--bg-primary)]">
+                                            <summary className="flex items-center justify-between px-4 py-2.5 cursor-pointer select-none hover:bg-[var(--bg-tertiary)] transition-colors">
+                                                <span className="text-sm text-[var(--text-primary)]">{formatDate(entry.date)}</span>
+                                                <span className="text-xs text-[var(--text-tertiary)]">{entry.stocks.length}종목</span>
+                                            </summary>
+                                            <div className="border-t border-[var(--border-color)]">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b border-[var(--border-color)] text-xs text-[var(--text-tertiary)]">
+                                                            <th className="px-4 py-2 text-left font-normal">종목명</th>
+                                                            <th className="px-3 py-2 text-center font-normal w-12">등급</th>
+                                                            <th className="px-3 py-2 text-right font-normal w-20">다음날</th>
+                                                            <th className="px-4 py-2 text-right font-normal w-20">1주일</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {entry.stocks.map((stock) => {
+                                                            const ex = stock.status === 'excluded';
+                                                            const d1 = ex ? { text: '제외', cls: 'text-[var(--text-tertiary)]' } : fmtPct(stock.returnD1);
+                                                            const d5 = ex ? { text: '—', cls: 'text-[var(--text-tertiary)]' } : fmtPct(stock.returnD5);
+                                                            const gc = stock.grade === 'S' ? 'text-[var(--grade-s)]' : 'text-[var(--grade-a)]';
+                                                            return (
+                                                                <tr key={stock.stockCode} className="border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors">
+                                                                    <td className="px-4 py-2">
+                                                                        <Link href={`/stocks/${stock.stockCode}`} className="text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline">{stock.stockName}</Link>
+                                                                    </td>
+                                                                    <td className={`px-3 py-2 text-center text-xs font-semibold ${gc}`}>{stock.grade}</td>
+                                                                    <td className={`px-3 py-2 text-right text-xs font-medium ${d1.cls}`}>{d1.text}</td>
+                                                                    <td className={`px-4 py-2 text-right text-xs font-medium ${d5.cls}`}>{d5.text}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    ))}
+                                </div>
+                            </details>
+                        )}
+                    </>
                 )}
 
                 {/* 방법론 노트 */}
                 <div className="bg-[var(--bg-primary)] rounded-lg px-4 py-4">
-                    <h3 className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">
-                        측정 방법
-                    </h3>
+                    <h2 className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">검증 방법</h2>
                     <ul className="space-y-1 text-xs text-[var(--text-tertiary)] list-disc list-inside">
-                        <li>장마감(15:35) 기준 S/A등급 종목을 다음 거래일 시가에 매수했다고 가정합니다.</li>
-                        <li>당일 단타 = 진입일(다음 거래일) 시가에 사서 그날 종가에 판 수익률입니다.</li>
-                        <li>일주일 보유 = 진입일 시가에 사서 5거래일째 종가에 판 수익률입니다.</li>
-                        <li>동일가중 평균이며 수수료·슬리피지는 반영하지 않습니다.</li>
-                        <li>상한가 갭 등으로 시가 매수가 불가능한 경우도 포함됩니다.</li>
-                        <li>거래정지·상장폐지로 시세가 없는 종목은 통계에서 제외하고 표기합니다.</li>
+                        <li>S·A등급 = 거래대금·등락률·뉴스·테마 집중도를 종합한 점수로 매일 자동 선정합니다.</li>
+                        <li>장마감(15:35) 기준 선정된 종목을 다음 거래일 시가에 매수했다고 가정합니다.</li>
+                        <li>적중률 = 수익이 난 종목 비율, 평균 수익률 = 동일가중 평균(수수료·슬리피지 미반영)입니다.</li>
+                        <li>다음날 성적 = 진입일 종가 기준, 1주일 성적 = 진입 후 5거래일째 종가 기준입니다.</li>
+                        <li>거래정지·상장폐지로 시세가 없는 종목은 통계에서 제외합니다.</li>
                     </ul>
                 </div>
             </div>
