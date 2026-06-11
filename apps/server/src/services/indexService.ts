@@ -179,9 +179,84 @@ async function getKosdaqIndexData(): Promise<IndexData | null> {
     return getKisIndexData('1001', 'kosdaq-index', '코스닥', '09:00 ~ 15:30');
 }
 
-// KOSPI 200 선물 데이터 조회 (Yahoo Finance)
+// KIS 국내선물 현재가 조회 (FHMIF10000000)
+// 심볼 10100 = KOSPI200 연결선물(최근월물 자동) — 분기 롤오버 유지보수 불필요
+async function getKisFuturesData(
+    symbol: string,
+    cacheKey: string,
+    name: string,
+    tradingHours: string,
+): Promise<IndexData | null> {
+    const cached = indexCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+    }
+
+    try {
+        const token = await getKisToken();
+        const response = await axios.get(
+            `${KIS_BASE_URL}/uapi/domestic-futureoption/v1/quotations/inquire-price`,
+            {
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHMIF10000000',
+                },
+                params: {
+                    FID_COND_MRKT_DIV_CODE: 'F',
+                    FID_INPUT_ISCD: symbol,
+                },
+                timeout: 5000,
+            }
+        );
+
+        const o = response.data.output1;
+        if (response.data.rt_cd !== '0' || !o || !o.futs_prpr) {
+            logIndexErrorThrottled(cacheKey, `${name} 조회 실패: ${response.data.msg1 || '데이터 없음'}`);
+            const stale = indexCache.get(cacheKey);
+            return stale ? stale.data : null;
+        }
+
+        const currentPrice = parseFloat(o.futs_prpr) || 0;
+        const previousClose = parseFloat(o.futs_prdy_clpr) || 0;
+        const change = parseFloat(o.futs_prdy_vrss) || 0;       // 이미 부호 포함
+        const changePercent = parseFloat(o.futs_prdy_ctrt) || 0; // 이미 부호 포함
+        const high = parseFloat(o.futs_hgpr) || 0;
+        const low = parseFloat(o.futs_lwpr) || 0;
+
+        const chartData = addChartPoint(cacheKey, currentPrice);
+
+        const data: IndexData = {
+            symbol,
+            name,
+            category: 'futures',
+            currentPrice,
+            previousClose,
+            change: Math.round(change * 100) / 100,
+            changePercent: Math.round(changePercent * 100) / 100,
+            high,
+            low,
+            chartData,
+            marketOpen: currentPrice > 0,
+            tradingHours,
+        };
+
+        indexCache.set(cacheKey, { data, timestamp: Date.now() });
+        return data;
+    } catch (error: any) {
+        logIndexErrorThrottled(cacheKey, `${name} 조회 에러: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`);
+        const stale = indexCache.get(cacheKey);
+        return stale ? stale.data : null;
+    }
+}
+
+// KOSPI 200 야간선물 — 야간 시세(WS H0MFCNT0 또는 야간 REST) 연동 작업 중.
+// 주간 정규선물은 KOSPI 지수로 충분해 표시하지 않음. 야간장(18:00~) 확인 후 구현 예정.
+// (getKisFuturesData는 야간 REST 검증/구현 시 재사용)
 async function getKospiFuturesPrice(): Promise<IndexData | null> {
-    return getYahooFinanceData('^KS200', 'kospi', 'KOSPI 200', 'futures', '18:00 ~ 익일 05:00');
+    return null;
 }
 
 // NASDAQ 100 선물 데이터 조회 (Yahoo Finance)
@@ -366,9 +441,8 @@ export function getChartHistoryStats(): { keys: number; totalPoints: number; ind
     return { keys: chartHistory.size, totalPoints, indexCacheSize: indexCache.size };
 }
 
-// [임시 진단] KIS 국내선물 시세 원시 응답 — 권한 통과 여부/응답 필드명/심볼 유효성 확인용.
-// 확인 후 제거 예정. (자격증명은 응답에 노출하지 않음 — 시세 데이터만)
-export async function debugKisFutures(symbol: string): Promise<any> {
+// [임시 진단] KIS 국내선물 REST 원시 응답 — 야간장(18:00~) 야간선물 심볼/tr_id 탐침용. 확인 후 제거.
+export async function debugKisFutures(symbol: string, trId: string = 'FHMIF10000000'): Promise<any> {
     try {
         const token = await getKisToken();
         const response = await axios.get(
@@ -379,31 +453,18 @@ export async function debugKisFutures(symbol: string): Promise<any> {
                     authorization: `Bearer ${token}`,
                     appkey: KIS_APP_KEY,
                     appsecret: KIS_APP_SECRET,
-                    tr_id: 'FHMIF10000000',
+                    tr_id: trId,
                 },
-                params: {
-                    FID_COND_MRKT_DIV_CODE: 'F',
-                    FID_INPUT_ISCD: symbol,
-                },
+                params: { FID_COND_MRKT_DIV_CODE: 'F', FID_INPUT_ISCD: symbol },
                 timeout: 8000,
-            },
+            }
         );
         return {
-            ok: true,
-            symbol,
-            rt_cd: response.data.rt_cd,
-            msg_cd: response.data.msg_cd,
-            msg1: response.data.msg1,
+            ok: true, symbol, trId,
+            rt_cd: response.data.rt_cd, msg1: response.data.msg1,
             output1: response.data.output1 ?? null,
-            output2Sample: Array.isArray(response.data.output2) ? response.data.output2[0] : (response.data.output2 ?? null),
         };
     } catch (error: any) {
-        return {
-            ok: false,
-            symbol,
-            httpStatus: error.response?.status,
-            data: error.response?.data,
-            message: error.message,
-        };
+        return { ok: false, symbol, trId, httpStatus: error.response?.status, data: error.response?.data, message: error.message };
     }
 }

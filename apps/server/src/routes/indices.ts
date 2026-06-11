@@ -3,10 +3,11 @@ import { getAllIndexData, getNasdaqIndexData, getKospiFuturesPrice, getKospiInde
 
 const router = Router();
 
-// [임시 진단] KIS 국내선물 시세 원시 응답 확인 — ?symbol=101W09. 확인 후 제거.
+// [임시 진단] KIS 국내선물 REST 응답 — ?symbol=10100&tr_id=FHMIF10000000. 야간장 확인 후 제거.
 router.get('/debug-futures', async (req: Request, res: Response) => {
-    const symbol = String(req.query.symbol || '101W09');
-    const result = await debugKisFutures(symbol);
+    const symbol = String(req.query.symbol || '10100');
+    const trId = req.query.tr_id ? String(req.query.tr_id) : undefined;
+    const result = await debugKisFutures(symbol, trId);
     res.json(result);
 });
 
