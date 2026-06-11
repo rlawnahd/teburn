@@ -19,6 +19,36 @@ function dirColor(change: number): string {
     return change >= 0 ? 'var(--rise-color)' : 'var(--fall-color)';
 }
 
+// 현재 KST 요일/분 (0=일~6=토, 자정 기준 분)
+function kstNow(): { day: number; minutes: number } {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Seoul', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(new Date());
+    const dayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    const wd = parts.find((p) => p.type === 'weekday')?.value ?? 'Sun';
+    const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+    return { day: dayMap[wd] ?? 0, minutes: hour * 60 + minute };
+}
+
+// 지수별 개장 여부 판정 (KST 시간 기준 — 서버 marketOpen이 KIS에선 부정확)
+function isMarketOpen(data: IndexData): boolean {
+    const { day, minutes } = kstNow();
+    const weekday = day >= 1 && day <= 5;
+    if (data.category === 'index') {
+        // 국내 지수 정규장 09:00~15:30
+        return weekday && minutes >= 540 && minutes < 930;
+    }
+    // 해외(NASDAQ) 선물 — 거의 24시간, 서버 판정 사용
+    if (data.name.includes('NASDAQ') || data.symbol === 'NQ=F') {
+        return data.marketOpen;
+    }
+    // KOSPI200 선물 — 주간 09:00~15:45 또는 야간 18:00~익일 05:00 (근사)
+    const dayOpen = weekday && minutes >= 540 && minutes < 945;
+    const nightOpen = minutes >= 1080 || minutes < 300;
+    return dayOpen || nightOpen;
+}
+
 function gradId(data: IndexData): string {
     return 'idxgrad-' + data.symbol.replace(/[^a-zA-Z0-9]/g, '');
 }
@@ -111,16 +141,25 @@ function IndexDetailCard({ data }: { data: IndexData }) {
     const isPositive = data.change >= 0;
     const dirClass = isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]';
     const arrow = isPositive ? '▲' : '▼';
+    const open = isMarketOpen(data);
 
     return (
-        <div className="card overflow-hidden">
+        <div className={`card overflow-hidden transition-opacity ${open ? '' : 'opacity-60'}`}>
             {/* 헤더 — 종목명 + 큰 가격(방향색) */}
             <div className="px-4 pt-3 pb-2">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-[var(--text-secondary)]">{data.name}</span>
-                    <span className="text-xs text-[var(--text-tertiary)]">{data.tradingHours}</span>
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-sm font-medium text-[var(--text-secondary)] truncate">{data.name}</span>
+                        {!open && (
+                            <span className="flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]">
+                                마감
+                            </span>
+                        )}
+                    </div>
+                    <span className="flex-shrink-0 text-xs text-[var(--text-tertiary)]">{data.tradingHours}</span>
                 </div>
                 <div className="mt-1 flex items-baseline gap-2 flex-wrap">
+                    {!open && <span className="text-xs text-[var(--text-tertiary)]">종가</span>}
                     <span className={`text-2xl font-bold tabular-nums ${dirClass}`}>
                         {data.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                     </span>
