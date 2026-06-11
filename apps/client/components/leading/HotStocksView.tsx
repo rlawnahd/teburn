@@ -143,7 +143,7 @@ function StockRow({
                                     key={theme}
                                     role="button"
                                     onClick={(e) => { e.stopPropagation(); onThemeClick(theme); }}
-                                    className="text-sm text-[var(--accent-blue)] hover:underline truncate max-w-[80px] cursor-pointer"
+                                    className="text-xs px-1.5 py-0.5 rounded-md bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border-color)] transition-colors truncate max-w-[88px] cursor-pointer"
                                 >
                                     {theme}
                                 </span>
