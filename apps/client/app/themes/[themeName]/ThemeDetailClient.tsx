@@ -99,7 +99,7 @@ export default function ThemeDetailPage() {
                 <div className="max-w-[1280px] mx-auto flex items-center gap-3 px-3 py-2">
                     <button
                         onClick={() => router.back()}
-                        className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
+                        className="-m-2 p-2 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer rounded"
                     >
                         <ArrowLeft size={14} />
                     </button>

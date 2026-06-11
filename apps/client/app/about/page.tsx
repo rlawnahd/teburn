@@ -16,7 +16,7 @@ export default function AboutPage() {
                     </Link>
                 </div>
 
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
                     <h1 className="text-lg font-bold text-[var(--text-primary)]">서비스 소개</h1>
 
                     <Section title="TEBURN이란?">

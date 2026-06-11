@@ -18,11 +18,11 @@ function getGradeStyle(grade: string): { color: string; bg: string; label: strin
         case 'S':
             return { color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]', label: 'S' };
         case 'A':
-            return { color: 'text-orange-500', bg: 'bg-orange-500', label: 'A' };
+            return { color: 'text-[var(--grade-a)]', bg: 'bg-[var(--grade-a)]', label: 'A' };
         case 'B':
-            return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: 'B' };
+            return { color: 'text-[var(--grade-b)]', bg: 'bg-[var(--grade-b)]', label: 'B' };
         case 'C':
-            return { color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]', label: 'C' };
+            return { color: 'text-[var(--grade-c)]', bg: 'bg-[var(--grade-c)]', label: 'C' };
         case 'D':
             return { color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]', label: 'D' };
         default:
@@ -49,8 +49,8 @@ function ScoreBar({
     return (
         <div className="flex items-center gap-1.5">
             <div className="w-14 text-xs text-[var(--text-tertiary)]">{label}</div>
-            <div className="flex-1 h-[4px] bg-[var(--bg-tertiary)] overflow-hidden">
-                <div className={`h-full ${color}`} style={{ width: `${percentage}%` }} />
+            <div className="flex-1 h-[4px] bg-[var(--bg-tertiary)] overflow-hidden rounded-full">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${percentage}%` }} />
             </div>
             <div className="w-6 text-right text-xs font-medium text-[var(--text-secondary)]">{(score ?? 0).toFixed(0)}</div>
             <div className="w-4 text-right text-[12px] text-[var(--text-tertiary)]">/{maxScore}</div>
@@ -139,7 +139,7 @@ export default function StockDetailPage() {
                 <div className="max-w-[1280px] mx-auto flex items-center gap-3 px-3 py-2">
                     <button
                         onClick={() => router.back()}
-                        className="w-6 h-6 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                        className="-m-2 p-2 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors rounded"
                     >
                         <ArrowLeft size={14} />
                     </button>

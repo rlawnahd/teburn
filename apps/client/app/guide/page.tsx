@@ -16,7 +16,7 @@ export default function GuidePage() {
                     </Link>
                 </div>
 
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
                     <h1 className="text-lg font-bold text-[var(--text-primary)]">이용 가이드</h1>
                     <p className="text-[14px] text-[var(--text-tertiary)]">
                         TEBURN의 주요 기능과 사용법을 안내합니다. 회원가입 없이 바로 이용할 수 있습니다.

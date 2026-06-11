@@ -27,8 +27,8 @@ const GRADES = [
         label: 'B등급',
         score: '35~49점',
         description: '관심 구간 진입',
-        color: '#eab308',
-        glowColor: 'rgba(234,179,8,0.2)',
+        color: 'var(--grade-b)',
+        glowColor: 'rgba(113,113,122,0.2)',
         size: 'small',
     },
 ];
@@ -100,7 +100,7 @@ export default function GradeShowcase() {
     const isInView = useInView(ref, { once: true, margin: '-100px' });
 
     return (
-        <section ref={ref} className="py-16 sm:py-24 border-t border-[#1e293b]" style={{ background: '#0d1220' }}>
+        <section ref={ref} className="py-16 sm:py-24 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
             <div className="max-w-[800px] mx-auto px-4 sm:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
