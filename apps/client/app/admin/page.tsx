@@ -86,7 +86,7 @@ function UsersTab() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
+                <RefreshCw className="animate-spin text-[var(--accent)]" size={24} />
             </div>
         );
     }
@@ -112,7 +112,7 @@ function UsersTab() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
-                        <UserPlus size={16} className="text-[var(--accent-blue)]" />
+                        <UserPlus size={16} className="text-[var(--accent)]" />
                         <h3 className="text-sm font-semibold text-[var(--text-primary)]">가입 지표</h3>
                     </div>
 
@@ -234,7 +234,7 @@ function UsersTab() {
                                         </div>
                                         <div className="w-full flex-1 flex items-end">
                                             <div
-                                                className="w-full rounded-t-md bg-[var(--accent-blue)]/80 hover:bg-[var(--accent-blue)] transition-colors"
+                                                className="w-full rounded-t-md bg-[var(--accent)]/80 hover:bg-[var(--accent)] transition-colors"
                                                 style={{ height }}
                                                 title={`${item.date}: ${item.count}명`}
                                             />
@@ -359,7 +359,7 @@ function DataTab() {
     if (isLoading || !status) {
         return (
             <div className="flex items-center justify-center py-20">
-                <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
+                <RefreshCw className="animate-spin text-[var(--accent)]" size={24} />
             </div>
         );
     }
@@ -532,7 +532,7 @@ function DataTab() {
                     <button
                         onClick={() => crawlMutation.mutate()}
                         disabled={crawlStatus?.isCrawling || crawlMutation.isPending}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent-blue)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                     >
                         <RefreshCw size={16} className={crawlStatus?.isCrawling ? 'animate-spin' : ''} />
                         {crawlStatus?.isCrawling ? '크롤링 중...' : '테마 크롤링'}
@@ -665,7 +665,7 @@ function ThemeEditModal({
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="예: 트럼프 수혜주"
-                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         />
                     </div>
 
@@ -679,7 +679,7 @@ function ThemeEditModal({
                             value={keywords}
                             onChange={(e) => setKeywords(e.target.value)}
                             placeholder="예: 트럼프, 미국, 관세"
-                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         />
                     </div>
 
@@ -697,19 +697,19 @@ function ThemeEditModal({
                                     value={newStockName}
                                     onChange={(e) => setNewStockName(e.target.value)}
                                     placeholder="종목명"
-                                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                                 />
                                 <input
                                     type="text"
                                     value={newStockCode}
                                     onChange={(e) => setNewStockCode(e.target.value)}
                                     placeholder="종목코드"
-                                    className="w-28 px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                                    className="w-28 px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                                 />
                                 <button
                                     onClick={() => addStockMutation.mutate()}
                                     disabled={!newStockName || addStockMutation.isPending}
-                                    className="px-4 py-2 rounded-xl bg-[var(--accent-blue)] text-white text-sm font-medium disabled:opacity-50"
+                                    className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium disabled:opacity-50"
                                 >
                                     <Plus size={16} />
                                 </button>
@@ -761,7 +761,7 @@ function ThemeEditModal({
                     <button
                         onClick={() => saveMutation.mutate()}
                         disabled={!name.trim() || saveMutation.isPending}
-                        className="px-5 py-2.5 rounded-xl bg-[var(--accent-blue)] text-white text-sm font-medium disabled:opacity-50"
+                        className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-medium disabled:opacity-50"
                     >
                         {saveMutation.isPending ? '저장 중...' : '저장'}
                     </button>
@@ -826,7 +826,7 @@ function ThemesTab() {
                             setPage(1);
                         }}
                         placeholder="테마명 검색..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     />
                 </div>
 
@@ -840,7 +840,7 @@ function ThemesTab() {
                             }}
                             className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                                 filter === f
-                                    ? 'bg-[var(--accent-blue)] text-white'
+                                    ? 'bg-[var(--accent)] text-white'
                                     : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:bg-[var(--bg-tertiary)]'
                             }`}
                         >
@@ -861,7 +861,7 @@ function ThemesTab() {
             {/* 테마 목록 */}
             {isLoading ? (
                 <div className="flex items-center justify-center py-20">
-                    <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
+                    <RefreshCw className="animate-spin text-[var(--accent)]" size={24} />
                 </div>
             ) : (
                 <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] overflow-hidden shadow-sm">
@@ -890,7 +890,7 @@ function ThemesTab() {
                                         <span className={`text-[14px] px-2 py-1 rounded-full ${
                                             theme.isCustom
                                                 ? 'bg-violet-500/10 text-violet-500'
-                                                : 'bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]'
+                                                : 'bg-[var(--accent)]/10 text-[var(--accent)]'
                                         }`}>
                                             {theme.isCustom ? '커스텀' : '네이버'}
                                         </span>
@@ -912,7 +912,7 @@ function ThemesTab() {
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 onClick={() => handleEdit(theme)}
-                                                className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--accent-blue)]"
+                                                className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--accent)]"
                                             >
                                                 <Edit3 size={16} />
                                             </button>
@@ -994,7 +994,7 @@ export default function AdminPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]">
-                <RefreshCw className="animate-spin text-[var(--accent-blue)]" size={24} />
+                <RefreshCw className="animate-spin text-[var(--accent)]" size={24} />
             </div>
         );
     }
@@ -1027,7 +1027,7 @@ export default function AdminPage() {
                             onClick={() => setActiveTab(tab.key)}
                             className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
                                 activeTab === tab.key
-                                    ? 'bg-[var(--accent-blue)] text-white'
+                                    ? 'bg-[var(--accent)] text-white'
                                     : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                             }`}
                         >

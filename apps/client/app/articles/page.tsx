@@ -44,7 +44,7 @@ export default function ArticlesPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
@@ -59,7 +59,7 @@ export default function ArticlesPage() {
                         <Link
                             key={article.slug}
                             href={`/articles/${article.slug}`}
-                            className="block bg-[var(--bg-primary)] border border-[var(--border-color)] p-4 hover:border-[var(--accent-blue)] transition-colors"
+                            className="block bg-[var(--bg-primary)] border border-[var(--border-color)] p-4 hover:border-[var(--accent)] transition-colors"
                         >
                             <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">
                                 {article.title}

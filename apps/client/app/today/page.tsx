@@ -99,7 +99,7 @@ export default async function TodayPage() {
             <div className="max-w-[800px] mx-auto px-4 py-8">
                 {/* 헤더 */}
                 <div className="mb-6">
-                    <Link href="/" className="text-xs text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-xs text-[var(--accent)] hover:underline">
                         ← 홈으로
                     </Link>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">
@@ -133,7 +133,7 @@ export default async function TodayPage() {
                                     href={`/stocks/${stock.stockCode}`}
                                     className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors"
                                 >
-                                    <span className={`w-6 text-center text-sm font-semibold ${i < 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                                    <span className={`w-6 text-center text-sm font-semibold ${i < 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>
                                         {i + 1}
                                     </span>
                                     <div className="flex-1 min-w-0">
@@ -177,7 +177,7 @@ export default async function TodayPage() {
                     </p>
                     <Link
                         href="/?tab=hot"
-                        className="inline-block text-sm font-medium text-[var(--accent-blue)] hover:underline"
+                        className="inline-block text-sm font-medium text-[var(--accent)] hover:underline"
                     >
                         전체 주도주 리스트 보기 →
                     </Link>

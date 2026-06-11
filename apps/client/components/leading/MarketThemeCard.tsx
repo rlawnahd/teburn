@@ -17,7 +17,7 @@ function ThemeChip({ theme, onStockClick }: { theme: MarketTheme; onStockClick: 
                     <button
                         key={stock}
                         onClick={() => onStockClick(stock)}
-                        className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/20 transition-colors"
+                        className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-colors"
                     >
                         {stock}
                     </button>
@@ -47,7 +47,7 @@ export default function MarketThemeCard() {
     return (
         <div className="mb-4">
             <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={16} className="text-[var(--accent-blue)]" />
+                <Sparkles size={16} className="text-[var(--accent)]" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">오늘의 시장 테마</span>
                 <span className="text-xs text-[var(--text-tertiary)]">AI 분석</span>
             </div>

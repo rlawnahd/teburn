@@ -8,7 +8,7 @@ function gradeColor(grade: string): string {
         case 'S': return 'var(--rise-color)';
         case 'A': return '#f97316';
         case 'B': return 'var(--text-tertiary)';
-        case 'C': return 'var(--accent-blue)';
+        case 'C': return 'var(--accent)';
         default: return 'var(--fall-color)';
     }
 }
@@ -63,7 +63,7 @@ function MiniLineChart({ data }: { data: HotnessHistoryItem[] }) {
                 fontSize="3" fill="#f97316" opacity="0.6">A</text>
 
             {/* 점수 라인 */}
-            <path d={linePath} fill="none" stroke="var(--accent-blue)" strokeWidth="1"
+            <path d={linePath} fill="none" stroke="var(--accent)" strokeWidth="1"
                 strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
 
             {/* 포인트 */}

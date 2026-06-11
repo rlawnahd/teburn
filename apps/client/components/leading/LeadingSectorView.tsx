@@ -12,7 +12,7 @@ function getScoreGrade(score: number): { label: string; color: string; bg: strin
     if (score >= 80) return { label: '급등', color: 'text-[var(--rise-color)]', bg: 'bg-[var(--rise-color)]' };
     if (score >= 60) return { label: '상승', color: 'text-orange-500', bg: 'bg-orange-500' };
     if (score >= 40) return { label: '보통', color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]' };
-    if (score >= 20) return { label: '하락', color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]' };
+    if (score >= 20) return { label: '하락', color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]' };
     return { label: '급락', color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]' };
 }
 
@@ -20,7 +20,7 @@ function getAccentColor(score: number): string {
     if (score >= 80) return 'var(--rise-color)';
     if (score >= 60) return '#f97316';
     if (score >= 40) return 'var(--text-tertiary)';
-    if (score >= 20) return 'var(--accent-blue)';
+    if (score >= 20) return 'var(--accent)';
     return 'var(--fall-color)';
 }
 
@@ -40,7 +40,7 @@ function SectorCard({ sector, rank, onClick }: { sector: LeadingSector; rank: nu
             {/* 헤더 */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-1.5 min-w-0">
-                    <span className={`text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                    <span className={`text-sm font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>
                         {rank}
                     </span>
                     <span className="text-base font-semibold text-[var(--text-primary)] truncate">{sector.themeName}</span>
@@ -130,7 +130,7 @@ export default function LeadingSectorView() {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <p className="text-base text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
-                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
+                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent)] hover:underline">다시 시도</button>
             </div>
         );
     }

@@ -22,7 +22,7 @@ function getGradeStyle(grade: string): { color: string; bg: string; label: strin
         case 'B':
             return { color: 'text-[var(--text-tertiary)]', bg: 'bg-[var(--text-tertiary)]', label: 'B' };
         case 'C':
-            return { color: 'text-[var(--accent-blue)]', bg: 'bg-[var(--accent-blue)]', label: 'C' };
+            return { color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]', label: 'C' };
         case 'D':
             return { color: 'text-[var(--fall-color)]', bg: 'bg-[var(--fall-color)]', label: 'D' };
         default:
@@ -120,7 +120,7 @@ export default function StockDetailPage() {
             <div className="min-h-screen bg-[var(--bg-secondary)]">
                 <main className="flex flex-col items-center justify-center h-[calc(100vh-2.5rem)]">
                     <p className="text-[14px] text-[var(--text-tertiary)] mb-3">종목을 찾을 수 없습니다</p>
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         홈으로 돌아가기
                     </Link>
                 </main>
@@ -263,7 +263,7 @@ export default function StockDetailPage() {
                                         <button
                                             key={theme}
                                             onClick={() => router.push(`/themes/${encodeURIComponent(theme)}`)}
-                                            className="px-1.5 py-0.5 text-[12px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-colors cursor-pointer rounded-sm"
+                                            className="px-1.5 py-0.5 text-[12px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer rounded-sm"
                                         >
                                             {theme}
                                         </button>
@@ -298,7 +298,7 @@ export default function StockDetailPage() {
                                     className="flex items-start gap-3 px-3 py-2 border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors group"
                                 >
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-[14px] text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent-blue)] transition-colors">
+                                        <h3 className="text-[14px] text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent)] transition-colors">
                                             {item.title}
                                         </h3>
                                         <div className="flex items-center gap-1.5 mt-1">
@@ -311,7 +311,7 @@ export default function StockDetailPage() {
                                     </div>
                                     <ExternalLink
                                         size={12}
-                                        className="text-[var(--text-tertiary)] group-hover:text-[var(--accent-blue)] shrink-0 mt-0.5 opacity-30 group-hover:opacity-100 transition-opacity"
+                                        className="text-[var(--text-tertiary)] group-hover:text-[var(--accent)] shrink-0 mt-0.5 opacity-30 group-hover:opacity-100 transition-opacity"
                                     />
                                 </a>
                             ))}

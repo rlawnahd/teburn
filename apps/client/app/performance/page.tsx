@@ -137,7 +137,7 @@ export default async function PerformancePage() {
             <div className="max-w-[800px] mx-auto px-4 py-8">
                 {/* 헤더 */}
                 <div className="mb-5">
-                    <Link href="/" className="text-xs text-[var(--accent-blue)] hover:underline">← 홈으로</Link>
+                    <Link href="/" className="text-xs text-[var(--accent)] hover:underline">← 홈으로</Link>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">주도주 성적표</h1>
                     <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed">
                         <strong className="text-[var(--text-primary)]">TEBURN이 뽑은 주도주, 믿고 사도 될까?</strong>{' '}
@@ -239,7 +239,7 @@ export default async function PerformancePage() {
                                                             return (
                                                                 <tr key={stock.stockCode} className="border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors">
                                                                     <td className="px-4 py-2">
-                                                                        <Link href={`/stocks/${stock.stockCode}`} className="text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline">{stock.stockName}</Link>
+                                                                        <Link href={`/stocks/${stock.stockCode}`} className="text-[var(--text-primary)] hover:text-[var(--accent)] hover:underline">{stock.stockName}</Link>
                                                                     </td>
                                                                     <td className={`px-3 py-2 text-center text-xs font-semibold ${gc}`}>{stock.grade}</td>
                                                                     <td className={`px-3 py-2 text-right text-xs font-medium ${d1.cls}`}>{d1.text}</td>

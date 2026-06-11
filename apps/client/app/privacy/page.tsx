@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
                     <Section title="5. 광고 서비스">
                         <p>서비스는 Google AdSense를 통해 광고를 게재할 수 있습니다. Google은 쿠키를 사용하여 이전 방문 기록을 기반으로 광고를 게재할 수 있습니다.</p>
                         <ul className="list-disc pl-5 space-y-1 mt-2">
-                            <li>Google의 광고 쿠키 사용에 대해서는 <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">Google 광고 정책</a>을 참고하시기 바랍니다.</li>
+                            <li>Google의 광고 쿠키 사용에 대해서는 <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">Google 광고 정책</a>을 참고하시기 바랍니다.</li>
                             <li>Google Analytics를 사용하여 서비스 이용 통계를 수집합니다.</li>
                         </ul>
                     </Section>

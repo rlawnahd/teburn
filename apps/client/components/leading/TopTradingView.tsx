@@ -33,13 +33,13 @@ function StockRow({
             <div className="absolute inset-0 overflow-hidden">
                 <div
                     className="absolute left-0 top-0 h-full transition-all"
-                    style={{ width: `${progressWidth}%`, background: 'linear-gradient(90deg, var(--accent-blue), transparent)', opacity: 0.12 }}
+                    style={{ width: `${progressWidth}%`, background: 'linear-gradient(90deg, var(--accent), transparent)', opacity: 0.12 }}
                 />
             </div>
 
             <div className="relative flex items-center py-2 px-3 md:px-4 gap-2 md:gap-3">
                 <div className={`w-5 text-right text-base font-medium flex-shrink-0 ${
-                    rank <= 3 ? 'text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-tertiary)]'
+                    rank <= 3 ? 'text-[var(--accent)] font-semibold' : 'text-[var(--text-tertiary)]'
                 }`}>
                     {rank}
                 </div>
@@ -62,7 +62,7 @@ function StockRow({
                                         e.stopPropagation();
                                         onThemeClick(theme);
                                     }}
-                                    className="text-sm text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
+                                    className="text-sm text-[var(--accent)] hover:underline truncate max-w-[80px]"
                                 >
                                     {theme}
                                 </button>
@@ -147,7 +147,7 @@ export default function TopTradingView() {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <p className="text-base text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
-                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
+                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent)] hover:underline">다시 시도</button>
             </div>
         );
     }
@@ -157,7 +157,7 @@ export default function TopTradingView() {
             <div className="px-3 py-2 bg-[var(--bg-tertiary)] rounded-lg">
                 <p className="text-sm text-[var(--text-tertiary)] leading-relaxed">
                     <span className="text-[var(--text-secondary)] font-medium">테마주</span> 중 거래대금 상위.
-                    상승·하락 무관, <span className="text-[var(--accent-blue)]">오늘 자금이 몰리는 종목</span>을 추적합니다.
+                    상승·하락 무관, <span className="text-[var(--accent)]">오늘 자금이 몰리는 종목</span>을 추적합니다.
                 </p>
             </div>
 
@@ -181,7 +181,7 @@ export default function TopTradingView() {
                             onClick={() => setMinRate(rate)}
                             className={`px-2 py-1 text-sm font-medium transition-colors border-r border-[var(--border-color)] last:border-r-0 ${
                                 minRate === rate
-                                    ? 'bg-[var(--accent-blue)] text-white'
+                                    ? 'bg-[var(--accent)] text-white'
                                     : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'
                             }`}
                         >

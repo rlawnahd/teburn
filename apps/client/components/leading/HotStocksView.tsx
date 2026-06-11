@@ -75,7 +75,7 @@ function StockRow({
         >
             {/* 순위 */}
             <div className="w-8 flex-shrink-0 text-center">
-                <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                <span className={`text-sm font-semibold ${rank <= 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>
                     {rank}
                 </span>
                 {isNewEntry ? (
@@ -409,7 +409,7 @@ export default function HotStocksView() {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <p className="text-sm text-[var(--text-tertiary)]">데이터를 불러오는데 실패했습니다.</p>
-                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent-blue)] hover:underline">다시 시도</button>
+                <button onClick={() => refetch()} className="text-[13px] text-[var(--accent)] hover:underline">다시 시도</button>
             </div>
         );
     }

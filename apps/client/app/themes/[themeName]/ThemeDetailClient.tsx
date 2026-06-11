@@ -17,7 +17,7 @@ function StockRow({ stock, rank, onClick }: { stock: StockPrice; rank: number; o
             onClick={onClick}
             className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] transition-colors text-left cursor-pointer"
         >
-            <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+            <span className={`w-5 text-center text-xs font-semibold flex-shrink-0 ${rank <= 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>
                 {rank}
             </span>
             <div className="flex-1 min-w-0">
@@ -74,7 +74,7 @@ export default function ThemeDetailPage() {
             <div className="min-h-screen bg-[var(--bg-secondary)]">
                 <main className="flex flex-col items-center justify-center h-[calc(100vh-2.5rem)]">
                     <p className="text-[14px] text-[var(--text-tertiary)] mb-3">테마를 찾을 수 없습니다</p>
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         홈으로 돌아가기
                     </Link>
                 </main>

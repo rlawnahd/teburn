@@ -65,7 +65,7 @@ export default function Sidebar() {
                   text-base font-medium
                   transition-all duration-150
                   ${isActive
-                    ? 'bg-[var(--accent-blue)] text-white shadow-lg shadow-[var(--accent-blue)]/25'
+                    ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/25'
                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
                   }
                 `}

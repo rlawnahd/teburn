@@ -54,12 +54,12 @@ export default function HomeContent() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             {/* 비로그인 안내 배너 */}
             {!isLoggedIn && (
-                <div className="bg-[var(--accent-blue-light)] border-b border-[var(--accent-blue)]/20">
+                <div className="bg-[var(--accent-light)] border-b border-[var(--accent)]/20">
                     <div className="max-w-[1280px] mx-auto px-4 py-2 flex items-center justify-between text-xs">
-                        <span className="text-[var(--accent-blue-dark)]">
+                        <span className="text-[var(--accent-dark)]">
                             5분 지연 데이터입니다. 실시간 업데이트는 로그인 후 이용 가능합니다.
                         </span>
-                        <Link href="/login" className="px-3 py-1 rounded-md bg-[var(--accent-blue)] text-white font-medium hover:opacity-90 transition-opacity">
+                        <Link href="/login" className="px-3 py-1 rounded-md bg-[var(--accent)] text-white font-medium hover:opacity-90 transition-opacity">
                             로그인
                         </Link>
                     </div>

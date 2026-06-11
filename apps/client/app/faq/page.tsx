@@ -11,7 +11,7 @@ export default function FaqPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
@@ -40,7 +40,7 @@ export default function FaqPage() {
                             주도주 점수는 TEBURN이 자체적으로 산출하는 100점 만점의 종합 지표입니다.
                             특정 종목이 현재 시장에서 얼마나 강한 주도력을 보이는지를 수치화한 것으로,
                             거래량 변화율, 가격 상승률, 뉴스 노출 빈도, 시가총액 대비 거래대금 비율 등이 반영됩니다.
-                            자세한 산출 원리는 <Link href="/articles/how-hotness-score-works" className="text-[var(--accent-blue)] hover:underline">주도주 점수 산출 원리</Link> 글에서 확인하실 수 있습니다.
+                            자세한 산출 원리는 <Link href="/articles/how-hotness-score-works" className="text-[var(--accent)] hover:underline">주도주 점수 산출 원리</Link> 글에서 확인하실 수 있습니다.
                         </p>
                     </QnA>
 
@@ -83,7 +83,7 @@ export default function FaqPage() {
                     <QnA question="텔레그램 봇은 어떻게 이용하나요?">
                         <p>텔레그램 앱에서 다음 단계를 따라 주세요.</p>
                         <ol className="list-decimal pl-5 space-y-1 mt-2">
-                            <li><a href="https://t.me/teburn_hot_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">@teburn_hot_bot</a>을 검색하여 대화를 시작합니다.</li>
+                            <li><a href="https://t.me/teburn_hot_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">@teburn_hot_bot</a>을 검색하여 대화를 시작합니다.</li>
                             <li><span className="font-mono bg-[var(--bg-secondary)] px-1 rounded">/start</span>를 입력하면 알림 구독이 시작됩니다.</li>
                             <li>S등급 주도주 등장 시 실시간 알림, 평일 오후 3시 40분에 일일 요약을 받을 수 있습니다.</li>
                         </ol>
@@ -98,7 +98,7 @@ export default function FaqPage() {
 
                     <QnA question="문의사항이 있으면 어떻게 하나요?">
                         <p>
-                            서비스 이용 중 문의사항이나 개선 의견이 있으시면 이메일(<span className="text-[var(--accent-blue)]">rlawnahd123@naver.com</span>)로 연락해 주세요.
+                            서비스 이용 중 문의사항이나 개선 의견이 있으시면 이메일(<span className="text-[var(--accent)]">rlawnahd123@naver.com</span>)로 연락해 주세요.
                             가능한 빠르게 답변드리겠습니다.
                         </p>
                     </QnA>

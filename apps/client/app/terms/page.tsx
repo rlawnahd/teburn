@@ -10,7 +10,7 @@ export default function TermsPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>

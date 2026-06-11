@@ -53,7 +53,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => { router.push(`/report/${date}`); onClose(); }}
-                            className="text-xs text-[var(--accent-blue)] hover:underline"
+                            className="text-xs text-[var(--accent)] hover:underline"
                         >
                             📄 리포트
                         </button>
@@ -98,7 +98,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                 >
                                     <div className="flex items-center gap-2">
                                         <span className={`text-xs font-semibold w-5 text-center flex-shrink-0 ${
-                                            stock.rank <= 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'
+                                            stock.rank <= 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'
                                         }`}>
                                             {stock.rank}
                                         </span>
@@ -117,7 +117,7 @@ export default function CalendarDetailModal({ date, onClose }: CalendarDetailMod
                                                         <button
                                                             key={theme}
                                                             onClick={(e) => handleThemeClick(theme, e)}
-                                                            className="text-[11px] text-[var(--accent-blue)] hover:underline truncate max-w-[80px]"
+                                                            className="text-[11px] text-[var(--accent)] hover:underline truncate max-w-[80px]"
                                                         >
                                                             {theme}
                                                         </button>

@@ -43,7 +43,7 @@ export default async function ReportIndexPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <div className="max-w-[800px] mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-xs text-[var(--accent-blue)] hover:underline">← 홈으로</Link>
+                    <Link href="/" className="text-xs text-[var(--accent)] hover:underline">← 홈으로</Link>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">주도주 일별 리포트</h1>
                     <p className="text-sm text-[var(--text-tertiary)] mt-2">날짜별 시장 마감 분석 — 주도테마와 주도주를 한눈에.</p>
                 </div>
