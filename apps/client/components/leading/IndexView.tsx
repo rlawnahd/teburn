@@ -163,7 +163,12 @@ export default function IndexView() {
     });
 
     const updatedTime = dataUpdatedAt
-        ? new Date(dataUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' })
+        ? (() => {
+            const d = new Date(dataUpdatedAt);
+            const date = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric' }).format(d);
+            const time = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+            return `${date} ${time}`;
+        })()
         : null;
 
     // null(미제공/오류) 카드는 숨김 — 깨진 카드 대신 비표시
