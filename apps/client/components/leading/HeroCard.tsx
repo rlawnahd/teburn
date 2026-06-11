@@ -29,7 +29,7 @@ function StockHero({ stock }: { stock: HotStock }) {
     return (
         <button
             onClick={() => router.push(`/stocks/${encodeURIComponent(stock.stockCode)}`)}
-            className="w-full text-left p-4 rounded-xl border border-[var(--border-color)] bg-gradient-to-br from-[var(--rise-bg)] to-[var(--bg-primary)] hover:shadow-lg transition-all"
+            className="w-full text-left p-4 rounded-xl border border-[var(--border-color)] bg-gradient-to-br from-amber-500/10 to-[var(--bg-primary)] hover:shadow-lg transition-all"
         >
             <div className="flex items-center gap-1.5 mb-2">
                 <Crown size={14} className="text-amber-500" />
@@ -72,7 +72,7 @@ function ThemeHero({ theme }: { theme: HeroTheme }) {
     return (
         <button
             onClick={() => router.push(`/themes/${encodeURIComponent(theme.themeName)}`)}
-            className="w-full text-left p-4 rounded-xl border border-[var(--border-color)] bg-gradient-to-br from-amber-500/10 to-[var(--bg-primary)] hover:shadow-lg transition-all"
+            className="w-full text-left p-4 rounded-xl border border-[var(--border-color)] bg-gradient-to-br from-[var(--rise-bg)] to-[var(--bg-primary)] hover:shadow-lg transition-all"
         >
             <div className="flex items-center gap-1.5 mb-2">
                 <Flame size={14} className="text-[var(--rise-color)]" />
