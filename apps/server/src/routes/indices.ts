@@ -1,7 +1,14 @@
 import { Router, Request, Response } from 'express';
-import { getAllIndexData, getNasdaqIndexData, getKospiFuturesPrice, getKospiIndexData, getKosdaqIndexData } from '../services/indexService';
+import { getAllIndexData, getNasdaqIndexData, getKospiFuturesPrice, getKospiIndexData, getKosdaqIndexData, debugKisFutures } from '../services/indexService';
 
 const router = Router();
+
+// [임시 진단] KIS 국내선물 시세 원시 응답 확인 — ?symbol=101W09. 확인 후 제거.
+router.get('/debug-futures', async (req: Request, res: Response) => {
+    const symbol = String(req.query.symbol || '101W09');
+    const result = await debugKisFutures(symbol);
+    res.json(result);
+});
 
 // 전체 지수 데이터 조회
 router.get('/', async (req: Request, res: Response) => {

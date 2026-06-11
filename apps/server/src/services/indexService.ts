@@ -365,3 +365,45 @@ export function getChartHistoryStats(): { keys: number; totalPoints: number; ind
     for (const points of chartHistory.values()) totalPoints += points.length;
     return { keys: chartHistory.size, totalPoints, indexCacheSize: indexCache.size };
 }
+
+// [임시 진단] KIS 국내선물 시세 원시 응답 — 권한 통과 여부/응답 필드명/심볼 유효성 확인용.
+// 확인 후 제거 예정. (자격증명은 응답에 노출하지 않음 — 시세 데이터만)
+export async function debugKisFutures(symbol: string): Promise<any> {
+    try {
+        const token = await getKisToken();
+        const response = await axios.get(
+            `${KIS_BASE_URL}/uapi/domestic-futureoption/v1/quotations/inquire-price`,
+            {
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    authorization: `Bearer ${token}`,
+                    appkey: KIS_APP_KEY,
+                    appsecret: KIS_APP_SECRET,
+                    tr_id: 'FHMIF10000000',
+                },
+                params: {
+                    FID_COND_MRKT_DIV_CODE: 'F',
+                    FID_INPUT_ISCD: symbol,
+                },
+                timeout: 8000,
+            },
+        );
+        return {
+            ok: true,
+            symbol,
+            rt_cd: response.data.rt_cd,
+            msg_cd: response.data.msg_cd,
+            msg1: response.data.msg1,
+            output1: response.data.output1 ?? null,
+            output2Sample: Array.isArray(response.data.output2) ? response.data.output2[0] : (response.data.output2 ?? null),
+        };
+    } catch (error: any) {
+        return {
+            ok: false,
+            symbol,
+            httpStatus: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        };
+    }
+}
