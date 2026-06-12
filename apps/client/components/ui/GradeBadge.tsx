@@ -4,7 +4,7 @@ const GRADE_STYLES: Record<Grade, { bg: string; text: string }> = {
     S: { bg: 'bg-[var(--grade-s)]', text: 'text-white' },
     A: { bg: 'bg-[var(--grade-a)]', text: 'text-white' },
     B: { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-secondary)]' },
-    C: { bg: 'bg-[var(--accent-blue)]/20', text: 'text-[var(--accent-blue)]' },
+    C: { bg: 'bg-[var(--grade-c)]/20', text: 'text-[var(--grade-c)]' },
     D: { bg: 'bg-[var(--bg-tertiary)]', text: 'text-[var(--text-tertiary)]' },
 };
 
@@ -25,7 +25,7 @@ export function getGradeColor(grade: string): string {
         case 'S': return 'var(--grade-s)';
         case 'A': return 'var(--grade-a)';
         case 'B': return 'var(--text-tertiary)';
-        case 'C': return 'var(--accent-blue)';
+        case 'C': return 'var(--grade-c)';
         case 'D': return 'var(--fall-color)';
         default: return 'var(--text-tertiary)';
     }

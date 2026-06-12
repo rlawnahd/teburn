@@ -11,12 +11,12 @@ export default function AboutPage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
 
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
                     <h1 className="text-lg font-bold text-[var(--text-primary)]">서비스 소개</h1>
 
                     <Section title="TEBURN이란?">
@@ -47,7 +47,7 @@ export default function AboutPage() {
                         <ul className="list-disc pl-5 space-y-1 mt-2">
                             <li>서비스명: TEBURN</li>
                             <li>이메일: rlawnahd123@naver.com</li>
-                            <li>텔레그램 봇: <a href="https://t.me/teburn_hot_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">@teburn_hot_bot</a></li>
+                            <li>텔레그램 봇: <a href="https://t.me/teburn_hot_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">@teburn_hot_bot</a></li>
                         </ul>
                     </Section>
 

@@ -17,6 +17,7 @@ export default function Footer() {
                             alt="TEBURN"
                             width={80}
                             height={20}
+                            className="brightness-0 invert"
                         />
                         <p className="text-[13px] text-[var(--text-tertiary)] leading-relaxed max-w-[320px]">
                             실시간 주도주 분석 서비스. 거래대금, 등락률, 거래량, 뉴스, 테마 집중도를 종합 분석합니다.

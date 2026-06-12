@@ -6,10 +6,10 @@ import { fetchHotnessHistory, HotnessHistoryItem } from '@/lib/api/stocks';
 function gradeColor(grade: string): string {
     switch (grade) {
         case 'S': return 'var(--rise-color)';
-        case 'A': return '#f97316';
+        case 'A': return 'var(--grade-a)';
         case 'B': return 'var(--text-tertiary)';
-        case 'C': return 'var(--accent-blue)';
-        default: return 'var(--fall-color)';
+        case 'C': return 'var(--grade-c)';
+        default: return 'var(--grade-d)';
     }
 }
 
@@ -48,22 +48,22 @@ function MiniLineChart({ data }: { data: HotnessHistoryItem[] }) {
                 fill="var(--rise-color)" opacity="0.05" />
             {/* A구간 배경 */}
             <rect x="0" y={sLineY} width={w} height={aLineY - sLineY}
-                fill="#f97316" opacity="0.05" />
+                fill="var(--grade-a)" opacity="0.05" />
 
             {/* S/A 기준선 */}
             <line x1="0" y1={sLineY} x2={w} y2={sLineY}
                 stroke="var(--rise-color)" strokeWidth="0.3" strokeDasharray="2,2" />
             <line x1="0" y1={aLineY} x2={w} y2={aLineY}
-                stroke="#f97316" strokeWidth="0.3" strokeDasharray="2,2" />
+                stroke="var(--grade-a)" strokeWidth="0.3" strokeDasharray="2,2" />
 
             {/* 기준선 라벨 */}
             <text x={w - 1} y={sLineY - 1} textAnchor="end"
                 fontSize="3" fill="var(--rise-color)" opacity="0.6">S</text>
             <text x={w - 1} y={aLineY - 1} textAnchor="end"
-                fontSize="3" fill="#f97316" opacity="0.6">A</text>
+                fontSize="3" fill="var(--grade-a)" opacity="0.6">A</text>
 
             {/* 점수 라인 */}
-            <path d={linePath} fill="none" stroke="var(--accent-blue)" strokeWidth="1"
+            <path d={linePath} fill="none" stroke="var(--accent)" strokeWidth="1"
                 strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
 
             {/* 포인트 */}

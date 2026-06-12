@@ -11,12 +11,12 @@ export default function GuidePage() {
         <div className="min-h-screen bg-[var(--bg-secondary)]">
             <main className="max-w-2xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <Link href="/" className="text-[14px] text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-[14px] text-[var(--accent)] hover:underline">
                         &larr; 홈으로
                     </Link>
                 </div>
 
-                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 space-y-6">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
                     <h1 className="text-lg font-bold text-[var(--text-primary)]">이용 가이드</h1>
                     <p className="text-[14px] text-[var(--text-tertiary)]">
                         TEBURN의 주요 기능과 사용법을 안내합니다. 회원가입 없이 바로 이용할 수 있습니다.
@@ -89,7 +89,7 @@ export default function GuidePage() {
                             TEBURN 텔레그램 봇을 통해 주도주 알림을 실시간으로 받아볼 수 있습니다.
                         </p>
                         <ol className="list-decimal pl-5 space-y-1 mt-2">
-                            <li>텔레그램에서 <a href="https://t.me/teburn_hot_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">@teburn_hot_bot</a>을 검색합니다.</li>
+                            <li>텔레그램에서 <a href="https://t.me/teburn_hot_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">@teburn_hot_bot</a>을 검색합니다.</li>
                             <li><span className="font-mono bg-[var(--bg-secondary)] px-1 rounded">/start</span> 명령어를 입력하여 구독을 시작합니다.</li>
                             <li>S등급 주도주가 새로 등장하면 실시간 알림을 받습니다.</li>
                             <li>매일 평일 오후 3시 40분에 일일 요약을 받습니다.</li>

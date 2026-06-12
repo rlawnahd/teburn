@@ -10,7 +10,7 @@ interface Props {
 export default function PerformanceCard({ account, stats }: Props) {
     if (!account) {
         return (
-            <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+            <div className="card p-4">
                 <p className="text-[var(--text-tertiary)] text-base">매매 데이터가 없습니다.</p>
             </div>
         );
@@ -20,7 +20,7 @@ export default function PerformanceCard({ account, stats }: Props) {
     const winRate = stats.totalTrades > 0 ? stats.winRate : 0;
 
     return (
-        <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+        <div className="card p-4">
             <div className="mb-4">
                 <p className="text-[var(--text-tertiary)] text-sm mb-1">총 수익률</p>
                 <p className={`text-2xl font-bold ${isProfit ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>

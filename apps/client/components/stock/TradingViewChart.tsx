@@ -98,6 +98,8 @@ export default function StockChart({ stockCode }: ChartProps) {
         const container = chartContainerRef.current;
         const isDark = theme === 'dark';
         const isMinute = ['1', '5', '15', '30', '60'].includes(period);
+        const riseColor = getComputedStyle(document.documentElement).getPropertyValue('--rise-color').trim() || '#ef4444';
+        const fallColor = getComputedStyle(document.documentElement).getPropertyValue('--fall-color').trim() || '#3b82f6';
 
         if (chartRef.current) {
             chartRef.current.remove();
@@ -142,12 +144,12 @@ export default function StockChart({ stockCode }: ChartProps) {
         chartRef.current = chart;
 
         const candleSeries = chart.addSeries(CandlestickSeries, {
-            upColor: '#ef4444',
-            downColor: '#3b82f6',
-            borderUpColor: '#ef4444',
-            borderDownColor: '#3b82f6',
-            wickUpColor: '#ef4444',
-            wickDownColor: '#3b82f6',
+            upColor: riseColor,
+            downColor: fallColor,
+            borderUpColor: riseColor,
+            borderDownColor: fallColor,
+            wickUpColor: riseColor,
+            wickDownColor: fallColor,
         });
 
         const timeToCandle = new Map<string, DailyCandle>();
@@ -171,12 +173,21 @@ export default function StockChart({ stockCode }: ChartProps) {
             scaleMargins: { top: 0.8, bottom: 0 },
         });
 
+        const riseAlpha = isDark ? 0.3 : 0.4;
+        const fallAlpha = isDark ? 0.3 : 0.4;
+        const hexToRgba = (hex: string, alpha: number) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+
         const volumeData = candles.map(c => ({
             time: formatTime(c.date, period) as any,
             value: c.close * c.volume,
             color: c.close >= c.open
-                ? (isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)')
-                : (isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.4)'),
+                ? hexToRgba(riseColor, riseAlpha)
+                : hexToRgba(fallColor, fallAlpha),
         }));
 
         volumeSeries.setData(volumeData);

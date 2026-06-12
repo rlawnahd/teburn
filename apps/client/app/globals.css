@@ -30,9 +30,9 @@
   --brand-primary: #f97316;
   --brand-secondary: #fb923c;
   --brand-gradient: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
-  --accent-blue: #f97316;
-  --accent-blue-light: rgba(249, 115, 22, 0.12);
-  --accent-blue-dark: #ea580c;
+  --accent: #f97316;
+  --accent-light: rgba(249, 115, 22, 0.12);
+  --accent-dark: #ea580c;
 
   /* 등급 */
   --grade-s: #ef4444;
@@ -211,7 +211,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary:hover {
-  background: var(--accent-blue-dark);
+  background: var(--accent-dark);
 }
 
 .btn-secondary {

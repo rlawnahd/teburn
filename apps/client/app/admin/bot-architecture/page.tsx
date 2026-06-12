@@ -157,7 +157,7 @@ export default function BotArchitecturePage() {
                             >
                                 {tab.label}
                                 {activeTab === tab.key && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-blue)]" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent)]" />
                                 )}
                             </button>
                         ))}

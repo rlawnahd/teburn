@@ -8,7 +8,7 @@ interface Props {
 
 export default function PortfolioSection({ positions }: Props) {
     return (
-        <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] p-4">
+        <div className="card p-4">
             <h3 className="text-[var(--text-primary)] text-base font-medium mb-3">현재 포트폴리오</h3>
 
             {positions.length === 0 ? (

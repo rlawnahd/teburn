@@ -7,7 +7,7 @@ import { MarketStatusInfo } from '@/lib/api/themes';
 function statusBadge(ms: MarketStatusInfo) {
     const map: Record<string, { label: string; color: string; dot: boolean }> = {
         regular: { label: '장중', color: 'var(--success-color)', dot: true },
-        pre_market: { label: '장전 시간외', color: 'var(--accent-blue)', dot: true },
+        pre_market: { label: '장전 시간외', color: 'var(--accent)', dot: true },
         post_market: { label: '장후 시간외', color: 'var(--warning-color)', dot: true },
         closed: { label: '장 마감', color: 'var(--text-tertiary)', dot: false },
     };

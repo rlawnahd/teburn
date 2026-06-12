@@ -33,21 +33,34 @@ function DateCell({
     return (
         <div
             onClick={hasData ? onClick : undefined}
+            onKeyDown={
+                hasData
+                    ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onClick();
+                          }
+                      }
+                    : undefined
+            }
+            role={hasData ? 'button' : undefined}
+            tabIndex={hasData ? 0 : undefined}
+            aria-label={hasData ? `${day}일 주도주 상세 보기` : undefined}
             className={`relative min-h-[90px] md:min-h-[110px] p-2 md:p-2.5 rounded-lg transition-colors ${
                 isCurrentMonth ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]/60'
-            } ${isToday ? 'bg-[var(--accent-blue)]/5 ring-1 ring-inset ring-[var(--accent-blue)]/40' : ''} ${
-                hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)]' : ''
+            } ${isToday ? 'bg-[var(--accent)]/5 ring-1 ring-inset ring-[var(--accent)]/40' : ''} ${
+                hasData ? 'cursor-pointer hover:bg-[var(--bg-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]' : ''
             }`}
         >
             {/* Data indicator dot */}
             {hasData && !isToday && (
-                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--accent-blue)]/40" />
+                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40" />
             )}
 
             <div
                 className={`text-sm font-medium mb-1.5 ${
                     isToday
-                        ? 'w-6 h-6 bg-[var(--accent-blue)] text-white rounded-full flex items-center justify-center text-xs'
+                        ? 'w-6 h-6 bg-[var(--accent)] text-white rounded-full flex items-center justify-center text-xs'
                         : isCurrentMonth
                         ? 'text-[var(--text-primary)]'
                         : 'text-[var(--text-disabled)]'
@@ -77,7 +90,7 @@ function DateCell({
                                         </span>
                                     </div>
                                     {themeTag && (
-                                        <div className="text-[11px] font-medium text-[var(--accent-blue)] truncate mt-0.5">
+                                        <div className="text-[11px] font-medium text-[var(--accent)] truncate mt-0.5">
                                             #{themeTag}
                                         </div>
                                     )}

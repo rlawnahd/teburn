@@ -425,7 +425,7 @@ function LiveStockTable() {
                         >
                             {/* 은하수 스포일러 오버레이 */}
                             {isHidden && <SpoilerOverlay />}
-                            <span className={`w-5 text-center text-sm font-bold ${i < 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>{i + 1}</span>
+                            <span className={`w-5 text-center text-sm font-bold ${i < 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>{i + 1}</span>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
                                     <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{stock.stockName}</span>
@@ -448,7 +448,7 @@ function LiveStockTable() {
                 <div className="relative">
                     <div className="h-12 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Link href="/?tab=hot" className="text-sm font-medium text-[var(--accent-blue)] hover:underline">
+                        <Link href="/?tab=hot" className="text-sm font-medium text-[var(--accent)] hover:underline">
                             + 나머지 종목 보기 →
                         </Link>
                     </div>

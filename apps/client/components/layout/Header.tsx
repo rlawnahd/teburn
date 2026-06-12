@@ -269,8 +269,8 @@ export default function Header() {
             {/* 모바일 메뉴 */}
             {showMobileMenu && (
                 <>
-                <div className="md:hidden fixed inset-0 top-12 z-30" onClick={() => setShowMobileMenu(false)} />
-                <div className="md:hidden fixed inset-x-0 top-12 z-40 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-lg animate-slideDown">
+                <div className="md:hidden fixed inset-0 top-10 z-30" onClick={() => setShowMobileMenu(false)} />
+                <div className="md:hidden fixed inset-x-0 top-10 z-40 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-lg animate-slideDown">
                     <nav className="p-3 space-y-1">
                         {NAV_LINKS.filter((link) => !link.authRequired || isLoggedIn).map((link) => (
                             <Link

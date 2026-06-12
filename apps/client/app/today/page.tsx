@@ -99,7 +99,7 @@ export default async function TodayPage() {
             <div className="max-w-[800px] mx-auto px-4 py-8">
                 {/* 헤더 */}
                 <div className="mb-6">
-                    <Link href="/" className="text-xs text-[var(--accent-blue)] hover:underline">
+                    <Link href="/" className="text-xs text-[var(--accent)] hover:underline">
                         ← 홈으로
                     </Link>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">
@@ -109,7 +109,7 @@ export default async function TodayPage() {
                     <div className="flex items-center gap-3 mt-2 text-xs">
                         {marketStatus && (
                             <span className="flex items-center gap-1">
-                                <span className={`w-1.5 h-1.5 rounded-full ${marketStatus.isOpen ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${marketStatus.isOpen ? 'bg-[var(--success-color)]' : 'bg-[var(--text-tertiary)]'}`} />
                                 <span className="text-[var(--text-tertiary)]">{marketStatus.statusText}</span>
                             </span>
                         )}
@@ -126,14 +126,20 @@ export default async function TodayPage() {
                 ) : (
                     <div className="card overflow-hidden">
                         {stocks.map((stock, i) => {
-                            const isPositive = stock.changeRate > 0;
+                            const changeRate = stock.changeRate;
+                            const rateColorClass = changeRate > 0
+                                ? 'text-[var(--rise-color)]'
+                                : changeRate < 0
+                                    ? 'text-[var(--fall-color)]'
+                                    : 'text-[var(--text-tertiary)]';
+                            const rateSign = changeRate > 0 ? '+' : changeRate < 0 ? '' : '';
                             return (
                                 <Link
                                     key={stock.stockCode}
                                     href={`/stocks/${stock.stockCode}`}
                                     className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-tertiary)] transition-colors"
                                 >
-                                    <span className={`w-6 text-center text-sm font-semibold ${i < 3 ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'}`}>
+                                    <span className={`w-6 text-center text-sm font-semibold ${i < 3 ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>
                                         {i + 1}
                                     </span>
                                     <div className="flex-1 min-w-0">
@@ -155,8 +161,8 @@ export default async function TodayPage() {
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <div className="text-sm text-[var(--text-primary)]">{stock.currentPrice.toLocaleString()}</div>
-                                        <div className={`text-xs font-medium ${isPositive ? 'text-[var(--rise-color)]' : 'text-[var(--fall-color)]'}`}>
-                                            {isPositive ? '+' : ''}{stock.changeRate.toFixed(2)}%
+                                        <div className={`text-xs font-medium ${rateColorClass}`}>
+                                            {rateSign}{changeRate.toFixed(2)}%
                                         </div>
                                     </div>
                                     <div className="w-14 text-right flex-shrink-0">
@@ -177,7 +183,7 @@ export default async function TodayPage() {
                     </p>
                     <Link
                         href="/?tab=hot"
-                        className="inline-block text-sm font-medium text-[var(--accent-blue)] hover:underline"
+                        className="inline-block text-sm font-medium text-[var(--accent)] hover:underline"
                     >
                         전체 주도주 리스트 보기 →
                     </Link>

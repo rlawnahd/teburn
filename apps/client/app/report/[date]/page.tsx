@@ -90,7 +90,7 @@ export default async function ReportPage({ params }: { params: Promise<{ date: s
             <div className="max-w-[800px] mx-auto px-4 py-8">
                 {/* 헤더 */}
                 <div className="mb-6">
-                    <Link href="/report" className="text-xs text-[var(--accent-blue)] hover:underline">
+                    <Link href="/report" className="text-xs text-[var(--accent)] hover:underline">
                         ← 리포트 목록
                     </Link>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">
@@ -119,7 +119,7 @@ export default async function ReportPage({ params }: { params: Promise<{ date: s
                                 return (
                                     <div key={t.rank} className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-color)] last:border-b-0">
                                         <span className="w-5 text-center text-sm font-semibold text-[var(--text-tertiary)]">{t.rank}</span>
-                                        <Link href={`/themes/${encodeURIComponent(t.themeName)}`} className="flex-1 text-sm font-medium text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline">
+                                        <Link href={`/themes/${encodeURIComponent(t.themeName)}`} className="flex-1 text-sm font-medium text-[var(--text-primary)] hover:text-[var(--accent)] hover:underline">
                                             {t.themeName}
                                         </Link>
                                         <span className="text-xs text-[var(--text-tertiary)]">대장주 {t.topStock}</span>
@@ -167,8 +167,8 @@ export default async function ReportPage({ params }: { params: Promise<{ date: s
 
                 {/* 상호링크 */}
                 <div className="flex gap-3 text-xs">
-                    <Link href="/today" className="text-[var(--accent-blue)] hover:underline">오늘의 주도주 →</Link>
-                    <Link href="/performance" className="text-[var(--accent-blue)] hover:underline">주도주 성적표 →</Link>
+                    <Link href="/today" className="text-[var(--accent)] hover:underline">오늘의 주도주 →</Link>
+                    <Link href="/performance" className="text-[var(--accent)] hover:underline">주도주 성적표 →</Link>
                 </div>
             </div>
         </div>
