@@ -26,7 +26,11 @@ export async function fetchDailyCandles(
     endDate: string,
     retries = 2,
 ): Promise<DailyCandle[]> {
-    await acquireKisToken();
+    try {
+        await acquireKisToken();
+    } catch {
+        return []; // 레이트리미터 백프레셔/타임아웃 — 조용히 스킵 (로그 스팸 방지)
+    }
 
     try {
         const token = await getKisToken();
