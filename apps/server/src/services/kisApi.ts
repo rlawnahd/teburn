@@ -41,7 +41,11 @@ export interface StockPrice {
 // 주식현재가 조회 — KIS REST API (FHKST01010100)
 // 글로벌 rate limiter를 거쳐 초당 호출 수 제한
 export async function getStockPrice(stockCode: string, retries = 3): Promise<StockPrice | null> {
-    await acquireKisToken();
+    try {
+        await acquireKisToken();
+    } catch {
+        return null; // 레이트리미터 백프레셔/타임아웃 — 조용히 스킵 (로그 스팸 방지)
+    }
 
     try {
         const token = await getAccessToken();
