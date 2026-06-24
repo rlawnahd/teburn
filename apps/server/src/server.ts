@@ -27,7 +27,7 @@ import performanceRoutes, { invalidateSummaryCache } from './routes/performance'
 import reportRoutes from './routes/report';
 import { upsertGradeRecords, fillPerformanceRecords, backfillPerformanceIfEmpty } from './services/performanceService';
 import { generateDailyReport, backfillDailyReports } from './services/dailyReportService';
-import { initWebSocketServer, closeAllConnections, broadcastToSubscribers, broadcastAll } from './services/wsServer';
+import { initWebSocketServer, closeAllConnections, stopWebSocketServer, broadcastToSubscribers, broadcastAll } from './services/wsServer';
 import { onRealtimePrice, startKisWebSocket } from './services/kisWebSocket';
 import { initRealtimeScores, realtimeHotnessUpdate } from './services/realtimeHotness';
 import { startHistoryCollection } from './services/themeHistoryService';
@@ -48,6 +48,14 @@ try {
     process.exit(1);
 }
 
+// 전역 미처리 예외/거부 핸들러 — 비동기 콜백·타이머의 reject로 프로세스가 죽는 것 방지 (로그만, 비종료)
+process.on('unhandledRejection', (reason: unknown) => {
+    console.error('❌ Unhandled Rejection:', reason instanceof Error ? (reason.stack || reason.message) : reason);
+});
+process.on('uncaughtException', (err: Error) => {
+    console.error('❌ Uncaught Exception:', err.stack || err.message);
+});
+
 const app = express();
 
 const PORT = process.env.PORT || 4000;
@@ -57,7 +65,8 @@ const MONGO_URI = process.env.MONGO_URI || '';
 const CRAWL_INTERVAL = 10 * 1000;
 
 // 2. 미들웨어 설정
-app.use(express.json());
+app.set('trust proxy', 1); // Railway/Vercel 프록시 뒤 — X-Forwarded-For 기반 정확한 클라이언트 IP (rate-limit 정상화)
+app.use(express.json({ limit: '100kb' })); // 본문 크기 제한 (대용량 페이로드 메모리 고갈/DoS 방지)
 app.use(cors({
     origin: [
         'https://teburn.com',
@@ -168,6 +177,13 @@ app.get('/health/memory', (req, res) => {
     res.json(getMemoryDiagnostics());
 });
 
+// 전역 에러 핸들러 (4-arg) — 라우트에서 throw/next(err) 시 일관된 응답 + 스택 로깅
+app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('❌ 요청 처리 에러:', err?.stack || err?.message || err);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+});
+
 // 6. 서버 실행
 connectDB().then(async () => {
     // 레거시 테마(JSON 마이그레이션) 삭제 - 네이버 크롤링 테마만 사용
@@ -178,6 +194,31 @@ connectDB().then(async () => {
 
     const server = http.createServer(app);
     initWebSocketServer(server);
+
+    // Graceful shutdown — SIGTERM/SIGINT(재배포 등) 시 진행 중 작업 정리 후 종료
+    let shuttingDown = false;
+    const gracefulShutdown = async (signal: string) => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        console.log(`🛑 ${signal} 수신 — graceful shutdown 시작`);
+
+        // 강제 종료 타임아웃 (정리가 늘어져도 일정 시간 후 종료 보장)
+        const forceTimer = setTimeout(() => process.exit(0), 8000);
+        forceTimer.unref();
+
+        try {
+            stopWebSocketServer();                       // WebSocket 정리
+            await new Promise<void>((resolve) => server.close(() => resolve())); // 신규 요청 차단 + 대기
+            await mongoose.connection.close();            // DB 연결 정리
+            console.log('✅ graceful shutdown 완료');
+        } catch (err) {
+            console.error('graceful shutdown 중 에러:', err);
+        } finally {
+            process.exit(0);
+        }
+    };
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
     server.listen(PORT, () => {
         console.log(`🚀 Server is running at http://localhost:${PORT}`);
