@@ -127,7 +127,7 @@ export default function GalaxyBackground() {
             }
 
             // 10~15초 간격으로 새 별똥별 생성
-            if (Math.random() < 0.005) { // ~매 200프레임(약 3초)마다 확률적 생성
+            if (Math.random() < 0.02) { // ~매 50프레임(약 0.8초)마다 확률적 생성 (별똥별 밀도↑)
                 const ww = w();
                 const hh = h();
                 shootingStars.push({
@@ -140,7 +140,7 @@ export default function GalaxyBackground() {
                     active: true,
                 });
                 // 오래된 비활성 별똥별 정리
-                while (shootingStars.length > 5) shootingStars.shift();
+                while (shootingStars.length > 12) shootingStars.shift();
             }
 
             frame = requestAnimationFrame(draw);
