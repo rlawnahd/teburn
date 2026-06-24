@@ -1,8 +1,8 @@
 // KIS REST API 글로벌 rate limiter (토큰 버킷)
 // 여러 서비스에서 병렬로 호출해도 전체 호출 속도를 초당 N건으로 강제.
 
-// 실전 초당 5건 제한, 안전 마진으로 3건
-export const MAX_TOKENS = 3;
+// 실전 초당 5건 제한 — 드레인 처리량 확보를 위해 한도까지 사용 (초과 시 EGW00201은 호출처에서 재시도)
+export const MAX_TOKENS = 5;
 const REFILL_INTERVAL_MS = 1000; // 1초에 MAX_TOKENS개 보충
 
 // 대기열 상한 + acquire 타임아웃 — 무한 적체로 인한 메모리 누수 차단.

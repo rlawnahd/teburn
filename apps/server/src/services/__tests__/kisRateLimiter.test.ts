@@ -35,20 +35,21 @@ describe('kisRateLimiter', () => {
     });
 
     it('드레인되지 않은 대기 요청은 타임아웃 후 큐에서 제거된다 (무한 적체 차단)', async () => {
-        const { acquireKisToken, getKisQueueLength, MAX_TOKENS } = mod;
+        const { acquireKisToken, getKisQueueLength, MAX_TOKENS, ACQUIRE_TIMEOUT_MS } = mod;
 
         for (let i = 0; i < MAX_TOKENS; i++) await acquireKisToken();
 
-        // refill(3/초)이 타임아웃 내에 다 빼지 못할 만큼 enqueue
-        const N = 60;
+        // refill이 타임아웃 내에 다 빼지 못할 만큼 enqueue (드레인 레이트와 무관하게 견고)
+        const drainableWithinTimeout = MAX_TOKENS * (ACQUIRE_TIMEOUT_MS / 1000);
+        const N = drainableWithinTimeout + 20;
         const results: Promise<string>[] = [];
         for (let i = 0; i < N; i++) {
             results.push(acquireKisToken().then(() => 'ok', () => 'timeout'));
         }
         expect(getKisQueueLength()).toBe(N);
 
-        // 타임아웃(15s) + refill 여유 경과 → 큐가 0으로 비워짐 (resolve 또는 timeout)
-        await vi.advanceTimersByTimeAsync(17000);
+        // 타임아웃 + refill 여유 경과 → 큐가 0으로 비워짐 (resolve 또는 timeout)
+        await vi.advanceTimersByTimeAsync(ACQUIRE_TIMEOUT_MS + 2000);
         expect(getKisQueueLength()).toBe(0);
 
         const settled = await Promise.all(results);
