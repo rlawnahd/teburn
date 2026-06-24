@@ -15,6 +15,7 @@ interface ClientInfo {
     authenticated: boolean;
     subscriptions: Set<string>;  // individual stock subscriptions (stock detail page)
     authTimer?: ReturnType<typeof setTimeout>;
+    isAlive: boolean;            // heartbeat: pong 응답 여부 추적 (half-open 좀비 연결 정리)
 }
 
 // Global state
@@ -36,6 +37,7 @@ export function initWebSocketServer(server: HTTPServer): void {
             userId: '',
             authenticated: false,
             subscriptions: new Set(),
+            isAlive: true,
         };
 
         // 5초 내 인증 안 되면 close
@@ -46,6 +48,11 @@ export function initWebSocketServer(server: HTTPServer): void {
         }, AUTH_TIMEOUT_MS);
 
         clients.set(ws, client);
+
+        // heartbeat: pong 응답 시 살아있음 표시
+        ws.on('pong', () => {
+            client.isAlive = true;
+        });
 
         ws.on('message', (data: Buffer) => {
             try {
@@ -70,13 +77,17 @@ export function initWebSocketServer(server: HTTPServer): void {
         });
     });
 
-    // Ping/keepalive
+    // Ping/keepalive + heartbeat (지난 주기에 pong 미응답이면 죽은 연결로 보고 정리)
     pingTimer = setInterval(() => {
         for (const [ws, client] of clients) {
-            if (!client.authenticated) continue;
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.ping();
+            if (ws.readyState !== WebSocket.OPEN) continue;
+            if (client.isAlive === false) {
+                // half-open 좀비 연결 — close 이벤트가 안 떠서 누적되는 것을 강제 종료
+                ws.terminate(); // 'close' 이벤트 발생 → 기존 핸들러가 clients/refCount 정리
+                continue;
             }
+            client.isAlive = false;
+            ws.ping();
         }
     }, PING_INTERVAL_MS);
 
@@ -198,6 +209,25 @@ export function closeAllConnections(): void {
     clients.clear();
     stockRefCounts.clear();
     console.log('🔌 WebSocket 장마감 — 모든 연결 종료');
+}
+
+/**
+ * graceful shutdown — ping 타이머 정리 + 모든 연결/서버 종료
+ */
+export function stopWebSocketServer(): void {
+    if (pingTimer) {
+        clearInterval(pingTimer);
+        pingTimer = null;
+    }
+    for (const [ws] of clients) {
+        try { ws.close(1001, 'Server shutting down'); } catch { /* noop */ }
+    }
+    clients.clear();
+    stockRefCounts.clear();
+    if (wss) {
+        wss.close();
+        wss = null;
+    }
 }
 
 /**
